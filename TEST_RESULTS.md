@@ -4,6 +4,213 @@
 
 ---
 
+## Прогон: 2026-11-16 12:40 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run --reporter=json`, `npx playwright test` (workers=1, production build через `next build && next start`), `npx tsc --noEmit`, `npx eslint .`
+
+### Приёмочные тесты (`playwright test`, workers=1)
+
+| #   | Тест                                                                       | Пакет                 | Результат | Время  |
+| --- | -------------------------------------------------------------------------- | --------------------- | --------- | ------ |
+| 1   | adds and removes a link between two waypoints                              | editing.spec.ts       | PASS      | 2.00s  |
+| 2   | creates a tour and deletes it again                                        | editing.spec.ts       | PASS      | 2.41s  |
+| 3   | moves a waypoint by dragging it on the map                                 | editing.spec.ts       | PASS      | 3.04s  |
+| 4   | refuses an empty label and an absolute path in the editor                  | editing.spec.ts       | PASS      | 3.39s  |
+| 5   | replays twenty changes back to the beginning and forward to the end        | editing.spec.ts       | PASS      | 62.88s |
+| 6   | says why a save failed and offers one retry                                | editing.spec.ts       | PASS      | 1.16s  |
+| 7   | dismisses the tour before the selection                                    | keyboard.spec.ts      | PASS      | 0.35s  |
+| 8   | Escape closes the inspector drawer before anything else                    | keyboard.spec.ts      | PASS      | 0.27s  |
+| 9   | focuses the map search with a slash                                        | keyboard.spec.ts      | PASS      | 0.23s  |
+| 10  | moves between waypoints with the arrow keys                                | keyboard.spec.ts      | PASS      | 0.29s  |
+| 11  | reaches every region with the keyboard in the contract order               | keyboard.spec.ts      | PASS      | 0.33s  |
+| 12  | shows a visible focus ring on a keyboard-focused control                   | keyboard.spec.ts      | PASS      | 0.21s  |
+| 13  | undo inside a text field stays text undo                                   | keyboard.spec.ts      | PASS      | 0.58s  |
+| 14  | clamps a stored step that no longer exists                                 | navigation.spec.ts    | PASS      | 0.19s  |
+| 15  | drops a stored tour that no longer exists                                  | navigation.spec.ts    | PASS      | 0.37s  |
+| 16  | returns to the same project, map, tour and stop three times                | navigation.spec.ts    | PASS      | 0.52s  |
+| 17  | pans, zooms, selects and drags inside the interaction budget               | performance.spec.ts   | PASS      | 0.90s  |
+| 18  | reports a map larger than the supported size                               | performance.spec.ts   | PASS      | 0.35s  |
+| 19  | stays inside the interaction budget on a 250 waypoint map                  | performance.spec.ts   | PASS      | 0.36s  |
+| 20  | edits are saved once at the end of a pause                                 | responsive.spec.ts    | PASS      | 3.28s  |
+| 21  | gives the space of a collapsed rail back to the canvas                     | responsive.spec.ts    | PASS      | 0.25s  |
+| 22  | keeps the rail labels reachable at the medium band                         | responsive.spec.ts    | PASS      | 0.28s  |
+| 23  | opens one drawer at a time and returns focus to its opener                 | responsive.spec.ts    | PASS      | 0.34s  |
+| 24  | rearranges itself at the wide, medium and narrow bands                     | responsive.spec.ts    | PASS      | 0.70s  |
+| 25  | a control that claims to change the map changes it                         | shell.spec.ts         | PASS      | 0.26s  |
+| 26  | autosaves a description to the map file                                    | shell.spec.ts         | PASS      | 2.80s  |
+| 27  | creates a map and opens it empty                                           | shell.spec.ts         | PASS      | 0.37s  |
+| 28  | every visible control has an accessible name                               | shell.spec.ts         | PASS      | 0.20s  |
+| 29  | keeps every tour fact in the dock                                          | shell.spec.ts         | PASS      | 0.20s  |
+| 30  | keeps the dock usable at 768                                               | shell.spec.ts         | PASS      | 0.19s  |
+| 31  | keeps the map visible while editing                                        | shell.spec.ts         | PASS      | 0.24s  |
+| 32  | never exposes the same action in two regions                               | shell.spec.ts         | PASS      | 0.21s  |
+| 33  | opens a map from the rail                                                  | shell.spec.ts         | PASS      | 0.23s  |
+| 34  | rearranges at 360 without horizontal scrolling                             | shell.spec.ts         | PASS      | 0.24s  |
+| 35  | resolves surfaces from tokens in the dark theme                            | shell.spec.ts         | PASS      | 0.33s  |
+| 36  | restores the tour and step after leaving the map                           | shell.spec.ts         | PASS      | 0.35s  |
+| 37  | shows the four regions without overlap                                     | shell.spec.ts         | PASS      | 0.24s  |
+| 38  | switches theme and keeps the choice after a reload                         | shell.spec.ts         | PASS      | 0.37s  |
+| 39  | undoes and redoes a change                                                 | shell.spec.ts         | PASS      | 1.98s  |
+| 40  | a failed load says what failed and offers one retry                        | states.spec.ts        | PASS      | 0.17s  |
+| 41  | a project without a map shows one create action                            | states.spec.ts        | PASS      | 0.16s  |
+| 42  | an empty workspace adds a project itself                                   | states.spec.ts        | PASS      | 0.36s  |
+| 43  | an unavailable project stays listed and can be repointed                   | states.spec.ts        | PASS      | 0.72s  |
+| 44  | disables the data actions while a map is loading                           | states.spec.ts        | PASS      | 1.97s  |
+| 45  | opens an unreachable project read-only from the last saved copy            | states.spec.ts        | PASS      | 0.41s  |
+| 46  | asks once when both sides changed and keeps the typing                     | sync-conflict.spec.ts | PASS      | 0.48s  |
+| 47  | shows one notice when a change lands while saving                          | sync-conflict.spec.ts | PASS      | 1.16s  |
+| 48  | takes the file version and restarts the history                            | sync-conflict.spec.ts | PASS      | 0.51s  |
+| 49  | writes the person version and raises no further notice                     | sync-conflict.spec.ts | PASS      | 2.00s  |
+| 50  | applies the file again once it is valid and clears the message             | sync-invalid.spec.ts  | PASS      | 0.41s  |
+| 51  | does not write the map back while the person keeps typing                  | sync-invalid.spec.ts  | PASS      | 2.07s  |
+| 52  | never applies content it cannot read                                       | sync-invalid.spec.ts  | PASS      | 1.45s  |
+| 53  | offers to write a deleted map back and never writes nothing                | sync-invalid.spec.ts  | PASS      | 0.27s  |
+| 54  | refuses a file that would lose a waypoint                                  | sync-invalid.spec.ts  | PASS      | 0.21s  |
+| 55  | writes over a file that cannot be read                                     | sync-invalid.spec.ts  | PASS      | 0.28s  |
+| 56  | announces an applied change without moving focus                           | sync-outside.spec.ts  | PASS      | 0.40s  |
+| 57  | does nothing when the file is rewritten with the same content              | sync-outside.spec.ts  | PASS      | 0.80s  |
+| 58  | keeps editing after the file is rewritten with the same content            | sync-outside.spec.ts  | PASS      | 1.66s  |
+| 59  | reconciles once when the page becomes visible again                        | sync-outside.spec.ts  | PASS      | 0.24s  |
+| 60  | settles five changes into the last state                                   | sync-outside.spec.ts  | PASS      | 0.22s  |
+| 61  | shows an outside change within a second and keeps the person in place      | sync-outside.spec.ts  | PASS      | 0.46s  |
+| 62  | keeps the map still when a field is cleared                                | sync-own.spec.ts      | PASS      | 2.60s  |
+| 63  | keeps twenty undos after twenty saves                                      | sync-own.spec.ts      | PASS      | 3.39s  |
+| 64  | shows nothing when the person saves                                        | sync-own.spec.ts      | PASS      | 2.09s  |
+| 65  | follows a map added and removed in the folder                              | sync-rail.spec.ts     | PASS      | 0.59s  |
+| 66  | keeps the open map open when another map appears                           | sync-rail.spec.ts     | PASS      | 0.40s  |
+| 67  | does not follow a map it cannot write and follows it again after relinking | sync-readonly.spec.ts | PASS      | 3.00s  |
+| 68  | opens a change stream for the open map                                     | sync.spec.ts          | PASS      | 0.20s  |
+| 69  | follows the system theme while it is set to system                         | theme.spec.ts         | PASS      | 0.27s  |
+| 70  | keeps a dialog and a tooltip on the dark surface                           | theme.spec.ts         | PASS      | 0.66s  |
+| 71  | resolves every surface of the dark theme from tokens                       | theme.spec.ts         | PASS      | 0.37s  |
+
+### Юнит-тесты (`vitest run`)
+
+| #   | Тест                                                                                               | Пакет                      | Результат | Время |
+| --- | -------------------------------------------------------------------------------------------------- | -------------------------- | --------- | ----- |
+| 1   | map fixture builder builds the requested number of waypoints and tours                             | build-map.test.ts          | PASS      | 0.00s |
+| 2   | map fixture builder gives every waypoint a known type and a unique id                              | build-map.test.ts          | PASS      | 0.00s |
+| 3   | map fixture builder points every stop at an existing waypoint                                      | build-map.test.ts          | PASS      | 0.00s |
+| 4   | map cache lists the cached maps of one project only                                                | cache.test.ts              | PASS      | 0.00s |
+| 5   | map cache reads back what was written                                                              | cache.test.ts              | PASS      | 0.00s |
+| 6   | map cache returns nothing for a missing or escaping file                                           | cache.test.ts              | PASS      | 0.00s |
+| 7   | change summary counts a moved stop as a tour change, not a waypoint change                         | diff.test.ts               | PASS      | 0.00s |
+| 8   | change summary counts a moved waypoint as changed                                                  | diff.test.ts               | PASS      | 0.00s |
+| 9   | change summary counts added, removed and changed waypoints                                         | diff.test.ts               | PASS      | 0.00s |
+| 10  | change summary counts links and their labels                                                       | diff.test.ts               | PASS      | 0.00s |
+| 11  | change summary describes what changed for a person                                                 | diff.test.ts               | PASS      | 0.00s |
+| 12  | change summary is empty for the same document                                                      | diff.test.ts               | PASS      | 0.00s |
+| 13  | change summary names at most three per kind in document order                                      | diff.test.ts               | PASS      | 0.00s |
+| 14  | map history caps the history at fifty entries                                                      | history.test.ts            | PASS      | 0.00s |
+| 15  | map history discards the forward branch after a new change                                         | history.test.ts            | PASS      | 0.00s |
+| 16  | map history ignores a move to where the waypoint already is                                        | history.test.ts            | PASS      | 0.00s |
+| 17  | map history moves a stop without losing it                                                         | history.test.ts            | PASS      | 0.00s |
+| 18  | map history moves a waypoint and records one entry                                                 | history.test.ts            | PASS      | 0.00s |
+| 19  | map history never records selection or status changes                                              | history.test.ts            | PASS      | 0.00s |
+| 20  | map history refuses to move a stop beyond the list                                                 | history.test.ts            | PASS      | 0.00s |
+| 21  | map history removes a deleted waypoint from edges and tours                                        | history.test.ts            | PASS      | 0.00s |
+| 22  | map history replays a twenty-change sequence exactly                                               | history.test.ts            | PASS      | 0.00s |
+| 23  | map history starts empty and records nothing on load                                               | history.test.ts            | PASS      | 0.00s |
+| 24  | map history steps back and forward through a change                                                | history.test.ts            | PASS      | 0.00s |
+| 25  | one history entry per committed change does not record a change that leaves the document identical | history.test.ts            | PASS      | 0.00s |
+| 26  | one history entry per committed change records exactly one entry per action type                   | history.test.ts            | PASS      | 0.00s |
+| 27  | map file accepts a file that loses nothing                                                         | map-file.test.ts           | PASS      | 0.00s |
+| 28  | map file canonicalises a document the way a re-read will see it                                    | map-file.test.ts           | PASS      | 0.00s |
+| 29  | map file coerces a broken position and drops an absolute file path                                 | map-file.test.ts           | PASS      | 0.00s |
+| 30  | map file creates an empty document with the three collections                                      | map-file.test.ts           | PASS      | 0.00s |
+| 31  | map file drops orphaned edges and stops when reading                                               | map-file.test.ts           | PASS      | 0.00s |
+| 32  | map file maps an unknown type to Open Question and counts it                                       | map-file.test.ts           | PASS      | 0.00s |
+| 33  | map file refuses a file name that escapes the project                                              | map-file.test.ts           | PASS      | 0.00s |
+| 34  | map file refuses a file that would lose a waypoint                                                 | map-file.test.ts           | PASS      | 0.00s |
+| 35  | map file refuses an unsupported version                                                            | map-file.test.ts           | PASS      | 0.00s |
+| 36  | map file refuses to write an invalid document                                                      | map-file.test.ts           | PASS      | 0.00s |
+| 37  | map file replaces the file atomically, leaving no temporary behind                                 | map-file.test.ts           | PASS      | 0.00s |
+| 38  | map file reports a missing map                                                                     | map-file.test.ts           | PASS      | 0.00s |
+| 39  | map file round-trips a document                                                                    | map-file.test.ts           | PASS      | 0.01s |
+| 40  | map file serialises deterministically                                                              | map-file.test.ts           | PASS      | 0.00s |
+| 41  | map file slugs a display name                                                                      | map-file.test.ts           | PASS      | 0.00s |
+| 42  | map file writes sorted collections and keeps stop order                                            | map-file.test.ts           | PASS      | 0.00s |
+| 43  | external document drops a selection that no longer exists and clamps the step                      | map-store-external.test.ts | PASS      | 0.00s |
+| 44  | external document drops a tour that no longer exists                                               | map-store-external.test.ts | PASS      | 0.00s |
+| 45  | external document keeps the selection, the tour and the step that still exist                      | map-store-external.test.ts | PASS      | 0.00s |
+| 46  | external document leaves the history it already had alone                                          | map-store-external.test.ts | PASS      | 0.00s |
+| 47  | workspace registry clamps an out-of-range step to zero on read                                     | registry.test.ts           | PASS      | 0.00s |
+| 48  | workspace registry makes ids unique without clobbering an existing one                             | registry.test.ts           | PASS      | 0.00s |
+| 49  | workspace registry recovers from unparseable content without overwriting it                        | registry.test.ts           | PASS      | 0.00s |
+| 50  | workspace registry registers a project with a slugged unique id                                    | registry.test.ts           | PASS      | 0.00s |
+| 51  | workspace registry returns the existing entry when the same path is registered twice               | registry.test.ts           | PASS      | 0.00s |
+| 52  | workspace registry starts empty when there is no file                                              | registry.test.ts           | PASS      | 0.00s |
+| 53  | workspace registry stores the last view and drops it with its project                              | registry.test.ts           | PASS      | 0.00s |
+| 54  | workspace registry writes atomically and leaves no temporary behind                                | registry.test.ts           | PASS      | 0.00s |
+| 55  | isWithinHome accepts an ancestor of home so browsing can reach the root                            | safe-path.test.ts          | PASS      | 0.00s |
+| 56  | isWithinHome accepts the home directory and its children                                           | safe-path.test.ts          | PASS      | 0.00s |
+| 57  | isWithinHome rejects an unrelated branch                                                           | safe-path.test.ts          | PASS      | 0.00s |
+| 58  | resolveInside accepts a plain child                                                                | safe-path.test.ts          | PASS      | 0.00s |
+| 59  | resolveInside accepts an absolute path inside the root                                             | safe-path.test.ts          | PASS      | 0.00s |
+| 60  | resolveInside accepts the root itself                                                              | safe-path.test.ts          | PASS      | 0.00s |
+| 61  | resolveInside does not confuse a sibling with a shared prefix                                      | safe-path.test.ts          | PASS      | 0.00s |
+| 62  | resolveInside follows a symlink that leaves the root                                               | safe-path.test.ts          | PASS      | 0.00s |
+| 63  | resolveInside rejects an absolute path outside the root                                            | safe-path.test.ts          | PASS      | 0.00s |
+| 64  | resolveInside rejects parent traversal                                                             | safe-path.test.ts          | PASS      | 0.00s |
+| 65  | resolveInside rejects traversal hidden in the middle                                               | safe-path.test.ts          | PASS      | 0.00s |
+| 66  | sync events names every kind once                                                                  | sync-events.test.ts        | PASS      | 0.00s |
+| 67  | sync events reads a changed map                                                                    | sync-events.test.ts        | PASS      | 0.00s |
+| 68  | sync events reads a changed map list                                                               | sync-events.test.ts        | PASS      | 0.00s |
+| 69  | sync events reads an unreadable file and a missing file                                            | sync-events.test.ts        | PASS      | 0.00s |
+| 70  | sync events refuses what it cannot understand                                                      | sync-events.test.ts        | PASS      | 0.00s |
+| 71  | unreadable and missing files applies the file again once it can be read                            | sync-invalid.test.ts       | PASS      | 0.09s |
+| 72  | unreadable and missing files reports a file that is not there when the stream opens                | sync-invalid.test.ts       | PASS      | 0.30s |
+| 73  | unreadable and missing files reports a missing file once when it had content before                | sync-invalid.test.ts       | PASS      | 0.38s |
+| 74  | unreadable and missing files reports one unreadable state per attempt and never the content        | sync-invalid.test.ts       | PASS      | 0.94s |
+| 75  | sync stays on this machine describes events with no field beyond the contract                      | sync-local.test.ts         | PASS      | 0.00s |
+| 76  | sync stays on this machine imports nothing that can reach another host                             | sync-local.test.ts         | PASS      | 0.00s |
+| 77  | own writes delivers a write that no record covers                                                  | sync-own-write.test.ts     | PASS      | 0.04s |
+| 78  | own writes delivers an external change that follows an own write at once                           | sync-own-write.test.ts     | PASS      | 0.30s |
+| 79  | own writes records the newest text per file                                                        | sync-own-write.test.ts     | PASS      | 0.00s |
+| 80  | comparison fallback delivers a change when the watcher never reports                               | sync-poll.test.ts          | PASS      | 0.17s |
+| 81  | comparison fallback delivers one update however many ticks pass                                    | sync-poll.test.ts          | PASS      | 0.46s |
+| 82  | comparison fallback does not go back to watching after falling back                                | sync-poll.test.ts          | PASS      | 0.15s |
+| 83  | comparison fallback reports a change when the filesystem reports nothing                           | sync-poll.test.ts          | PASS      | 0.17s |
+| 84  | comparison fallback settles several changes into the last state                                    | sync-poll.test.ts          | PASS      | 0.35s |
+| 85  | comparison fallback stops comparing when the last subscription closes                              | sync-poll.test.ts          | PASS      | 0.25s |
+| 86  | sync watcher collapses five changes into one settled update                                        | sync-watch.test.ts         | PASS      | 0.47s |
+| 87  | sync watcher delivers a change made to the open map                                                | sync-watch.test.ts         | PASS      | 0.05s |
+| 88  | sync watcher does not deliver a write this process made                                            | sync-watch.test.ts         | PASS      | 0.36s |
+| 89  | sync watcher does not deliver an own write that normalises differently                             | sync-watch.test.ts         | PASS      | 0.40s |
+| 90  | sync watcher keeps one watcher until the last subscription closes                                  | sync-watch.test.ts         | PASS      | 0.35s |
+| 91  | sync watcher refuses an unreadable file and reports it once per attempt                            | sync-watch.test.ts         | PASS      | 0.45s |
+| 92  | sync watcher reports a delivered file that disappears once                                         | sync-watch.test.ts         | PASS      | 0.40s |
+| 93  | sync watcher says nothing when the content is identical                                            | sync-watch.test.ts         | PASS      | 0.60s |
+| 94  | design tokens defines the same colour tokens in both themes                                        | theme-contrast.test.ts     | PASS      | 0.00s |
+| 95  | design tokens meets 3:1 for interactive borders in dark                                            | theme-contrast.test.ts     | PASS      | 0.00s |
+| 96  | design tokens meets 3:1 for interactive borders in light                                           | theme-contrast.test.ts     | PASS      | 0.00s |
+| 97  | design tokens meets AA for text pairs in dark                                                      | theme-contrast.test.ts     | PASS      | 0.00s |
+| 98  | design tokens meets AA for text pairs in light                                                     | theme-contrast.test.ts     | PASS      | 0.00s |
+| 99  | tour validation accepts a name                                                                     | validation.test.ts         | PASS      | 0.00s |
+| 100 | tour validation refuses an empty name                                                              | validation.test.ts         | PASS      | 0.00s |
+| 101 | waypoint validation accepts a plain label and a relative path                                      | validation.test.ts         | PASS      | 0.00s |
+| 102 | waypoint validation checks nothing it was not given                                                | validation.test.ts         | PASS      | 0.00s |
+| 103 | waypoint validation refuses an absolute path                                                       | validation.test.ts         | PASS      | 0.00s |
+| 104 | waypoint validation refuses an empty label                                                         | validation.test.ts         | PASS      | 0.00s |
+
+### Сводка
+
+| Показатель           | Значение |
+| -------------------- | -------- |
+| Всего                | 175      |
+| PASS                 | 175      |
+| FAIL                 | 0        |
+| SKIP                 | 0        |
+| Время (сумма тестов) | 129.58s  |
+| Приёмочные           | 71       |
+| Юнит                 | 104      |
+
+### Падения
+
+нет
+
+---
+
 ## Прогон: 2026-11-16 11:23 MSK (+0300)
 
 **Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run --reporter=json`, `npx playwright test` (workers=1, production build через `next build && next start`), `npx tsc --noEmit`, `npx eslint .`, `npx next build`

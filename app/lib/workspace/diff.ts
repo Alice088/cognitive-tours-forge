@@ -51,6 +51,12 @@ export function summariseChange(before: MapDocument, after: MapDocument): Change
   };
 }
 
+export function isEmptyChange(summary: ChangeSummary): boolean {
+  return [summary.waypoints, summary.edges, summary.tours].every(
+    bucket => bucket.added + bucket.removed + bucket.changed === 0
+  );
+}
+
 export function describeChange(summary: ChangeSummary): string {
   const clauses: string[] = [];
   addClause(clauses, summary.names.added, 'added');

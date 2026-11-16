@@ -16,11 +16,11 @@ import type { MapStore } from '@/app/lib/store/map-store';
 import { nextTourId } from '@/app/lib/store/selectors';
 import { useMapStore } from '@/app/components/shell/MapStoreProvider';
 import { generateTourMarkdown, tourSlug } from '@/app/lib/tour-markdown';
-import { summariseChange, type ChangeSummary } from '@/app/lib/workspace/diff';
+import { isEmptyChange, summariseChange, type ChangeSummary } from '@/app/lib/workspace/diff';
 import { serializeDocument } from '@/app/lib/workspace/serialize';
 import { useListSync, useMapSync } from '@/app/lib/workspace/use-map-sync';
 import type { MapChangedEvent } from '@/app/lib/workspace/sync-events';
-import { useWorkspace, fetchMap, saveMap, saveViewState } from '@/app/lib/workspace/use-workspace';
+import { ApiError, useWorkspace, fetchMap, saveMap, saveViewState } from '@/app/lib/workspace/use-workspace';
 import { SUPPORTED_TOURS, SUPPORTED_WAYPOINTS, type SaveStatus } from '@/app/lib/workspace/types';
 
 const SAVE_DELAY = 800;
@@ -105,8 +105,21 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
       saving.current = true;
       const generation = saveGeneration.current;
       store.getState().setSaveStatus('pending');
+      const writeOnce = async (expected: number | null) => {
+        try {
+          return await saveMap(projectId, mapFile, current, expected);
+        } catch (cause) {
+          const retryable = expected !== null && cause instanceof ApiError && cause.code === 'stale-document';
+          const disk = retryable ? await fetchMap(projectId, mapFile).catch(() => null) : null;
+          if (!disk || disk.mtimeMs === null || !isEmptyChange(summariseChange(current, disk.document))) {
+            throw cause;
+          }
+          store.getState().adoptMtime(disk.mtimeMs);
+          return saveMap(projectId, mapFile, current, disk.mtimeMs);
+        }
+      };
       try {
-        const result = await saveMap(projectId, mapFile, current, force ? null : store.getState().mtimeMs);
+        const result = await writeOnce(force ? null : store.getState().mtimeMs);
         if (generation !== saveGeneration.current) {
           return;
         }
@@ -247,12 +260,24 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
         store.getState().adoptMtime(event.mtimeMs);
         return;
       }
+      const selected = store.getState().selectedWaypointId;
+      const selectedLabel = selected
+        ? (store.getState().document?.waypoints.find(waypoint => waypoint.id === selected)?.label ?? null)
+        : null;
       diskText.current = text;
       skipAutosave.current = true;
       store.getState().applyExternal(event);
+      store.getState().markSaved(event.mtimeMs);
       if (restart) {
         clearHistory(store);
         setLiveMessage('Reloaded from disk. The history starts again.');
+        return;
+      }
+      const selectionLost = selected !== null && !event.document.waypoints.some(waypoint => waypoint.id === selected);
+      if (selectionLost) {
+        setLiveMessage(
+          `${selectedLabel ? `“${selectedLabel}”` : 'The selected waypoint'} is no longer on the map on disk, so the selection is cleared.`
+        );
         return;
       }
       setLiveMessage(
@@ -305,6 +330,8 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
         if (dirtyNow()) {
           cancelScheduledSave();
           holdAutosave.current = true;
+          setUnreadable(null);
+          setGone(null);
           const current = store.getState().document;
           setExternal({
             event,
@@ -320,9 +347,14 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
       },
       onUnreadable: event => {
         blocked.current = true;
+        setExternal(null);
+        setGone(null);
         setUnreadable({ file: event.file, reason: event.reason });
       },
       onGone: event => {
+        blocked.current = true;
+        setExternal(null);
+        setUnreadable(null);
         setGone(event.file);
       },
     },
@@ -458,7 +490,7 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
           kind: 'unreadable',
           file: unreadable.file,
           reason: unreadable.reason,
-          onDismiss: () => setUnreadable(null),
+          onKeepMine: () => void save(true),
         }
       : external
         ? {
@@ -482,7 +514,7 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
                   onReload: () => {
                     saveGeneration.current += 1;
                     cancelScheduledSave();
-                    void load();
+                    void load().then(() => setLiveMessage('Reloaded from disk. The history starts again.'));
                   },
                   onKeepMine: () => void save(true),
                 }

@@ -1,4 +1,6 @@
+import { EventEmitter } from 'node:events';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import type { FSWatcher } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -26,6 +28,12 @@ function write(label: string): void {
 
 function noNotifications(): never {
   throw new Error('this filesystem reports nothing');
+}
+
+function silentWatcher(): FSWatcher {
+  const watcher = new EventEmitter() as unknown as FSWatcher & { close: () => void };
+  watcher.close = () => undefined;
+  return watcher;
 }
 
 async function until<T>(check: () => T | null | undefined, timeoutMs = 4000): Promise<T> {
@@ -59,6 +67,28 @@ afterEach(() => {
 });
 
 describe('comparison fallback', () => {
+  it('delivers a change when the watcher never reports', async () => {
+    const subscription = watchMap({
+      projectId: 'p-silent',
+      root,
+      file: 'main.tour.json',
+      emit: event => events.push(event),
+      pollMs: 40,
+      watchImpl: silentWatcher,
+    });
+    await subscription.ready;
+    events.length = 0;
+    expect(syncMode('p-silent')).toBe('watch');
+
+    write('second');
+    const changed = await until(() => events.find(event => event.type === 'map-changed'));
+    if (changed.type !== 'map-changed') {
+      throw new Error('expected a map-changed event');
+    }
+    expect(changed.document.waypoints[0].label).toBe('second');
+    subscription.close();
+  });
+
   it('reports a change when the filesystem reports nothing', async () => {
     const subscription = watchMap({
       projectId: 'p-poll-1',

@@ -4,6 +4,7 @@ import { canUndo, clearHistory, historyDepth } from '@/app/lib/store/history';
 import type { LoadReport, MapDocument } from '@/app/lib/workspace/types';
 
 const report: LoadReport = {
+  droppedWaypoints: 0,
   droppedEdges: 0,
   droppedStops: 0,
   droppedPaths: 0,

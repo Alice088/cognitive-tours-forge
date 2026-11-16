@@ -99,3 +99,20 @@ test('reconciles once when the page becomes visible again', async ({ page }) => 
   await expect.poll(() => reads.length - before, { timeout: 3000 }).toBe(1);
   await expect(page.locator('[data-notice]')).toHaveCount(0);
 });
+
+test('keeps editing after the file is rewritten with the same content', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openSample(page);
+
+  mutateMapFile(document => document);
+  await page.waitForTimeout(600);
+
+  await page.locator('.react-flow__node[data-id="w-2"]').click();
+  const field = page.getByLabel('Label');
+  await field.fill('Edited after a rewrite');
+  await field.blur();
+  await expect(page.getByText('Saved', { exact: true })).toBeVisible({ timeout: 8000 });
+
+  await expect(page.locator('[data-notice]')).toHaveCount(0);
+  await expect(page.locator('.react-flow__node', { hasText: 'Edited after a rewrite' })).toBeVisible();
+});

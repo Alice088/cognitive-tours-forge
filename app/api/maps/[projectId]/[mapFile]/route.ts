@@ -1,4 +1,4 @@
-import { mapMtime, serializeDocument, writeMap } from '@/app/lib/workspace/map-file';
+import { canonicalText, mapMtime, writeMap } from '@/app/lib/workspace/map-file';
 import { loadMap, projectById, rememberMap } from '@/app/lib/workspace/service';
 import { fail, handleError, ok } from '@/app/lib/workspace/http';
 import { recordOwnWrite } from '@/app/lib/workspace/sync';
@@ -30,11 +30,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ proj
     }
     if (typeof body.expectedMtimeMs === 'number') {
       const current = await mapMtime(project.path, file);
-      if (current !== null && Math.abs(current - body.expectedMtimeMs) > 1) {
+      if (current === null) {
+        return fail('stale-document', 'This map is no longer in the folder.', 409);
+      }
+      if (Math.abs(current - body.expectedMtimeMs) > 1) {
         return fail('stale-document', 'This map changed on disk.', 409);
       }
     }
-    recordOwnWrite(projectId, file, serializeDocument(body.document));
+    recordOwnWrite(projectId, file, canonicalText(body.document));
     const result = await writeMap(project.path, file, body.document);
     await rememberMap(projectId, file, body.document).catch(() => undefined);
     return ok(result);

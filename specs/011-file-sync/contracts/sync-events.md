@@ -115,11 +115,14 @@ Guarantees:
 { "type": "map-unreadable", "file": "main.tour.json", "reason": "main.tour.json is not valid JSON" }
 ```
 
-Sent on the transition into an unreadable state: a file that is missing, empty,
-truncated, or not a map document of a supported version. `reason` is the message
-the existing `MapFileError` already carries. Not repeated while the file stays
-unreadable; a later readable file produces `map-changed` and the client clears
-the notice.
+Sent when the map cannot be applied: a file that is empty, truncated, not JSON,
+of an unsupported version, or one whose repair would drop a waypoint, a link, a
+stop, a file path or a waypoint type. Sync reads strictly — a document the load
+surface would silently repair is refused here, because the loss would otherwise
+be one save away from the disk. `reason` is the message the existing
+`MapFileError` already carries and names what would be lost. Not repeated while
+the file stays unreadable; a later readable file produces `map-changed` and the
+client clears the notice.
 
 ---
 
@@ -129,11 +132,11 @@ the notice.
 { "type": "map-gone", "file": "main.tour.json" }
 ```
 
-Sent when a file that was delivered before is no longer in `.tours/`. Never sent
-for a subscription that has delivered nothing, so a stream opened on a
-just-deleted file does not start with an error. The client must not treat this as
-empty content (FR-010): the document on screen stays and the notice offers to
-write it back.
+Sent when the map a subscription follows is no longer in `.tours/`. A fresh
+subscription reports the state it finds, including this one, so a stream opened
+after the file disappeared still says so instead of staying silent. The client
+must not treat this as empty content (FR-010): the document on screen stays, an
+autosave may not recreate the file, and the notice offers to write it back.
 
 ---
 
@@ -152,10 +155,14 @@ order the map list endpoint returns, so a client can replace its list wholesale.
 
 ## Server-side rules
 
-1. One watcher per project folder; `fs.watch` first, a two-second comparison loop
-   after a watch error. The client cannot tell them apart.
+1. One watcher per project folder; `fs.watch` for the fast path and a two-second
+   comparison loop that always runs, because a watch can be accepted and then
+   report nothing. The client cannot tell them apart.
 2. A write performed through `PUT /api/maps/{projectId}/{mapFile}` records its
-   canonical text as an own write before the file is renamed into place.
+   canonical text — normalised the way a read would normalise it — as an own
+   write before the file is renamed into place. A numbered `expectedMtimeMs`
+   against a file that is not there is refused as `stale-document`, so only an
+   explicit write-back can recreate a deleted map.
 3. A subscription holds the text it last delivered and the last state it
    reported; both survive an unrelated change in the folder.
 4. Aborting the request closes the subscription; the last close closes the
@@ -174,10 +181,14 @@ order the map list endpoint returns, so a client can replace its list wholesale.
    the live region without moving focus.
 3. `map-changed` with something unsaved: hold it, show the one notice with the
    change summary, and let the person choose.
-4. `map-unreadable`: keep the current document, name the file, stop offering to
-   save until the file is valid again.
+4. `map-unreadable`: keep the current document, name the file and what would be
+   lost, stop writing until the file is valid again, and offer to write the map
+   over it.
 5. `map-gone`: keep the current document, offer to write it back.
 6. `maps-changed`: refresh the workspace listing.
 7. On becoming visible after being hidden, fetch the map once and reconcile —
    missed while hidden is missed silently, never noticed as a conflict with
    nothing unsaved.
+8. A `409 stale-document` whose disk document differs from the one being saved by
+   nothing at all is not a conflict: take the new timestamp and write once more,
+   without a notice.

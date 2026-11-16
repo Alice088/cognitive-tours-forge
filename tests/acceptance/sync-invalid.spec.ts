@@ -69,3 +69,52 @@ test('offers to write a deleted map back and never writes nothing', async ({ pag
   expect(restored.waypoints).toHaveLength(3);
   await expect(page.locator('[data-notice]')).toHaveCount(0);
 });
+
+test('refuses a file that would lose a waypoint', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openSample(page);
+
+  const document = JSON.parse(readFileSync(MAP_PATH, 'utf8')) as {
+    waypoints: Array<Record<string, unknown>>;
+  };
+  document.waypoints.push({ id: 'w-4', label: '', type: 'Goal', position: { x: 0, y: 0 } });
+  writeRawMap(`${JSON.stringify(document, null, 2)}\n`);
+
+  await expect(page.locator('[data-notice="unreadable"]')).toBeVisible({ timeout: 2000 });
+  await expect(page.locator('[data-notice="unreadable"]')).toContainText('waypoint');
+  await expect(page.locator('.react-flow__node')).toHaveCount(3);
+  await expect(page.getByText('Understanding is the deliverable')).toBeVisible();
+});
+
+test('writes over a file that cannot be read', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openSample(page);
+
+  writeRawMap('<<<<<<< HEAD\n');
+  const notice = page.locator('[data-notice="unreadable"]');
+  await expect(notice).toBeVisible({ timeout: 2000 });
+
+  await notice.getByRole('button', { name: 'Keep mine' }).click();
+  await waitForSaved(page);
+
+  await expect(page.locator('[data-notice]')).toHaveCount(0);
+  const restored = JSON.parse(readFileSync(MAP_PATH, 'utf8')) as { waypoints: unknown[] };
+  expect(restored.waypoints).toHaveLength(3);
+});
+
+test('does not write the map back while the person keeps typing', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openSample(page);
+  await page.locator('.react-flow__node[data-id="w-1"]').click();
+
+  deleteMapFile();
+  await expect(page.locator('[data-notice="gone"]')).toBeVisible({ timeout: 4000 });
+
+  const field = page.getByLabel('Label');
+  await field.fill('Typed while the file is gone');
+  await field.blur();
+  await page.waitForTimeout(1600);
+
+  expect(existsSync(MAP_PATH)).toBe(false);
+  await expect(page.locator('[data-notice="gone"]')).toBeVisible();
+});

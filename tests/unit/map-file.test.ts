@@ -1,13 +1,15 @@
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   MapFileError,
+  canonicalText,
   emptyDocument,
   mapFileName,
   normalizeDocument,
   readMap,
+  readMapStrict,
   serializeDocument,
   writeMap,
 } from '@/app/lib/workspace/map-file';
@@ -56,6 +58,7 @@ describe('map file', () => {
     expect(document.waypoints).toHaveLength(2);
     expect(document.tours[0].stops.map(stop => stop.waypointId)).toEqual(['w-b', 'w-a']);
     expect(report).toEqual({
+      droppedWaypoints: 0,
       droppedEdges: 0,
       droppedStops: 0,
       droppedPaths: 0,
@@ -168,5 +171,37 @@ describe('map file', () => {
     expect(document.waypoints.map(waypoint => waypoint.id)).toEqual(['w-a', 'w-b', 'w-c']);
     const entries = readFileSync(path.join(project, '.tours', 'main.tour.json'), 'utf8');
     expect(entries).toContain('"w-c"');
+  });
+
+  it('canonicalises a document the way a re-read will see it', () => {
+    const draft: MapDocument = {
+      ...sample(),
+      waypoints: [{ id: 'w-a', label: 'First', type: 'Goal', description: '', notes: '', position: { x: 0, y: 0 } }],
+      edges: [],
+      tours: [],
+    };
+    const { document } = normalizeDocument(JSON.parse(serializeDocument(draft)));
+    expect(canonicalText(draft)).toBe(serializeDocument(document));
+    expect(canonicalText(draft)).not.toContain('"description"');
+  });
+
+  it('refuses a file that would lose a waypoint', async () => {
+    await writeMap(project, 'strict.tour.json', sample());
+    const path_ = path.join(project, '.tours', 'strict.tour.json');
+    const parsed = JSON.parse(readFileSync(path_, 'utf8')) as MapDocument;
+    parsed.waypoints = [...parsed.waypoints, { id: 'w-c', label: '', type: 'Goal', position: { x: 0, y: 0 } }];
+    writeFileSync(path_, `${JSON.stringify(parsed, null, 2)}\n`, 'utf8');
+
+    await expect(readMapStrict(project, 'strict.tour.json')).rejects.toMatchObject({
+      code: 'map-unreadable',
+    });
+    const { report } = await readMap(project, 'strict.tour.json');
+    expect(report.droppedWaypoints).toBe(1);
+  });
+
+  it('accepts a file that loses nothing', async () => {
+    await writeMap(project, 'clean.tour.json', sample());
+    const { document } = await readMapStrict(project, 'clean.tour.json');
+    expect(document.waypoints).toHaveLength(2);
   });
 });

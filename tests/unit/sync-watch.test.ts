@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { normalizeDocument, serializeDocument } from '@/app/lib/workspace/map-file';
+import { canonicalText, normalizeDocument, serializeDocument } from '@/app/lib/workspace/map-file';
 import { recordOwnWrite, stopAllSyncWatchers, syncMode, watchMap } from '@/app/lib/workspace/sync';
 import type { SyncEvent } from '@/app/lib/workspace/sync-events';
 import type { MapDocument } from '@/app/lib/workspace/types';
@@ -260,5 +260,35 @@ describe('sync watcher', () => {
     write(root, 'third');
     await settle();
     expect(second.filter(event => event.type === 'map-changed')).toHaveLength(1);
+  });
+
+  it('does not deliver an own write that normalises differently', async () => {
+    const root = fixture();
+    const initial: MapDocument = {
+      ...document('first'),
+      waypoints: [{ id: 'w-1', label: 'first', type: 'Goal', description: 'old note', position: { x: 0, y: 0 } }],
+    };
+    writeFileSync(path.join(root, '.tours', 'main.tour.json'), serializeDocument(initial), 'utf8');
+    const events: SyncEvent[] = [];
+    const subscription = watchMap({
+      projectId: 'p-echo',
+      root,
+      file: 'main.tour.json',
+      emit: event => events.push(event),
+      debounceMs: 40,
+    });
+    await subscription.ready;
+    events.length = 0;
+
+    const saved: MapDocument = {
+      ...initial,
+      waypoints: [{ id: 'w-1', label: 'first', type: 'Goal', description: '', position: { x: 0, y: 0 } }],
+    };
+    recordOwnWrite('p-echo', 'main.tour.json', canonicalText(saved));
+    writeFileSync(path.join(root, '.tours', 'main.tour.json'), serializeDocument(saved), 'utf8');
+    await settle(400);
+
+    expect(events).toHaveLength(0);
+    subscription.close();
   });
 });

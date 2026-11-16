@@ -90,6 +90,41 @@ export async function readMap(
   return normalizeDocument(parsed);
 }
 
+export async function readMapStrict(
+  projectRoot: string,
+  file: string
+): Promise<{ document: MapDocument; report: LoadReport }> {
+  const { document, report } = await readMap(projectRoot, file);
+  const lost = losses(report);
+  if (lost !== null) {
+    throw new MapFileError('map-unreadable', `${file} would lose ${lost}`);
+  }
+  return { document, report };
+}
+
+function losses(report: LoadReport): string | null {
+  const parts = [
+    tally(report.droppedWaypoints, 'waypoint'),
+    tally(report.droppedEdges, 'link'),
+    tally(report.droppedStops, 'stop'),
+    tally(report.droppedPaths, 'file path'),
+    tally(report.unknownTypes, 'waypoint type'),
+  ].filter((part): part is string => part !== null);
+  return parts.length > 0 ? parts.join(', ') : null;
+}
+
+function tally(count: number, noun: string): string | null {
+  return count > 0 ? `${count} ${noun}${count === 1 ? '' : 's'}` : null;
+}
+
+export function canonicalText(document: MapDocument): string {
+  try {
+    return serializeDocument(normalizeDocument(document).document);
+  } catch {
+    return serializeDocument(document);
+  }
+}
+
 export function normalizeDocument(raw: unknown): { document: MapDocument; report: LoadReport } {
   const source = (raw ?? {}) as Record<string, unknown>;
   if (source.version !== MAP_VERSION) {
@@ -101,6 +136,7 @@ export function normalizeDocument(raw: unknown): { document: MapDocument; report
   }
 
   const report: LoadReport = {
+    droppedWaypoints: 0,
     droppedEdges: 0,
     droppedStops: 0,
     droppedPaths: 0,
@@ -113,10 +149,12 @@ export function normalizeDocument(raw: unknown): { document: MapDocument; report
   for (const entry of asArray(source.waypoints)) {
     const candidate = entry as Record<string, unknown>;
     if (typeof candidate.id !== 'string' || !candidate.id.startsWith('w-') || known.has(candidate.id)) {
+      report.droppedWaypoints += 1;
       continue;
     }
     const label = typeof candidate.label === 'string' ? candidate.label.trim() : '';
     if (!label) {
+      report.droppedWaypoints += 1;
       continue;
     }
     known.add(candidate.id);

@@ -6,7 +6,7 @@ import { describeChange, type ChangeSummary } from '@/app/lib/workspace/diff';
 
 export type MapNoticeState =
   | { kind: 'read-only'; onRelink: () => void }
-  | { kind: 'unreadable'; file: string; reason: string; onDismiss: () => void }
+  | { kind: 'unreadable'; file: string; reason: string; onKeepMine: () => void }
   | { kind: 'outside-change'; summary: ChangeSummary | null; onReload: () => void; onKeepMine: () => void }
   | { kind: 'gone'; file: string; onWriteBack: () => void; onDismiss: () => void }
   | { kind: 'save-failed'; detail: string; onRetry: () => void }
@@ -63,8 +63,8 @@ function actions(notice: MapNoticeState) {
       );
     case 'unreadable':
       return (
-        <Button variant="outline" size="sm" onClick={notice.onDismiss}>
-          Dismiss
+        <Button size="sm" onClick={notice.onKeepMine}>
+          Keep mine
         </Button>
       );
     case 'outside-change':

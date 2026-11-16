@@ -23,6 +23,7 @@ function storeWith(count = 1) {
   store.getState().loadDocument({
     document: documentWith(count),
     report: {
+      droppedWaypoints: 0,
       droppedEdges: 0,
       droppedStops: 0,
       droppedPaths: 0,

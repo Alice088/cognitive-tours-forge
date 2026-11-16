@@ -31,10 +31,12 @@ Supporting decisions, each with the alternative it replaced:
    and would need a custom server, which breaks "one command to start". Polling
    from the browser spends more work for the same one-second guarantee. SSE is a
    plain route handler and a browser primitive.
-4. **Two mechanisms behind one emitter.** `fs.watch` where it works, a
-   two-second comparison loop where it throws or reports nothing. The consumer
-   cannot tell them apart, so an awkward filesystem degrades latency instead of
-   correctness.
+4. **Two mechanisms behind one emitter.** `fs.watch` for the fast path and a
+   two-second comparison loop that always runs, not only after a watch error: a
+   network mount or an exhausted inotify table often accepts a watch and then
+   reports nothing, and a silent watcher would otherwise stop the map from
+   following the file at all. The consumer cannot tell them apart, so an awkward
+   filesystem degrades latency instead of correctness.
 5. **One watcher per project, refcounted on `globalThis`.** A module-level handle
    leaks one inotify watch per hot reload in development; two tabs sharing one
    project would fight over the same handle. The last subscription closes the
@@ -53,6 +55,21 @@ Supporting decisions, each with the alternative it replaced:
    document (or list) on its first sweep instead of adopting it silently. That
    removes the window between the page's own fetch and the stream opening, where
    a change could otherwise be adopted as "already delivered" and never sent.
+10. **Reads for sync are strict.** The load path repairs a map it can partly
+    understand; live sync must not, because applying a document that lost
+    waypoints or links puts the loss one save away from the disk. A change that
+    would drop anything is refused with a message naming what would be lost.
+11. **Own writes are recorded in canonical form.** The recorded text goes
+    through the same normalisation a read applies, otherwise clearing a field
+    makes the application's own save look like an outside change.
+12. **A save refused because the file is absent is never retried silently.** The
+    person chose whether a deleted map comes back; an autosave must not decide
+    it for them. The same applies to a file that cannot be read: the notice
+    offers to write the map over it instead of dismissing the problem.
+13. **A refusal caused only by the file's timestamp is retried once.** When the
+    disk document differs from the one being saved by nothing at all, the page
+    takes the new timestamp and writes again, so a formatter or `git checkout`
+    that changes no content cannot produce a conflict notice.
 
 ## Consequences
 
@@ -63,3 +80,8 @@ browser on the same machine, so no part of a map leaves the computer.
 
 A second browser tab on the same map sees the same events and makes its own
 choices; two people editing one map at once remains out of scope.
+
+The comparison loop reads the watched map every two seconds while a stream is
+open, which is the price of the guarantee on filesystems that report nothing.
+Strict reads mean a map that the load surface would have quietly repaired is
+shown as unreadable while it is open, with the loss named.

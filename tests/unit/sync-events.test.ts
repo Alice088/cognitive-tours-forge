@@ -10,7 +10,14 @@ const document: MapDocument = {
   tours: [],
 };
 
-const report = { droppedEdges: 0, droppedStops: 0, droppedPaths: 0, unknownTypes: 0, waypointCount: 0 };
+const report = {
+  droppedWaypoints: 0,
+  droppedEdges: 0,
+  droppedStops: 0,
+  droppedPaths: 0,
+  unknownTypes: 0,
+  waypointCount: 0,
+};
 
 describe('sync events', () => {
   it('reads a changed map', () => {

@@ -1,6 +1,6 @@
 import { promises as fsPromises, watch as fsWatch, type FSWatcher } from 'node:fs';
 import path from 'node:path';
-import { MapFileError, mapDisplayName, mapMtime, readMap, serializeDocument } from '@/app/lib/workspace/map-file';
+import { MapFileError, mapDisplayName, mapMtime, readMapStrict, serializeDocument } from '@/app/lib/workspace/map-file';
 import type { SyncEvent } from '@/app/lib/workspace/sync-events';
 import type { MapRef } from '@/app/lib/workspace/types';
 
@@ -185,21 +185,25 @@ function projectFor(input: SyncOptions & { projectId: string; root: string }): P
 function startWatching(project: ProjectSync): void {
   try {
     const watcher = project.watchImpl(project.tours, () => schedule(project));
-    watcher.on('error', () => startPolling(project));
+    watcher.on('error', () => stopWatching(project));
     project.watcher = watcher;
     project.mode = 'watch';
   } catch {
-    startPolling(project);
+    stopWatching(project);
   }
+  startComparing(project);
 }
 
-function startPolling(project: ProjectSync): void {
+function stopWatching(project: ProjectSync): void {
   project.watcher?.close();
   project.watcher = null;
+  project.mode = 'poll';
+}
+
+function startComparing(project: ProjectSync): void {
   if (project.pollTimer) {
     return;
   }
-  project.mode = 'poll';
   project.pollTimer = setInterval(() => schedule(project), project.pollMs);
 }
 
@@ -241,7 +245,7 @@ async function refreshMap(project: ProjectSync, sub: FileSub): Promise<void> {
   const first = sub.fresh;
   sub.fresh = false;
   try {
-    const { document, report } = await readMap(project.root, sub.file);
+    const { document, report } = await readMapStrict(project.root, sub.file);
     const text = serializeDocument(document);
     if (ownWriteFor(project.projectId, sub.file) === text) {
       project.ownWrites.delete(sub.file);

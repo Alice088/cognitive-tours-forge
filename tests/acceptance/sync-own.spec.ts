@@ -57,3 +57,21 @@ test('keeps twenty undos after twenty saves', async ({ page }) => {
   await expect(page.locator('.react-flow__node')).toHaveCount(3);
   await expect.poll(() => readLabel('w-2')).toBe('Waypoints carry meaning');
 });
+
+test('keeps the map still when a field is cleared', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openSample(page);
+  await page.locator('.react-flow__node[data-id="w-1"]').click();
+
+  const description = page.getByLabel('Description');
+  await expect(description).toHaveValue('People need to see how the code fits together.');
+  await description.fill('');
+  await description.blur();
+  await waitForSaved(page);
+
+  await page.waitForTimeout(1500);
+  await expect(page.locator('[data-notice]')).toHaveCount(0);
+  await expect(page.getByText('Updated from disk')).toHaveCount(0);
+  await expect(description).toHaveValue('');
+  await expect(page.locator('.react-flow__node')).toHaveCount(3);
+});

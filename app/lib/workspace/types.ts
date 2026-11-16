@@ -48,6 +48,7 @@ export interface MapDocument {
 }
 
 export interface LoadReport {
+  droppedWaypoints: number;
   droppedEdges: number;
   droppedStops: number;
   droppedPaths: number;

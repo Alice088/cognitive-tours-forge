@@ -92,15 +92,28 @@ every save renames a temporary file over the target, which replaces the inode
 and silently kills a watcher attached to the file. A change is read, parsed and
 normalised, and compared with the canonical text last delivered; equal text
 produces no event, which is also why the application's own saves do not echo
-back. The browser receives events over one local stream per open map, so
-nothing leaves the machine. Where the filesystem reports no changes — some
-network mounts, container volumes — the same comparison runs every two seconds
-and the person sees no difference. When the file changes under unsaved typing
-the map-level notice says what changed and offers two actions: reload the
-file's version, which restarts the history and says so, or keep mine, which
-writes the open document over the file without a second notice. Content that
-cannot be parsed is never applied, and a deleted file offers to be written back
-rather than being treated as empty.
+back — the write records the same normalised text a read will produce, so
+clearing a field cannot make the application's own save look like an outside
+one. The browser receives events over one local stream per open map, so nothing
+leaves the machine. A comparison loop runs every two seconds alongside the
+watcher rather than only after a watch error: some network mounts and container
+volumes accept a watch and then report nothing, and a silent watcher would stop
+the map from following the file at all.
+
+When the file changes under unsaved typing the map-level notice says what
+changed and offers two actions: reload the file's version, which restarts the
+history and says so, or keep mine, which writes the open document over the file
+without a second notice. A save refused only because the file's timestamp moved
+— a formatter, `git checkout` of the same branch — is retried without a notice
+when the two documents say the same thing.
+
+Reads for sync are strict. The load surface repairs a map it partly understands;
+while a map is open, a document whose repair would drop a waypoint, a link, a
+stop or a file path is refused, and the message names what would be lost. A
+deleted file is never recreated by an autosave: the notice offers to write it
+back, and typing continues on the copy in memory until that choice is made. When
+the map cannot be read at all, the same notice offers to write the map over the
+file.
 
 ### When the folder is not there any more
 
