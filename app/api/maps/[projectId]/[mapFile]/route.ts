@@ -1,6 +1,7 @@
-import { mapMtime, writeMap } from '@/app/lib/workspace/map-file';
+import { mapMtime, serializeDocument, writeMap } from '@/app/lib/workspace/map-file';
 import { loadMap, projectById, rememberMap } from '@/app/lib/workspace/service';
 import { fail, handleError, ok } from '@/app/lib/workspace/http';
+import { recordOwnWrite } from '@/app/lib/workspace/sync';
 import type { MapDocument } from '@/app/lib/workspace/types';
 
 export const dynamic = 'force-dynamic';
@@ -33,6 +34,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ proj
         return fail('stale-document', 'This map changed on disk.', 409);
       }
     }
+    recordOwnWrite(projectId, file, serializeDocument(body.document));
     const result = await writeMap(project.path, file, body.document);
     await rememberMap(projectId, file, body.document).catch(() => undefined);
     return ok(result);

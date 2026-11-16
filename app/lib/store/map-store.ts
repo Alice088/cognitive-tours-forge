@@ -31,6 +31,10 @@ export interface MapState {
   saveError: string | null;
   saveErrorDetail: string | null;
   readOnly: boolean;
+  drafting: boolean;
+  documentEpoch: number;
+  setDrafting: (drafting: boolean) => void;
+  applyExternal: (payload: { document: MapDocument; report: LoadReport; mtimeMs: number }) => void;
   loadDocument: (payload: {
     document: MapDocument;
     report: LoadReport;
@@ -55,6 +59,7 @@ export interface MapState {
   moveStop: (tourId: string, from: number, to: number) => void;
   setSaveStatus: (status: SaveStatus, error?: string | null, detail?: string | null) => void;
   markSaved: (mtimeMs: number) => void;
+  adoptMtime: (mtimeMs: number) => void;
   setReadOnly: (readOnly: boolean) => void;
 }
 
@@ -71,6 +76,8 @@ const initial = {
   saveError: null,
   saveErrorDetail: null,
   readOnly: false,
+  drafting: false,
+  documentEpoch: 0,
 };
 
 export function createMapStore(seed: Partial<MapState> = {}) {
@@ -88,18 +95,39 @@ export function createMapStore(seed: Partial<MapState> = {}) {
         return {
           ...initial,
           ...seed,
+          setDrafting: drafting => set({ drafting }),
+          applyExternal: ({ document, report, mtimeMs }) =>
+            set(state => {
+              const waypoint = document.waypoints.some(item => item.id === state.selectedWaypointId);
+              const tour = document.tours.find(item => item.id === state.activeTourId) ?? null;
+              const step = tour ? Math.min(state.step, Math.max(tour.stops.length - 1, 0)) : 0;
+              return {
+                document,
+                report,
+                mtimeMs,
+                documentEpoch: state.documentEpoch + 1,
+                drafting: false,
+                status: 'ready',
+                failure: null,
+                selectedWaypointId: waypoint ? state.selectedWaypointId : null,
+                activeTourId: tour ? state.activeTourId : null,
+                step,
+              };
+            }),
           loadDocument: ({ document, report, mtimeMs, readOnly = false }) =>
-            set({
+            set(state => ({
               document,
               report,
               mtimeMs,
               readOnly,
+              documentEpoch: state.documentEpoch + 1,
+              drafting: false,
               status: 'ready',
               failure: null,
               saveStatus: 'idle',
               saveError: null,
               saveErrorDetail: null,
-            }),
+            })),
           setStatus: status => set({ status }),
           failLoad: message => set({ status: 'failed', failure: { message, retryable: true } }),
           selectWaypoint: id => set({ selectedWaypointId: id }),
@@ -211,6 +239,7 @@ export function createMapStore(seed: Partial<MapState> = {}) {
           setSaveStatus: (status, error = null, detail = null) =>
             set({ saveStatus: status, saveError: error, saveErrorDetail: detail }),
           markSaved: mtimeMs => set({ saveStatus: 'saved', saveError: null, saveErrorDetail: null, mtimeMs }),
+          adoptMtime: mtimeMs => set({ mtimeMs }),
           setReadOnly: readOnly => set({ readOnly }),
         };
       },

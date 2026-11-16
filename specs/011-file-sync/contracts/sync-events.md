@@ -38,6 +38,22 @@ x-accel-buffering: no
 
 The route is dynamic; no caching layer may hold the response.
 
+## Request: the map list
+
+```http
+GET /api/workspace/{projectId}/events HTTP/1.1
+Accept: text/event-stream
+```
+
+Same headers and frames as the map stream, carrying only `maps-changed` and the
+idle `: ping`. The navigation rail subscribes once per project; a subscriber
+announces the list on its first sweep rather than on subscribe, so a list the
+page fetched before the stream opened can never stay stale.
+
+```http
+404 { "error": "unknown-project", "message": "…" }
+```
+
 ---
 
 ## Frames

@@ -1,6 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { resolveInside } from '@/app/lib/fs/safe-path';
+import { serializeDocument } from '@/app/lib/workspace/serialize';
 import { WAYPOINT_TYPES, type WaypointType } from '@/app/lib/theme/tokens';
 import {
   MAP_VERSION,
@@ -10,6 +11,8 @@ import {
   type Tour,
   type Waypoint,
 } from '@/app/lib/workspace/types';
+
+export { serializeDocument };
 
 export type MapFileCode = 'map-missing' | 'map-unreadable' | 'invalid-document' | 'path-escape';
 
@@ -24,6 +27,10 @@ export class MapFileError extends Error {
 }
 
 const MAP_FILE = /^[a-z0-9][a-z0-9-]*\.tour\.json$/;
+
+export function isMapFile(file: string): boolean {
+  return MAP_FILE.test(file);
+}
 
 export function mapFileName(name: string): string {
   const slug = name
@@ -242,45 +249,6 @@ export function validateDocument(document: MapDocument): void {
   }
 }
 
-export function serializeDocument(document: MapDocument): string {
-  const ordered = {
-    version: document.version,
-    project: {
-      name: document.project.name,
-      createdAt: document.project.createdAt,
-    },
-    waypoints: [...document.waypoints]
-      .sort((a, b) => a.id.localeCompare(b.id))
-      .map(waypoint =>
-        stripUndefined({
-          id: waypoint.id,
-          label: waypoint.label,
-          type: waypoint.type,
-          description: waypoint.description,
-          notes: waypoint.notes,
-          file: waypoint.file,
-          position: { x: waypoint.position.x, y: waypoint.position.y },
-        })
-      ),
-    edges: [...document.edges]
-      .sort((a, b) => a.id.localeCompare(b.id))
-      .map(edge => stripUndefined({ id: edge.id, source: edge.source, target: edge.target, label: edge.label })),
-    tours: [...document.tours]
-      .sort((a, b) => a.id.localeCompare(b.id))
-      .map(tour =>
-        stripUndefined({
-          id: tour.id,
-          name: tour.name,
-          description: tour.description,
-          author: tour.author,
-          updatedAt: tour.updatedAt,
-          stops: tour.stops.map(stop => stripUndefined({ waypointId: stop.waypointId, narrative: stop.narrative })),
-        })
-      ),
-  };
-  return `${JSON.stringify(ordered, null, 2)}\n`;
-}
-
 export async function writeMap(
   projectRoot: string,
   file: string,
@@ -327,13 +295,4 @@ function toWaypointType(value: unknown, report: LoadReport): WaypointType {
   }
   report.unknownTypes += 1;
   return 'Open Question';
-}
-
-function stripUndefined<T extends Record<string, unknown>>(value: T): T {
-  for (const key of Object.keys(value)) {
-    if (value[key] === undefined) {
-      delete value[key];
-    }
-  }
-  return value;
 }

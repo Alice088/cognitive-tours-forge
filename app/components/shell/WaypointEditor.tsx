@@ -14,10 +14,12 @@ const COMMIT_DELAY = 600;
 export function WaypointEditor({
   waypoint,
   onCommit,
+  onDrafting,
   readOnly,
 }: {
   waypoint: Waypoint;
   onCommit: (patch: Partial<Waypoint>) => void;
+  onDrafting: (drafting: boolean) => void;
   readOnly: boolean;
 }) {
   const [label, setLabel] = useState(waypoint.label);
@@ -39,6 +41,7 @@ export function WaypointEditor({
     if (readOnly) {
       return;
     }
+    onDrafting(false);
     const found = waypointIssues(patch);
     setIssues(found);
     if (found.length === 0) {
@@ -47,6 +50,7 @@ export function WaypointEditor({
   };
 
   const schedule = (patch: Partial<Waypoint>) => {
+    onDrafting(true);
     if (timer.current) {
       clearTimeout(timer.current);
     }

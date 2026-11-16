@@ -15,6 +15,7 @@ export function Inspector({ store, editing }: { store: MapStore; editing: boolea
   const document = useStore(store, state => state.document);
   const activeTourId = useStore(store, state => state.activeTourId);
   const readOnly = useStore(store, state => state.readOnly);
+  const documentEpoch = useStore(store, state => state.documentEpoch);
 
   const waypoint = document?.waypoints.find(item => item.id === selectedId) ?? null;
   const tour = document?.tours.find(item => item.id === activeTourId) ?? null;
@@ -45,10 +46,11 @@ export function Inspector({ store, editing }: { store: MapStore; editing: boolea
     return (
       <div>
         <WaypointEditor
-          key={waypoint.id}
+          key={`${waypoint.id}-${documentEpoch}`}
           waypoint={waypoint}
           readOnly={readOnly}
           onCommit={patch => store.getState().updateWaypoint(waypoint.id, patch)}
+          onDrafting={drafting => store.getState().setDrafting(drafting)}
         />
 
         <div className="space-y-2 border-t border-border p-3">

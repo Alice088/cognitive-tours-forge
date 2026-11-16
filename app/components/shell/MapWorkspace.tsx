@@ -6,16 +6,20 @@ import { useStore } from 'zustand';
 import { AppShell } from '@/app/components/shell/AppShell';
 import { Inspector } from '@/app/components/shell/Inspector';
 import { MapCanvas } from '@/app/components/shell/MapCanvas';
+import { MapNotice, type MapNoticeState } from '@/app/components/shell/MapNotice';
 import { RelinkDialog } from '@/app/components/shell/RelinkDialog';
 import { TourDock } from '@/app/components/shell/TourDock';
 import { WorkspaceRail } from '@/app/components/shell/WorkspaceRail';
 import { FailedSurface, LoadingSurface } from '@/app/components/shell/states';
-import { Button } from '@/app/components/ui/button';
 import { clearHistory, redo, undo } from '@/app/lib/store/history';
 import type { MapStore } from '@/app/lib/store/map-store';
 import { nextTourId } from '@/app/lib/store/selectors';
 import { useMapStore } from '@/app/components/shell/MapStoreProvider';
 import { generateTourMarkdown, tourSlug } from '@/app/lib/tour-markdown';
+import { summariseChange, type ChangeSummary } from '@/app/lib/workspace/diff';
+import { serializeDocument } from '@/app/lib/workspace/serialize';
+import { useListSync, useMapSync } from '@/app/lib/workspace/use-map-sync';
+import type { MapChangedEvent } from '@/app/lib/workspace/sync-events';
 import { useWorkspace, fetchMap, saveMap, saveViewState } from '@/app/lib/workspace/use-workspace';
 import { SUPPORTED_TOURS, SUPPORTED_WAYPOINTS, type SaveStatus } from '@/app/lib/workspace/types';
 
@@ -29,11 +33,20 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
   const [overview, setOverview] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [relinking, setRelinking] = useState(false);
+  const [liveMessage, setLiveMessage] = useState<string | null>(null);
   const [oversizedDismissed, setOversizedDismissed] = useState(false);
   const pendingSave = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saving = useRef(false);
   const dirty = useRef(false);
   const retrySave = useRef<() => void>(() => undefined);
+  const diskText = useRef<string | null>(null);
+  const skipAutosave = useRef(false);
+  const saveGeneration = useRef(0);
+  const holdAutosave = useRef(false);
+  const blocked = useRef(false);
+  const [external, setExternal] = useState<{ event: MapChangedEvent; summary: ChangeSummary | null } | null>(null);
+  const [unreadable, setUnreadable] = useState<{ file: string; reason: string } | null>(null);
+  const [gone, setGone] = useState<string | null>(null);
 
   const status = useStore(store, state => state.status);
   const failure = useStore(store, state => state.failure);
@@ -49,12 +62,15 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
   const future = useStore(store.temporal, state => state.futureStates.length);
 
   const query = searchParams.toString();
+  const projectAvailability = snapshot?.projects.find(item => item.id === projectId)?.availability ?? null;
 
   const load = useCallback(async () => {
     store.getState().setStatus('loading');
     try {
       const payload = await fetchMap(projectId, mapFile);
+      skipAutosave.current = true;
       store.getState().loadDocument(payload);
+      diskText.current = serializeDocument(payload.document);
       clearHistory(store);
       const params = new URLSearchParams(window.location.search);
       const requested = payload.document.tours.find(tour => tour.id === params.get('tour'));
@@ -73,35 +89,55 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
     void load();
   }, [load, query]);
 
-  const save = useCallback(async () => {
-    const current = store.getState().document;
-    if (!current || store.getState().readOnly) {
-      return;
-    }
-    if (saving.current) {
-      dirty.current = true;
-      return;
-    }
-    saving.current = true;
-    store.getState().setSaveStatus('pending');
-    try {
-      const result = await saveMap(projectId, mapFile, current, store.getState().mtimeMs);
-      store.getState().markSaved(result.mtimeMs ?? 0);
-    } catch (cause) {
-      const code =
-        cause && typeof cause === 'object' && 'code' in cause
-          ? String((cause as { code: unknown }).code)
-          : 'save-failed';
-      const detail = cause instanceof Error ? cause.message : 'This change could not be saved.';
-      store.getState().setSaveStatus('failed', code, detail);
-    } finally {
-      saving.current = false;
-      if (dirty.current) {
-        dirty.current = false;
-        retrySave.current();
+  const save = useCallback(
+    async (force = false) => {
+      const current = store.getState().document;
+      if (!current || store.getState().readOnly || (blocked.current && !force)) {
+        return;
       }
-    }
-  }, [mapFile, projectId, store]);
+      if (holdAutosave.current && !force) {
+        return;
+      }
+      if (saving.current) {
+        dirty.current = true;
+        return;
+      }
+      saving.current = true;
+      const generation = saveGeneration.current;
+      store.getState().setSaveStatus('pending');
+      try {
+        const result = await saveMap(projectId, mapFile, current, force ? null : store.getState().mtimeMs);
+        if (generation !== saveGeneration.current) {
+          return;
+        }
+        diskText.current = serializeDocument(current);
+        store.getState().markSaved(result.mtimeMs ?? 0);
+        if (force) {
+          blocked.current = false;
+          holdAutosave.current = false;
+          setUnreadable(null);
+          setGone(null);
+        }
+      } catch (cause) {
+        if (generation !== saveGeneration.current) {
+          return;
+        }
+        const code =
+          cause && typeof cause === 'object' && 'code' in cause
+            ? String((cause as { code: unknown }).code)
+            : 'save-failed';
+        const detail = cause instanceof Error ? cause.message : 'This change could not be saved.';
+        store.getState().setSaveStatus('failed', code, detail);
+      } finally {
+        saving.current = false;
+        if (dirty.current) {
+          dirty.current = false;
+          retrySave.current();
+        }
+      }
+    },
+    [mapFile, projectId, store]
+  );
 
   useEffect(() => {
     retrySave.current = () => void save();
@@ -115,6 +151,13 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
       }
       last = state.document;
       if (state.readOnly) {
+        return;
+      }
+      if (skipAutosave.current) {
+        skipAutosave.current = false;
+        return;
+      }
+      if (holdAutosave.current || blocked.current) {
         return;
       }
       store.getState().setSaveStatus('pending');
@@ -182,6 +225,125 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [editing, store]);
 
+  const dirtyNow = useCallback(() => {
+    const current = store.getState().document;
+    if (!current) {
+      return false;
+    }
+    return store.getState().drafting || serializeDocument(current) !== diskText.current;
+  }, [store]);
+
+  const cancelScheduledSave = useCallback(() => {
+    if (pendingSave.current) {
+      clearTimeout(pendingSave.current);
+      pendingSave.current = null;
+    }
+  }, []);
+
+  const applyFromDisk = useCallback(
+    (event: MapChangedEvent, restart = false) => {
+      const text = serializeDocument(event.document);
+      if (text === diskText.current) {
+        store.getState().adoptMtime(event.mtimeMs);
+        return;
+      }
+      diskText.current = text;
+      skipAutosave.current = true;
+      store.getState().applyExternal(event);
+      if (restart) {
+        clearHistory(store);
+        setLiveMessage('Reloaded from disk. The history starts again.');
+        return;
+      }
+      setLiveMessage(
+        `Updated from disk: ${event.document.waypoints.length} waypoints and ${event.document.tours.length} tours`
+      );
+    },
+    [store]
+  );
+
+  const reloadFromDisk = useCallback(() => {
+    if (!external) {
+      return;
+    }
+    saveGeneration.current += 1;
+    cancelScheduledSave();
+    holdAutosave.current = false;
+    blocked.current = false;
+    setUnreadable(null);
+    setGone(null);
+    applyFromDisk(external.event, true);
+    setExternal(null);
+  }, [applyFromDisk, cancelScheduledSave, external]);
+
+  const keepMine = useCallback(() => {
+    saveGeneration.current += 1;
+    const active = window.document.activeElement;
+    if (active instanceof HTMLElement) {
+      active.blur();
+    }
+    cancelScheduledSave();
+    holdAutosave.current = false;
+    blocked.current = false;
+    setExternal(null);
+    void save(true);
+  }, [cancelScheduledSave, save]);
+
+  useMapSync({
+    projectId,
+    mapFile,
+    readOnly: readOnly || status !== 'ready',
+    handlers: {
+      onChanged: event => {
+        if (serializeDocument(event.document) === diskText.current) {
+          store.getState().adoptMtime(event.mtimeMs);
+          blocked.current = false;
+          setUnreadable(null);
+          setGone(null);
+          return;
+        }
+        if (dirtyNow()) {
+          cancelScheduledSave();
+          holdAutosave.current = true;
+          const current = store.getState().document;
+          setExternal({
+            event,
+            summary: current ? summariseChange(current, event.document) : null,
+          });
+          return;
+        }
+        blocked.current = false;
+        holdAutosave.current = false;
+        setUnreadable(null);
+        setGone(null);
+        applyFromDisk(event);
+      },
+      onUnreadable: event => {
+        blocked.current = true;
+        setUnreadable({ file: event.file, reason: event.reason });
+      },
+      onGone: event => {
+        setGone(event.file);
+      },
+    },
+  });
+
+  useListSync(projectId, () => void refresh(), projectAvailability !== 'unavailable');
+
+  useEffect(() => {
+    if (projectAvailability === 'ready') {
+      void refresh();
+    }
+  }, [projectAvailability, refresh]);
+
+  useEffect(() => {
+    if (!liveMessage) {
+      return;
+    }
+    const timer = setTimeout(() => setLiveMessage(null), 5000);
+    return () => clearTimeout(timer);
+  }, [liveMessage]);
+
   const waypoints = mapDocument?.waypoints ?? [];
   const edges = mapDocument?.edges ?? [];
   const tours = mapDocument?.tours ?? [];
@@ -198,13 +360,14 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
   const project = snapshot?.projects.find(item => item.id === projectId) ?? null;
 
   const announcement =
-    status === 'loading'
+    liveMessage ??
+    (status === 'loading'
       ? 'Loading map'
       : status === 'failed'
         ? 'The map could not be loaded'
         : mapDocument
           ? `Map open with ${waypoints.length} waypoints and ${tours.length} tours${readOnly ? ', read only' : ''}`
-          : '';
+          : '');
 
   const exportTour = tour
     ? () => {
@@ -288,53 +451,58 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
     />
   );
 
+  const notice: MapNoticeState | null = readOnly
+    ? { kind: 'read-only', onRelink: () => setRelinking(true) }
+    : unreadable
+      ? {
+          kind: 'unreadable',
+          file: unreadable.file,
+          reason: unreadable.reason,
+          onDismiss: () => setUnreadable(null),
+        }
+      : external
+        ? {
+            kind: 'outside-change',
+            summary: external.summary,
+            onReload: reloadFromDisk,
+            onKeepMine: keepMine,
+          }
+        : gone
+          ? {
+              kind: 'gone',
+              file: gone,
+              onWriteBack: () => void save(true),
+              onDismiss: () => setGone(null),
+            }
+          : saveStatus === 'failed'
+            ? saveError === 'stale-document'
+              ? {
+                  kind: 'outside-change',
+                  summary: null,
+                  onReload: () => {
+                    saveGeneration.current += 1;
+                    cancelScheduledSave();
+                    void load();
+                  },
+                  onKeepMine: () => void save(true),
+                }
+              : {
+                  kind: 'save-failed',
+                  detail: saveErrorDetail ?? 'This change could not be saved.',
+                  onRetry: () => void save(),
+                }
+            : oversized && !oversizedDismissed
+              ? {
+                  kind: 'oversized',
+                  waypointLimit: SUPPORTED_WAYPOINTS,
+                  tourLimit: SUPPORTED_TOURS,
+                  onDismiss: () => setOversizedDismissed(true),
+                }
+              : null;
+
   return (
     <div className="flex h-dvh w-full flex-col">
-      {readOnly ? (
-        <div role="status" className="flex items-center gap-2 border-b border-border bg-muted px-3 py-2 text-sm">
-          <span className="flex-1">
-            This project folder cannot be reached, so the map below is the last copy that was saved here, read only.
-          </span>
-          <Button variant="outline" size="sm" onClick={() => setRelinking(true)}>
-            Choose a new location
-          </Button>
-        </div>
-      ) : null}
-      {saveStatus === 'failed' && saveError === 'stale-document' ? (
-        <div role="alert" className="flex items-center gap-2 border-b border-destructive bg-muted px-3 py-2 text-sm">
-          <span className="flex-1">This map changed on disk while you were editing.</span>
-          <Button variant="outline" size="sm" onClick={() => void load()}>
-            Reload
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => {
-              store.getState().setSaveStatus('idle', null);
-            }}
-          >
-            Keep mine
-          </Button>
-        </div>
-      ) : null}
-      {saveStatus === 'failed' && saveError !== 'stale-document' ? (
-        <div role="alert" className="flex items-center gap-2 border-b border-destructive bg-muted px-3 py-2 text-sm">
-          <span className="flex-1">{saveErrorDetail ?? 'This change could not be saved.'}</span>
-          <Button variant="outline" size="sm" onClick={() => void save()}>
-            Retry
-          </Button>
-        </div>
-      ) : null}
-      {oversized && !oversizedDismissed ? (
-        <div role="status" className="flex items-center gap-2 border-b border-border bg-muted px-3 py-2 text-sm">
-          <span className="flex-1">
-            This map is larger than the supported size of {SUPPORTED_WAYPOINTS} waypoints and {SUPPORTED_TOURS} tours.
-            It still works, but panning may not stay smooth.
-          </span>
-          <Button variant="outline" size="sm" onClick={() => setOversizedDismissed(true)}>
-            Dismiss
-          </Button>
-        </div>
-      ) : null}
+      <MapNotice notice={notice} />
       <div className="min-h-0 flex-1">
         <AppShell
           rail={rail}

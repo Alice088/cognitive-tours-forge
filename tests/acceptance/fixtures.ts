@@ -1,6 +1,7 @@
-import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
+import type { MapDocument } from '@/app/lib/workspace/types';
 
 export const PROJECT_DIR = path.join(process.cwd(), '.tmp', 'e2e-fixture');
 export const MAP_PATH = path.join(PROJECT_DIR, '.tours', 'main.tour.json');
@@ -49,6 +50,29 @@ export function writeSampleMap(): void {
     }
   }
   writeFileSync(MAP_PATH, `${JSON.stringify(sampleDocument, null, 2)}\n`, 'utf8');
+}
+
+export function mapPathFor(file: string): string {
+  return path.join(PROJECT_DIR, '.tours', file);
+}
+
+export function writeRawMap(text: string, file = 'main.tour.json'): void {
+  mkdirSync(path.dirname(mapPathFor(file)), { recursive: true });
+  writeFileSync(mapPathFor(file), text, 'utf8');
+}
+
+export function mutateMapFile(change: (document: MapDocument) => MapDocument, file = 'main.tour.json'): MapDocument {
+  const target = mapPathFor(file);
+  const current = existsSync(target)
+    ? (JSON.parse(readFileSync(target, 'utf8')) as MapDocument)
+    : (structuredClone(sampleDocument) as MapDocument);
+  const next = change(current);
+  writeRawMap(`${JSON.stringify(next, null, 2)}\n`, file);
+  return next;
+}
+
+export function deleteMapFile(file = 'main.tour.json'): void {
+  rmSync(mapPathFor(file), { force: true });
 }
 
 export async function ensureProject(request: APIRequestContext): Promise<void> {

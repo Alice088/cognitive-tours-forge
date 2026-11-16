@@ -85,6 +85,23 @@ order, sort collections by id, keep tour stop order exactly as authored, write a
 temporary file and rename it over the target. A crash mid-save cannot truncate a
 map, and adding one waypoint produces a one-line diff.
 
+### Following the file while it is open
+
+The server watches the project's `.tours/` folder, never the map file itself:
+every save renames a temporary file over the target, which replaces the inode
+and silently kills a watcher attached to the file. A change is read, parsed and
+normalised, and compared with the canonical text last delivered; equal text
+produces no event, which is also why the application's own saves do not echo
+back. The browser receives events over one local stream per open map, so
+nothing leaves the machine. Where the filesystem reports no changes — some
+network mounts, container volumes — the same comparison runs every two seconds
+and the person sees no difference. When the file changes under unsaved typing
+the map-level notice says what changed and offers two actions: reload the
+file's version, which restarts the history and says so, or keep mine, which
+writes the open document over the file without a second notice. Content that
+cannot be parsed is never applied, and a deleted file offers to be written back
+rather than being treated as empty.
+
 ### When the folder is not there any more
 
 Every successful read and write also refreshes a copy of the map in
@@ -113,8 +130,10 @@ make is also a change the history can step back through. The store is watched by
 an autosave that writes 800 ms after the last change and reports pending, saved
 or failed in the dock. Saves are serialised, so a burst of changes cannot put two
 writes in flight at once. A save that would overwrite a file changed on disk is
-refused with a 409 and shown as a choice between reloading and keeping yours;
-any other failure names the reason and offers one retry without losing the text.
+refused with a 409 and shown in the same map-level notice as an outside change,
+with the same two actions; any other failure names the reason and offers one
+retry without losing the text. Loading a map is not an edit, so opening one no
+longer writes it back.
 
 ## Technical detail
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { LoadReport, MapDocument, ProjectSummary, ViewState } from '@/app/lib/workspace/types';
 
 export interface WorkspaceSnapshot {
@@ -41,14 +41,23 @@ export function useWorkspace() {
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
   const [failure, setFailure] = useState<string | null>(null);
+  const latestRequest = useRef(0);
 
   const refresh = useCallback(async () => {
+    const request = latestRequest.current + 1;
+    latestRequest.current = request;
     try {
       const data = await requestJson<WorkspaceSnapshot>('/api/workspace');
+      if (request !== latestRequest.current) {
+        return;
+      }
       setSnapshot(data);
       setStatus('ready');
       setFailure(null);
     } catch (error) {
+      if (request !== latestRequest.current) {
+        return;
+      }
       setStatus('failed');
       setFailure(error instanceof Error ? error.message : 'The workspace could not be read.');
     }
