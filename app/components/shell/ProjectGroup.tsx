@@ -1,8 +1,7 @@
 'use client';
 
-import { AlertTriangleIcon, FolderSearchIcon, MapIcon, PlusIcon } from 'lucide-react';
+import { AlertTriangleIcon, MapIcon, PlusIcon } from 'lucide-react';
 import Link from 'next/link';
-import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/app/components/ui/tooltip';
 import { cn } from '@/app/lib/utils';
@@ -12,12 +11,10 @@ export function ProjectGroup({
   project,
   activeMapFile,
   onCreateMap,
-  onRelink,
 }: {
   project: ProjectSummary;
   activeMapFile: string | null;
   onCreateMap: (project: ProjectSummary) => void;
-  onRelink: (project: ProjectSummary) => void;
 }) {
   return (
     <li className="px-1 py-1" data-project={project.id}>
@@ -29,25 +26,14 @@ export function ProjectGroup({
           {project.name}
         </span>
         {project.availability === 'unavailable' ? (
-          <>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span aria-label="Not found on disk" className="text-destructive">
-                  <AlertTriangleIcon className="size-4" aria-hidden="true" />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>{project.error ?? 'The folder cannot be reached'}</TooltipContent>
-            </Tooltip>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7"
-              aria-label={`Choose a new location for ${project.name}`}
-              onClick={() => onRelink(project)}
-            >
-              <FolderSearchIcon aria-hidden="true" />
-            </Button>
-          </>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span aria-label="Not found on disk" className="text-destructive">
+                <AlertTriangleIcon className="size-4" aria-hidden="true" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{project.error ?? 'The folder cannot be reached'}</TooltipContent>
+          </Tooltip>
         ) : null}
         <Button
           variant="ghost"
@@ -63,8 +49,13 @@ export function ProjectGroup({
 
       {project.maps.length === 0 ? (
         <p data-rail-label className="px-2 pb-1 text-xs text-muted-foreground">
-          {}
-          {project.availability === 'unavailable' ? 'Not reachable' : 'No maps yet'}
+          {project.availability === 'unavailable' ? (
+            'Not reachable'
+          ) : (
+            <Link href={`/p/${project.id}`} className="underline underline-offset-2">
+              No maps yet
+            </Link>
+          )}
         </p>
       ) : (
         <ul>
@@ -87,9 +78,9 @@ export function ProjectGroup({
                     {map.name}
                   </span>
                   {project.availability === 'unavailable' ? (
-                    <Badge data-rail-wide variant="secondary">
+                    <span data-rail-wide className="text-xs">
                       read only
-                    </Badge>
+                    </span>
                   ) : null}
                 </Link>
               </li>

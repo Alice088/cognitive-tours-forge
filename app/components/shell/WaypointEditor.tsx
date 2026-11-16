@@ -6,6 +6,7 @@ import { Label } from '@/app/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Textarea } from '@/app/components/ui/textarea';
 import { WAYPOINT_TYPES, type WaypointType } from '@/app/lib/theme/tokens';
+import { waypointIssues, type FieldIssue } from '@/app/lib/workspace/validation';
 import type { Waypoint } from '@/app/lib/workspace/types';
 
 const COMMIT_DELAY = 600;
@@ -13,14 +14,17 @@ const COMMIT_DELAY = 600;
 export function WaypointEditor({
   waypoint,
   onCommit,
+  readOnly,
 }: {
   waypoint: Waypoint;
   onCommit: (patch: Partial<Waypoint>) => void;
+  readOnly: boolean;
 }) {
   const [label, setLabel] = useState(waypoint.label);
   const [description, setDescription] = useState(waypoint.description ?? '');
   const [notes, setNotes] = useState(waypoint.notes ?? '');
   const [file, setFile] = useState(waypoint.file ?? '');
+  const [issues, setIssues] = useState<FieldIssue[]>([]);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -31,19 +35,32 @@ export function WaypointEditor({
     };
   }, []);
 
+  const commit = (patch: Partial<Waypoint>) => {
+    if (readOnly) {
+      return;
+    }
+    const found = waypointIssues(patch);
+    setIssues(found);
+    if (found.length === 0) {
+      onCommit(patch);
+    }
+  };
+
   const schedule = (patch: Partial<Waypoint>) => {
     if (timer.current) {
       clearTimeout(timer.current);
     }
-    timer.current = setTimeout(() => onCommit(patch), COMMIT_DELAY);
+    timer.current = setTimeout(() => commit(patch), COMMIT_DELAY);
   };
 
   const commitNow = (patch: Partial<Waypoint>) => {
     if (timer.current) {
       clearTimeout(timer.current);
     }
-    onCommit(patch);
+    commit(patch);
   };
+
+  const issueFor = (field: FieldIssue['field']) => issues.find(issue => issue.field === field) ?? null;
 
   return (
     <div className="space-y-3 p-3">
@@ -52,17 +69,28 @@ export function WaypointEditor({
         <Input
           id="waypoint-label"
           value={label}
+          disabled={readOnly}
+          aria-invalid={issueFor('label') ? true : undefined}
           onChange={event => {
             setLabel(event.target.value);
             schedule({ label: event.target.value });
           }}
           onBlur={() => commitNow({ label })}
         />
+        {issueFor('label') ? (
+          <p role="alert" className="text-xs text-destructive">
+            {issueFor('label')?.message}
+          </p>
+        ) : null}
       </div>
 
       <div className="space-y-1">
         <Label htmlFor="waypoint-type">Type</Label>
-        <Select value={waypoint.type} onValueChange={value => onCommit({ type: value as WaypointType })}>
+        <Select
+          value={waypoint.type}
+          disabled={readOnly}
+          onValueChange={value => onCommit({ type: value as WaypointType })}
+        >
           <SelectTrigger id="waypoint-type" aria-label="Waypoint type">
             <SelectValue />
           </SelectTrigger>
@@ -82,6 +110,7 @@ export function WaypointEditor({
           id="waypoint-description"
           rows={5}
           value={description}
+          disabled={readOnly}
           onChange={event => {
             setDescription(event.target.value);
             schedule({ description: event.target.value });
@@ -96,6 +125,7 @@ export function WaypointEditor({
           id="waypoint-notes"
           rows={3}
           value={notes}
+          disabled={readOnly}
           onChange={event => {
             setNotes(event.target.value);
             schedule({ notes: event.target.value });
@@ -110,13 +140,21 @@ export function WaypointEditor({
           id="waypoint-file"
           placeholder="app/components/example.tsx"
           value={file}
+          disabled={readOnly}
+          aria-invalid={issueFor('file') ? true : undefined}
           onChange={event => {
             setFile(event.target.value);
             schedule({ file: event.target.value });
           }}
           onBlur={() => commitNow({ file })}
         />
-        <p className="text-xs text-muted-foreground">Relative to the project root.</p>
+        {issueFor('file') ? (
+          <p role="alert" className="text-xs text-destructive">
+            {issueFor('file')?.message}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">Relative to the project root.</p>
+        )}
       </div>
     </div>
   );

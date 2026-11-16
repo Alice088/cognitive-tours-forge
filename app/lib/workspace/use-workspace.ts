@@ -84,7 +84,12 @@ export function useWorkspace() {
 export async function fetchMap(
   projectId: string,
   mapFile: string
-): Promise<{ document: MapDocument; report: LoadReport; mtimeMs: number | null }> {
+): Promise<{
+  document: MapDocument;
+  report: LoadReport;
+  mtimeMs: number | null;
+  readOnly: boolean;
+}> {
   return requestJson(`/api/maps/${encodeURIComponent(projectId)}/${encodeURIComponent(mapFile)}`);
 }
 

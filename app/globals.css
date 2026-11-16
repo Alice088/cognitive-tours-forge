@@ -56,7 +56,6 @@
 
   --overlay: #08080a;
 
-  --state-new: #3d5afe;
   --state-dimmed: #f6f6f8;
   --state-selected: #1f3bd8;
 }
@@ -112,7 +111,6 @@
 
   --overlay: #000000;
 
-  --state-new: #8fa2ff;
   --state-dimmed: #0c0c0f;
   --state-selected: #7f95ff;
 }
@@ -168,7 +166,6 @@
 
   --color-overlay: var(--overlay);
 
-  --color-state-new: var(--state-new);
   --color-state-dimmed: var(--state-dimmed);
   --color-state-selected: var(--state-selected);
 
@@ -251,4 +248,26 @@
 .react-flow__selection {
   background: color-mix(in oklab, var(--state-selected) 12%, transparent);
   border: 1px dashed var(--state-selected);
+}
+
+@media (min-width: 48rem) and (max-width: 79.9375rem) {
+  [data-region='rail'] [data-rail-label],
+  [data-region='rail'] [data-rail-wide] {
+    display: none;
+  }
+
+  [data-region='rail']:not([data-collapsed='true']):hover,
+  [data-region='rail']:not([data-collapsed='true']):focus-within {
+    width: 15rem;
+  }
+
+  [data-region='rail']:not([data-collapsed='true']):hover [data-rail-label],
+  [data-region='rail']:not([data-collapsed='true']):focus-within [data-rail-label] {
+    display: block;
+  }
+}
+
+[data-region='rail'][data-collapsed='true'] [data-rail-label],
+[data-region='rail'][data-collapsed='true'] [data-rail-wide] {
+  display: none;
 }

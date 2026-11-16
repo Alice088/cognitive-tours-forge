@@ -30,6 +30,7 @@ export function FolderBrowser({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const request = useRef(0);
+  const typed = useRef(false);
 
   const go = useCallback(
     async (target?: string) => {
@@ -42,6 +43,7 @@ export function FolderBrowser({
         if (id !== request.current) {
           return;
         }
+        typed.current = false;
         setLocation(result);
         setManualPath(result.path);
         onPathChange(result.path);
@@ -68,6 +70,10 @@ export function FolderBrowser({
           return;
         }
         setLocation(result);
+        setLoading(false);
+        if (typed.current) {
+          return;
+        }
         setManualPath(result.path);
         onPathChange(result.path);
         setError(null);
@@ -98,7 +104,11 @@ export function FolderBrowser({
         <Input
           aria-label="Folder path"
           value={manualPath}
-          onChange={event => setManualPath(event.target.value)}
+          onChange={event => {
+            typed.current = true;
+            setManualPath(event.target.value);
+            onPathChange(event.target.value);
+          }}
           onKeyDown={event => {
             if (event.key === 'Enter') {
               void go(manualPath);

@@ -6,12 +6,14 @@ import { useStore } from 'zustand';
 import { AppShell } from '@/app/components/shell/AppShell';
 import { Inspector } from '@/app/components/shell/Inspector';
 import { MapCanvas } from '@/app/components/shell/MapCanvas';
+import { RelinkDialog } from '@/app/components/shell/RelinkDialog';
 import { TourDock } from '@/app/components/shell/TourDock';
 import { WorkspaceRail } from '@/app/components/shell/WorkspaceRail';
 import { FailedSurface, LoadingSurface } from '@/app/components/shell/states';
 import { Button } from '@/app/components/ui/button';
 import { clearHistory, redo, undo } from '@/app/lib/store/history';
 import type { MapStore } from '@/app/lib/store/map-store';
+import { nextTourId } from '@/app/lib/store/selectors';
 import { useMapStore } from '@/app/components/shell/MapStoreProvider';
 import { generateTourMarkdown, tourSlug } from '@/app/lib/tour-markdown';
 import { useWorkspace, fetchMap, saveMap, saveViewState } from '@/app/lib/workspace/use-workspace';
@@ -26,8 +28,12 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
   const [editing, setEditing] = useState(false);
   const [overview, setOverview] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [relinking, setRelinking] = useState(false);
   const [oversizedDismissed, setOversizedDismissed] = useState(false);
   const pendingSave = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saving = useRef(false);
+  const dirty = useRef(false);
+  const retrySave = useRef<() => void>(() => undefined);
 
   const status = useStore(store, state => state.status);
   const failure = useStore(store, state => state.failure);
@@ -37,6 +43,8 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
   const step = useStore(store, state => state.step);
   const saveStatus = useStore(store, state => state.saveStatus);
   const saveError = useStore(store, state => state.saveError);
+  const saveErrorDetail = useStore(store, state => state.saveErrorDetail);
+  const readOnly = useStore(store, state => state.readOnly);
   const past = useStore(store.temporal, state => state.pastStates.length);
   const future = useStore(store.temporal, state => state.futureStates.length);
 
@@ -52,8 +60,9 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
       const requested = payload.document.tours.find(tour => tour.id === params.get('tour'));
       if (requested) {
         store.getState().setActiveTour(requested.id);
-        const requestedStep = Number(params.get('step') ?? '0');
-        store.getState().setStep(Number.isFinite(requestedStep) ? requestedStep : 0);
+        const stored = Number(params.get('step') ?? '0');
+        const safe = Number.isFinite(stored) ? Math.floor(stored) : 0;
+        store.getState().setStep(Math.min(Math.max(safe, 0), Math.max(requested.stops.length - 1, 0)));
       }
     } catch (cause) {
       store.getState().failLoad(cause instanceof Error ? cause.message : 'This map could not be loaded.');
@@ -64,6 +73,40 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
     void load();
   }, [load, query]);
 
+  const save = useCallback(async () => {
+    const current = store.getState().document;
+    if (!current || store.getState().readOnly) {
+      return;
+    }
+    if (saving.current) {
+      dirty.current = true;
+      return;
+    }
+    saving.current = true;
+    store.getState().setSaveStatus('pending');
+    try {
+      const result = await saveMap(projectId, mapFile, current, store.getState().mtimeMs);
+      store.getState().markSaved(result.mtimeMs ?? 0);
+    } catch (cause) {
+      const code =
+        cause && typeof cause === 'object' && 'code' in cause
+          ? String((cause as { code: unknown }).code)
+          : 'save-failed';
+      const detail = cause instanceof Error ? cause.message : 'This change could not be saved.';
+      store.getState().setSaveStatus('failed', code, detail);
+    } finally {
+      saving.current = false;
+      if (dirty.current) {
+        dirty.current = false;
+        retrySave.current();
+      }
+    }
+  }, [mapFile, projectId, store]);
+
+  useEffect(() => {
+    retrySave.current = () => void save();
+  }, [save]);
+
   useEffect(() => {
     let last = store.getState().document;
     const unsubscribe = store.subscribe(state => {
@@ -71,26 +114,14 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
         return;
       }
       last = state.document;
+      if (state.readOnly) {
+        return;
+      }
       store.getState().setSaveStatus('pending');
       if (pendingSave.current) {
         clearTimeout(pendingSave.current);
       }
-      pendingSave.current = setTimeout(async () => {
-        const current = store.getState().document;
-        if (!current) {
-          return;
-        }
-        try {
-          const result = await saveMap(projectId, mapFile, current, store.getState().mtimeMs);
-          store.getState().markSaved(result.mtimeMs ?? 0);
-        } catch (cause) {
-          const code =
-            cause && typeof cause === 'object' && 'code' in cause
-              ? String((cause as { code: unknown }).code)
-              : 'save-failed';
-          store.getState().setSaveStatus('failed', code);
-        }
-      }, SAVE_DELAY);
+      pendingSave.current = setTimeout(() => void save(), SAVE_DELAY);
     });
     return () => {
       unsubscribe();
@@ -98,7 +129,7 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
         clearTimeout(pendingSave.current);
       }
     };
-  }, [mapFile, projectId, store]);
+  }, [save, store]);
 
   useEffect(() => {
     if (!mapDocument) {
@@ -118,22 +149,38 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
         return;
       }
       const meta = event.metaKey || event.ctrlKey;
-      if (!meta) {
+      if (meta) {
+        if (event.key.toLowerCase() === 'z' && !event.shiftKey) {
+          event.preventDefault();
+          undo(store);
+          return;
+        }
+        if ((event.key.toLowerCase() === 'z' && event.shiftKey) || event.key.toLowerCase() === 'y') {
+          event.preventDefault();
+          redo(store);
+        }
         return;
       }
-      if (event.key.toLowerCase() === 'z' && !event.shiftKey) {
-        event.preventDefault();
-        undo(store);
+      if (event.key !== 'Escape') {
         return;
       }
-      if ((event.key.toLowerCase() === 'z' && event.shiftKey) || event.key.toLowerCase() === 'y') {
+      if (window.document.querySelector('[role="dialog"]')) {
+        return;
+      }
+      if (editing) {
         event.preventDefault();
-        redo(store);
+        setEditing(false);
+        return;
+      }
+      if (store.getState().selectedWaypointId) {
+        event.preventDefault();
+        store.getState().selectWaypoint(null);
+        setInspectorOpen(false);
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [store]);
+  }, [editing, store]);
 
   const waypoints = mapDocument?.waypoints ?? [];
   const edges = mapDocument?.edges ?? [];
@@ -147,6 +194,8 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
   }, [tour, overview]);
 
   const oversized = waypoints.length > SUPPORTED_WAYPOINTS || tours.length > SUPPORTED_TOURS;
+  const frozen = status !== 'ready';
+  const project = snapshot?.projects.find(item => item.id === projectId) ?? null;
 
   const announcement =
     status === 'loading'
@@ -154,7 +203,7 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
       : status === 'failed'
         ? 'The map could not be loaded'
         : mapDocument
-          ? `Map open with ${waypoints.length} waypoints and ${tours.length} tours`
+          ? `Map open with ${waypoints.length} waypoints and ${tours.length} tours${readOnly ? ', read only' : ''}`
           : '';
 
   const exportTour = tour
@@ -189,10 +238,12 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
         waypoints={waypoints}
         edges={edges}
         selectedId={selectedId}
+        readOnly={readOnly}
         onSelect={id => {
           store.getState().selectWaypoint(id);
           setInspectorOpen(id !== null);
         }}
+        onMove={(id, position) => store.getState().moveWaypoint(id, position)}
         dimmedIds={dimmed}
       />
     );
@@ -202,6 +253,8 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
       tours={tours}
       activeTourId={activeTourId}
       step={step}
+      disabled={frozen}
+      readOnly={readOnly}
       onTourChange={id => {
         store.getState().setActiveTour(id);
         setOverview(false);
@@ -211,6 +264,16 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
         store.getState().setStep(value);
         const stop = tour?.stops[value];
         store.getState().selectWaypoint(stop?.waypointId ?? null);
+      }}
+      onCreateTour={() => {
+        if (!mapDocument) {
+          return;
+        }
+        const id = nextTourId(mapDocument.tours);
+        store.getState().addTour({ id, name: 'Untitled tour', stops: [] });
+        store.getState().setActiveTour(id);
+        setOverview(false);
+        setEditing(true);
       }}
       editing={editing}
       onEditingChange={setEditing}
@@ -227,7 +290,17 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
 
   return (
     <div className="flex h-dvh w-full flex-col">
-      {saveError === 'stale-document' ? (
+      {readOnly ? (
+        <div role="status" className="flex items-center gap-2 border-b border-border bg-muted px-3 py-2 text-sm">
+          <span className="flex-1">
+            This project folder cannot be reached, so the map below is the last copy that was saved here, read only.
+          </span>
+          <Button variant="outline" size="sm" onClick={() => setRelinking(true)}>
+            Choose a new location
+          </Button>
+        </div>
+      ) : null}
+      {saveStatus === 'failed' && saveError === 'stale-document' ? (
         <div role="alert" className="flex items-center gap-2 border-b border-destructive bg-muted px-3 py-2 text-sm">
           <span className="flex-1">This map changed on disk while you were editing.</span>
           <Button variant="outline" size="sm" onClick={() => void load()}>
@@ -240,6 +313,14 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
             }}
           >
             Keep mine
+          </Button>
+        </div>
+      ) : null}
+      {saveStatus === 'failed' && saveError !== 'stale-document' ? (
+        <div role="alert" className="flex items-center gap-2 border-b border-destructive bg-muted px-3 py-2 text-sm">
+          <span className="flex-1">{saveErrorDetail ?? 'This change could not be saved.'}</span>
+          <Button variant="outline" size="sm" onClick={() => void save()}>
+            Retry
           </Button>
         </div>
       ) : null}
@@ -265,6 +346,19 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
           announcement={announcement}
         />
       </div>
+
+      <RelinkDialog
+        project={relinking && project ? project : null}
+        onOpenChange={open => {
+          if (!open) {
+            setRelinking(false);
+          }
+        }}
+        onRelinked={() => {
+          refresh();
+          void load();
+        }}
+      />
     </div>
   );
 }

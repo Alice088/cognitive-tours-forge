@@ -4,6 +4,148 @@
 
 ---
 
+## Прогон: 2026-11-16 09:17 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run`, `npx playwright test` (workers=1, production build через `next build && next start`), `npx tsc --noEmit`, `npx eslint .`
+
+### Приёмочные тесты (`playwright test`, workers=1)
+
+| #   | Тест                                                                | Пакет               | Результат | Время  |
+| --- | ------------------------------------------------------------------- | ------------------- | --------- | ------ |
+| 1   | adds and removes a link between two waypoints                       | editing.spec.ts     | PASS      | 2.49s  |
+| 2   | creates a tour and deletes it again                                 | editing.spec.ts     | PASS      | 1.89s  |
+| 3   | moves a waypoint by dragging it on the map                          | editing.spec.ts     | PASS      | 3.02s  |
+| 4   | refuses an empty label and an absolute path in the editor           | editing.spec.ts     | PASS      | 3.37s  |
+| 5   | replays twenty changes back to the beginning and forward to the end | editing.spec.ts     | PASS      | 63.96s |
+| 6   | says why a save failed and offers one retry                         | editing.spec.ts     | PASS      | 1.11s  |
+| 7   | dismisses the tour before the selection                             | keyboard.spec.ts    | PASS      | 0.30s  |
+| 8   | Escape closes the inspector drawer before anything else             | keyboard.spec.ts    | PASS      | 0.25s  |
+| 9   | focuses the map search with a slash                                 | keyboard.spec.ts    | PASS      | 0.22s  |
+| 10  | moves between waypoints with the arrow keys                         | keyboard.spec.ts    | PASS      | 0.26s  |
+| 11  | reaches every region with the keyboard in the contract order        | keyboard.spec.ts    | PASS      | 0.35s  |
+| 12  | shows a visible focus ring on a keyboard-focused control            | keyboard.spec.ts    | PASS      | 0.20s  |
+| 13  | undo inside a text field stays text undo                            | keyboard.spec.ts    | PASS      | 0.53s  |
+| 14  | clamps a stored step that no longer exists                          | navigation.spec.ts  | PASS      | 0.17s  |
+| 15  | drops a stored tour that no longer exists                           | navigation.spec.ts  | PASS      | 0.36s  |
+| 16  | returns to the same project, map, tour and stop three times         | navigation.spec.ts  | PASS      | 0.49s  |
+| 17  | pans, zooms, selects and drags inside the interaction budget        | performance.spec.ts | PASS      | 0.83s  |
+| 18  | reports a map larger than the supported size                        | performance.spec.ts | PASS      | 0.32s  |
+| 19  | stays inside the interaction budget on a 250 waypoint map           | performance.spec.ts | PASS      | 0.34s  |
+| 20  | edits are saved once at the end of a pause                          | responsive.spec.ts  | PASS      | 3.76s  |
+| 21  | gives the space of a collapsed rail back to the canvas              | responsive.spec.ts  | PASS      | 0.24s  |
+| 22  | keeps the rail labels reachable at the medium band                  | responsive.spec.ts  | PASS      | 0.26s  |
+| 23  | opens one drawer at a time and returns focus to its opener          | responsive.spec.ts  | PASS      | 0.33s  |
+| 24  | rearranges itself at the wide, medium and narrow bands              | responsive.spec.ts  | PASS      | 0.65s  |
+| 25  | a control that claims to change the map changes it                  | shell.spec.ts       | PASS      | 0.22s  |
+| 26  | autosaves a description to the map file                             | shell.spec.ts       | PASS      | 2.79s  |
+| 27  | creates a map and opens it empty                                    | shell.spec.ts       | PASS      | 0.34s  |
+| 28  | every visible control has an accessible name                        | shell.spec.ts       | PASS      | 0.20s  |
+| 29  | keeps every tour fact in the dock                                   | shell.spec.ts       | PASS      | 0.18s  |
+| 30  | keeps the dock usable at 768                                        | shell.spec.ts       | PASS      | 0.17s  |
+| 31  | keeps the map visible while editing                                 | shell.spec.ts       | PASS      | 0.22s  |
+| 32  | never exposes the same action in two regions                        | shell.spec.ts       | PASS      | 0.19s  |
+| 33  | opens a map from the rail                                           | shell.spec.ts       | PASS      | 0.22s  |
+| 34  | rearranges at 360 without horizontal scrolling                      | shell.spec.ts       | PASS      | 0.23s  |
+| 35  | resolves surfaces from tokens in the dark theme                     | shell.spec.ts       | PASS      | 0.29s  |
+| 36  | restores the tour and step after leaving the map                    | shell.spec.ts       | PASS      | 0.34s  |
+| 37  | shows the four regions without overlap                              | shell.spec.ts       | PASS      | 0.19s  |
+| 38  | switches theme and keeps the choice after a reload                  | shell.spec.ts       | PASS      | 0.35s  |
+| 39  | undoes and redoes a change                                          | shell.spec.ts       | PASS      | 1.99s  |
+| 40  | a failed load says what failed and offers one retry                 | states.spec.ts      | PASS      | 0.16s  |
+| 41  | a project without a map shows one create action                     | states.spec.ts      | PASS      | 0.16s  |
+| 42  | an empty workspace adds a project itself                            | states.spec.ts      | PASS      | 0.33s  |
+| 43  | an unavailable project stays listed and can be repointed            | states.spec.ts      | PASS      | 0.74s  |
+| 44  | disables the data actions while a map is loading                    | states.spec.ts      | PASS      | 1.96s  |
+| 45  | opens an unreachable project read-only from the last saved copy     | states.spec.ts      | PASS      | 0.38s  |
+| 46  | follows the system theme while it is set to system                  | theme.spec.ts       | PASS      | 0.26s  |
+| 47  | keeps a dialog and a tooltip on the dark surface                    | theme.spec.ts       | PASS      | 0.63s  |
+| 48  | resolves every surface of the dark theme from tokens                | theme.spec.ts       | PASS      | 0.38s  |
+
+### Юнит-тесты (`vitest run`)
+
+| #   | Тест                                                              | Пакет                  | Результат | Время |
+| --- | ----------------------------------------------------------------- | ---------------------- | --------- | ----- |
+| 1   | builds the requested number of waypoints and tours                | build-map.test.ts      | PASS      | 0.00s |
+| 2   | gives every waypoint a known type and a unique id                 | build-map.test.ts      | PASS      | 0.00s |
+| 3   | points every stop at an existing waypoint                         | build-map.test.ts      | PASS      | 0.00s |
+| 4   | lists the cached maps of one project only                         | cache.test.ts          | PASS      | 0.00s |
+| 5   | reads back what was written                                       | cache.test.ts          | PASS      | 0.00s |
+| 6   | returns nothing for a missing or escaping file                    | cache.test.ts          | PASS      | 0.00s |
+| 7   | caps the history at fifty entries                                 | history.test.ts        | PASS      | 0.00s |
+| 8   | discards the forward branch after a new change                    | history.test.ts        | PASS      | 0.00s |
+| 9   | does not record a change that leaves the document identical       | history.test.ts        | PASS      | 0.00s |
+| 10  | ignores a move to where the waypoint already is                   | history.test.ts        | PASS      | 0.00s |
+| 11  | moves a stop without losing it                                    | history.test.ts        | PASS      | 0.00s |
+| 12  | moves a waypoint and records one entry                            | history.test.ts        | PASS      | 0.00s |
+| 13  | never records selection or status changes                         | history.test.ts        | PASS      | 0.00s |
+| 14  | records exactly one entry per action type                         | history.test.ts        | PASS      | 0.00s |
+| 15  | refuses to move a stop beyond the list                            | history.test.ts        | PASS      | 0.00s |
+| 16  | removes a deleted waypoint from edges and tours                   | history.test.ts        | PASS      | 0.00s |
+| 17  | replays a twenty-change sequence exactly                          | history.test.ts        | PASS      | 0.00s |
+| 18  | starts empty and records nothing on load                          | history.test.ts        | PASS      | 0.00s |
+| 19  | steps back and forward through a change                           | history.test.ts        | PASS      | 0.00s |
+| 20  | coerces a broken position and drops an absolute file path         | map-file.test.ts       | PASS      | 0.00s |
+| 21  | creates an empty document with the three collections              | map-file.test.ts       | PASS      | 0.00s |
+| 22  | drops orphaned edges and stops when reading                       | map-file.test.ts       | PASS      | 0.00s |
+| 23  | maps an unknown type to Open Question and counts it               | map-file.test.ts       | PASS      | 0.00s |
+| 24  | refuses a file name that escapes the project                      | map-file.test.ts       | PASS      | 0.00s |
+| 25  | refuses an unsupported version                                    | map-file.test.ts       | PASS      | 0.00s |
+| 26  | refuses to write an invalid document                              | map-file.test.ts       | PASS      | 0.00s |
+| 27  | replaces the file atomically, leaving no temporary behind         | map-file.test.ts       | PASS      | 0.00s |
+| 28  | reports a missing map                                             | map-file.test.ts       | PASS      | 0.00s |
+| 29  | round-trips a document                                            | map-file.test.ts       | PASS      | 0.01s |
+| 30  | serialises deterministically                                      | map-file.test.ts       | PASS      | 0.00s |
+| 31  | slugs a display name                                              | map-file.test.ts       | PASS      | 0.00s |
+| 32  | writes sorted collections and keeps stop order                    | map-file.test.ts       | PASS      | 0.00s |
+| 33  | clamps an out-of-range step to zero on read                       | registry.test.ts       | PASS      | 0.00s |
+| 34  | makes ids unique without clobbering an existing one               | registry.test.ts       | PASS      | 0.00s |
+| 35  | recovers from unparseable content without overwriting it          | registry.test.ts       | PASS      | 0.00s |
+| 36  | registers a project with a slugged unique id                      | registry.test.ts       | PASS      | 0.00s |
+| 37  | returns the existing entry when the same path is registered twice | registry.test.ts       | PASS      | 0.00s |
+| 38  | starts empty when there is no file                                | registry.test.ts       | PASS      | 0.00s |
+| 39  | stores the last view and drops it with its project                | registry.test.ts       | PASS      | 0.00s |
+| 40  | writes atomically and leaves no temporary behind                  | registry.test.ts       | PASS      | 0.00s |
+| 41  | accepts a plain child                                             | safe-path.test.ts      | PASS      | 0.00s |
+| 42  | accepts an absolute path inside the root                          | safe-path.test.ts      | PASS      | 0.00s |
+| 43  | accepts an ancestor of home so browsing can reach the root        | safe-path.test.ts      | PASS      | 0.00s |
+| 44  | accepts the home directory and its children                       | safe-path.test.ts      | PASS      | 0.00s |
+| 45  | accepts the root itself                                           | safe-path.test.ts      | PASS      | 0.00s |
+| 46  | does not confuse a sibling with a shared prefix                   | safe-path.test.ts      | PASS      | 0.00s |
+| 47  | follows a symlink that leaves the root                            | safe-path.test.ts      | PASS      | 0.00s |
+| 48  | rejects an absolute path outside the root                         | safe-path.test.ts      | PASS      | 0.00s |
+| 49  | rejects an unrelated branch                                       | safe-path.test.ts      | PASS      | 0.00s |
+| 50  | rejects parent traversal                                          | safe-path.test.ts      | PASS      | 0.00s |
+| 51  | rejects traversal hidden in the middle                            | safe-path.test.ts      | PASS      | 0.00s |
+| 52  | defines the same colour tokens in both themes                     | theme-contrast.test.ts | PASS      | 0.00s |
+| 53  | meets 3:1 for interactive borders in dark                         | theme-contrast.test.ts | PASS      | 0.00s |
+| 54  | meets 3:1 for interactive borders in light                        | theme-contrast.test.ts | PASS      | 0.00s |
+| 55  | meets AA for text pairs in dark                                   | theme-contrast.test.ts | PASS      | 0.00s |
+| 56  | meets AA for text pairs in light                                  | theme-contrast.test.ts | PASS      | 0.00s |
+| 57  | accepts a name                                                    | validation.test.ts     | PASS      | 0.00s |
+| 58  | accepts a plain label and a relative path                         | validation.test.ts     | PASS      | 0.00s |
+| 59  | checks nothing it was not given                                   | validation.test.ts     | PASS      | 0.00s |
+| 60  | refuses an absolute path                                          | validation.test.ts     | PASS      | 0.00s |
+| 61  | refuses an empty label                                            | validation.test.ts     | PASS      | 0.00s |
+| 62  | refuses an empty name                                             | validation.test.ts     | PASS      | 0.00s |
+
+### Статические проверки
+
+| Проверка       | Результат |
+| -------------- | --------- |
+| `tsc --noEmit` | PASS      |
+| `eslint .`     | PASS      |
+| `next build`   | PASS      |
+
+### Сводка
+
+Всего: 110 тестов (48 приёмочных, 62 юнит) · PASS: 110 · FAIL: 0 · SKIP: 0 · время: 98.7s приёмочные + 0.1s юнит.
+
+### Падения
+
+нет
+
+---
+
 ## Прогон: 2026-11-16 08:13 MSK (+0300)
 
 **Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run`, `npx playwright test` (workers=1), `npx tsc --noEmit`, `npx eslint .`, `npx next build`

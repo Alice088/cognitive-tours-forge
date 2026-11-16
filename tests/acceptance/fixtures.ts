@@ -53,6 +53,11 @@ export function writeSampleMap(): void {
 
 export async function ensureProject(request: APIRequestContext): Promise<void> {
   writeSampleMap();
+  const current = await request.get('/api/workspace');
+  const { projects } = (await current.json()) as { projects: Array<{ id: string }> };
+  for (const project of projects) {
+    await request.delete(`/api/workspace/${project.id}`);
+  }
   const response = await request.post('/api/workspace', { data: { path: PROJECT_DIR } });
   if (![201, 409].includes(response.status())) {
     throw new Error(`could not register the fixture: ${response.status()}`);

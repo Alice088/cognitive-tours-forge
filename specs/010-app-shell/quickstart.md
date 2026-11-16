@@ -39,13 +39,19 @@ empty workspace state.
 ```bash
 npm run typecheck     # tsc --noEmit, must be clean
 npm run lint          # eslint, must be clean, includes the literal-colour rule
-npm run test:unit     # vitest: history, map-file, registry, tokens, contrast
+npm run test:unit     # vitest: history, map-file, cache, registry, tokens, contrast, validation
 npm run test:e2e      # playwright: the scenarios below, automated
 ```
 
-`npm run test:unit` covers the four things that are cheaper to prove in a unit
-than in a browser: undo/redo semantics, map-file round-trip and ordering,
-registry atomicity and corruption recovery, and the token contrast table.
+`npm run test:e2e` builds the application and serves the production build
+(`next build && next start`) with one worker, because the suite shares one
+workspace registry and one `.tours/` fixture, and because the interaction budget
+in SC-010 is a property of the built application, not of the dev server.
+
+`npm run test:unit` covers the things that are cheaper to prove in a unit than in
+a browser: undo/redo semantics, map-file round-trip and ordering, the read-only
+cache, registry atomicity and corruption recovery, field validation, and the
+token contrast table.
 
 ## Scenarios
 

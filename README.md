@@ -61,9 +61,11 @@ and their maps), the map canvas, the inspector (the selected waypoint or the
 tour being edited), and the tour dock (the current tour, its position, its
 controls). A fact that appears in two regions is a defect, not a convenience.
 
-Width bands: at 1280 px and wider all four are visible; below that the rail
-becomes icons only; below 768 px the rail and inspector become drawers over the
-canvas and the dock becomes a single scrollable row.
+Width bands: at 1280 px and wider all four are visible, with a 240 px rail and
+a 320 px inspector; between 768 and 1279 px the rail is 56 px of icons whose
+labels appear on hover or focus and the inspector stays docked at 300 px; below
+768 px the rail and inspector become drawers over the canvas and the dock
+becomes a single scrollable row.
 
 ### Design tokens
 
@@ -83,6 +85,15 @@ order, sort collections by id, keep tour stop order exactly as authored, write a
 temporary file and rename it over the target. A crash mid-save cannot truncate a
 map, and adding one waypoint produces a one-line diff.
 
+### When the folder is not there any more
+
+Every successful read and write also refreshes a copy of the map in
+`~/.ctour/cache/<project>/`. If the project folder is renamed, moved or deleted,
+the project stays in the rail, marked, and opening a map serves the last copy
+saved on this machine, read only: every editing control is disabled and the only
+action is to choose a new location for the project. The cache is a fallback, not
+a source of truth — nothing is ever read from it while the folder is reachable.
+
 ### Server routes exist because the browser cannot touch the disk
 
 `app/api/workspace/*` and `app/api/maps/*` are the only code that reads or writes
@@ -95,10 +106,15 @@ server the browser talks to.
 One zustand store per open map, wrapped in temporal history limited to fifty
 steps and scoped to the document — selection and loading flags are not edits and
 never enter the history. A text field commits to the store when the person
-pauses or leaves the field, so one edit is one undo step. The store is watched by
+pauses or leaves the field, so one edit is one undo step. A waypoint is moved by
+dragging it on the canvas and one drag is one undo step. Links and tours are
+created from the inspector and the tour dock, so every change the interface can
+make is also a change the history can step back through. The store is watched by
 an autosave that writes 800 ms after the last change and reports pending, saved
-or failed in the dock. A save that would overwrite a file changed on disk is
-refused with a 409 and shown as a choice between reloading and keeping yours.
+or failed in the dock. Saves are serialised, so a burst of changes cannot put two
+writes in flight at once. A save that would overwrite a file changed on disk is
+refused with a 409 and shown as a choice between reloading and keeping yours;
+any other failure names the reason and offers one retry without losing the text.
 
 ## Technical detail
 

@@ -7,6 +7,7 @@ import {
   type SaveStatus,
   type Stop,
   type SurfaceStatus,
+  type Position,
   type Tour,
   type Waypoint,
   type Edge,
@@ -28,13 +29,21 @@ export interface MapState {
   step: number;
   saveStatus: SaveStatus;
   saveError: string | null;
-  loadDocument: (payload: { document: MapDocument; report: LoadReport; mtimeMs: number | null }) => void;
+  saveErrorDetail: string | null;
+  readOnly: boolean;
+  loadDocument: (payload: {
+    document: MapDocument;
+    report: LoadReport;
+    mtimeMs: number | null;
+    readOnly?: boolean;
+  }) => void;
   setStatus: (status: SurfaceStatus) => void;
   failLoad: (message: string) => void;
   selectWaypoint: (id: string | null) => void;
   setActiveTour: (tourId: string | null) => void;
   setStep: (step: number) => void;
   updateWaypoint: (id: string, patch: Partial<Waypoint>) => void;
+  moveWaypoint: (id: string, position: Position) => void;
   addWaypoint: (waypoint: Waypoint) => void;
   deleteWaypoint: (id: string) => void;
   addEdge: (edge: Edge) => void;
@@ -44,8 +53,9 @@ export interface MapState {
   deleteTour: (id: string) => void;
   setTourStops: (tourId: string, stops: Stop[]) => void;
   moveStop: (tourId: string, from: number, to: number) => void;
-  setSaveStatus: (status: SaveStatus, error?: string | null) => void;
+  setSaveStatus: (status: SaveStatus, error?: string | null, detail?: string | null) => void;
   markSaved: (mtimeMs: number) => void;
+  setReadOnly: (readOnly: boolean) => void;
 }
 
 const initial = {
@@ -59,6 +69,8 @@ const initial = {
   step: 0,
   saveStatus: 'idle' as SaveStatus,
   saveError: null,
+  saveErrorDetail: null,
+  readOnly: false,
 };
 
 export function createMapStore(seed: Partial<MapState> = {}) {
@@ -76,15 +88,17 @@ export function createMapStore(seed: Partial<MapState> = {}) {
         return {
           ...initial,
           ...seed,
-          loadDocument: ({ document, report, mtimeMs }) =>
+          loadDocument: ({ document, report, mtimeMs, readOnly = false }) =>
             set({
               document,
               report,
               mtimeMs,
+              readOnly,
               status: 'ready',
               failure: null,
               saveStatus: 'idle',
               saveError: null,
+              saveErrorDetail: null,
             }),
           setStatus: status => set({ status }),
           failLoad: message => set({ status: 'failed', failure: { message, retryable: true } }),
@@ -101,6 +115,22 @@ export function createMapStore(seed: Partial<MapState> = {}) {
                 ...document,
                 waypoints: document.waypoints.map(waypoint =>
                   waypoint.id === id ? { ...waypoint, ...patch } : waypoint
+                ),
+              };
+            }),
+          moveWaypoint: (id, position) =>
+            change(document => {
+              const target = document.waypoints.find(waypoint => waypoint.id === id);
+              if (!target) {
+                return document;
+              }
+              if (target.position.x === position.x && target.position.y === position.y) {
+                return document;
+              }
+              return {
+                ...document,
+                waypoints: document.waypoints.map(waypoint =>
+                  waypoint.id === id ? { ...waypoint, position: { x: position.x, y: position.y } } : waypoint
                 ),
               };
             }),
@@ -178,8 +208,10 @@ export function createMapStore(seed: Partial<MapState> = {}) {
                 }),
               };
             }),
-          setSaveStatus: (status, error = null) => set({ saveStatus: status, saveError: error }),
-          markSaved: mtimeMs => set({ saveStatus: 'saved', saveError: null, mtimeMs }),
+          setSaveStatus: (status, error = null, detail = null) =>
+            set({ saveStatus: status, saveError: error, saveErrorDetail: detail }),
+          markSaved: mtimeMs => set({ saveStatus: 'saved', saveError: null, saveErrorDetail: null, mtimeMs }),
+          setReadOnly: readOnly => set({ readOnly }),
         };
       },
       {

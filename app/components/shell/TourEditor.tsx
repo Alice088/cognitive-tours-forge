@@ -1,10 +1,12 @@
 'use client';
 
 import { ArrowDownIcon, ArrowUpIcon, Trash2Icon } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
+import { tourIssues } from '@/app/lib/workspace/validation';
 import type { Tour, Waypoint } from '@/app/lib/workspace/types';
 
 export function TourEditor({
@@ -13,20 +15,42 @@ export function TourEditor({
   onChange,
   onReorder,
   onRemoveStop,
+  onDelete,
+  readOnly,
 }: {
   tour: Tour;
   waypoints: Waypoint[];
   onChange: (patch: Partial<Tour>) => void;
   onReorder: (from: number, to: number) => void;
   onRemoveStop: (index: number) => void;
+  onDelete: () => void;
+  readOnly: boolean;
 }) {
+  const [nameIssue, setNameIssue] = useState<string | null>(null);
   const byId = new Map(waypoints.map(waypoint => [waypoint.id, waypoint]));
 
   return (
     <div className="space-y-4 p-3">
       <div className="space-y-1">
         <Label htmlFor="tour-name">Tour name</Label>
-        <Input id="tour-name" value={tour.name} onChange={event => onChange({ name: event.target.value })} />
+        <Input
+          id="tour-name"
+          value={tour.name}
+          disabled={readOnly}
+          aria-invalid={nameIssue ? true : undefined}
+          onChange={event => {
+            const issue = tourIssues({ name: event.target.value })[0] ?? null;
+            setNameIssue(issue?.message ?? null);
+            if (!issue) {
+              onChange({ name: event.target.value });
+            }
+          }}
+        />
+        {nameIssue ? (
+          <p role="alert" className="text-xs text-destructive">
+            {nameIssue}
+          </p>
+        ) : null}
       </div>
 
       <div className="space-y-1">
@@ -35,6 +59,7 @@ export function TourEditor({
           id="tour-description"
           rows={3}
           value={tour.description ?? ''}
+          disabled={readOnly}
           onChange={event => onChange({ description: event.target.value })}
         />
       </div>
@@ -58,7 +83,7 @@ export function TourEditor({
                     variant="ghost"
                     size="icon"
                     aria-label={`Move stop ${index + 1} up`}
-                    disabled={index === 0}
+                    disabled={readOnly || index === 0}
                     onClick={() => onReorder(index, index - 1)}
                   >
                     <ArrowUpIcon aria-hidden="true" />
@@ -67,7 +92,7 @@ export function TourEditor({
                     variant="ghost"
                     size="icon"
                     aria-label={`Move stop ${index + 1} down`}
-                    disabled={index === tour.stops.length - 1}
+                    disabled={readOnly || index === tour.stops.length - 1}
                     onClick={() => onReorder(index, index + 1)}
                   >
                     <ArrowDownIcon aria-hidden="true" />
@@ -76,6 +101,7 @@ export function TourEditor({
                     variant="ghost"
                     size="icon"
                     aria-label={`Remove stop ${index + 1}`}
+                    disabled={readOnly}
                     onClick={() => onRemoveStop(index)}
                   >
                     <Trash2Icon aria-hidden="true" />
@@ -85,6 +111,12 @@ export function TourEditor({
             ))}
           </ol>
         )}
+      </div>
+
+      <div className="border-t border-border pt-3">
+        <Button variant="destructive" className="w-full" disabled={readOnly} onClick={onDelete}>
+          Delete tour
+        </Button>
       </div>
     </div>
   );

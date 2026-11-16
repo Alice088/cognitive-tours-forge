@@ -1,6 +1,6 @@
 # ADR 008: One Site and Database per Team
 
-**Status:** Accepted (stopgap; defers ADR 007)  
+**Status:** Superseded by ADR 009 (Local first)
 **Date:** 2026-10-20 (decided); written up 2026-11-03  
 **Related:** ADR 007 (One Database with Team-Scoped Rows), spec 009 (`specs/009-multi-user-support/spec.md`), issue #10, ADR 003 (Use Turso), ADR 004 (Deploy to Vercel), `docs/RESTORE.md`  
 **Author:** Margaret-Anne Storey (decision), Claude (write-up)
@@ -49,6 +49,7 @@ be given a site (or use the demo).
 ## Consequences
 
 **Positive:**
+
 - **ADR 007's main risk can't happen.** No query can forget a team filter,
   because no tables are shared.
 - **One site can be restored without touching the others**
@@ -59,6 +60,7 @@ be given a site (or use the demo).
   because each name gives a site's address and the sites have no login.)
 
 **Negative** (the costs ADR 007 predicted when it rejected this option):
+
 - **Schema changes multiply.** Every migration has to run on every database
   (the loop in `CLAUDE.md`, "Applying a schema migration to production"),
   before the push.

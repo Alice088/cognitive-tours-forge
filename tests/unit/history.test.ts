@@ -134,6 +134,23 @@ describe('map history', () => {
     store.getState().moveStop('t-1', 0, 5);
     expect(store.getState().document?.tours[0].stops).toEqual([{ waypointId: 'w-1' }]);
   });
+
+  it('moves a waypoint and records one entry', () => {
+    const store = storeWith(2);
+    const before = historyDepth(store).past;
+    store.getState().moveWaypoint('w-1', { x: 140, y: 60 });
+    expect(store.getState().document?.waypoints[0].position).toEqual({ x: 140, y: 60 });
+    expect(historyDepth(store).past).toBe(before + 1);
+    undo(store);
+    expect(store.getState().document?.waypoints[0].position).toEqual({ x: 0, y: 0 });
+  });
+
+  it('ignores a move to where the waypoint already is', () => {
+    const store = storeWith(2);
+    const before = historyDepth(store).past;
+    store.getState().moveWaypoint('w-1', { x: 0, y: 0 });
+    expect(historyDepth(store).past).toBe(before);
+  });
 });
 
 describe('one history entry per committed change', () => {

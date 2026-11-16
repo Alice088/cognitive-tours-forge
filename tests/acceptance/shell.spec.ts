@@ -221,3 +221,40 @@ test.describe('US4 any width', () => {
     expect(overflow).toBeLessThanOrEqual(1);
   });
 });
+
+test.describe('SC-002 one place per action', () => {
+  test('never exposes the same action in two regions', async ({ page }) => {
+    await openMap(page);
+    const perRegion = await page.locator('[data-region]').evaluateAll(regions =>
+      regions
+        .filter(region => region.getBoundingClientRect().width > 0)
+        .map(region => ({
+          region: region.getAttribute('data-region') ?? '',
+          names: Array.from(region.querySelectorAll('button, a'))
+            .map(node => node.getAttribute('aria-label') ?? (node.textContent ?? '').trim())
+            .filter(name => name !== ''),
+        }))
+    );
+
+    const home = new Map<string, string>();
+    const duplicates: string[] = [];
+    for (const { region, names } of perRegion) {
+      for (const name of names) {
+        const owner = home.get(name);
+        if (owner && owner !== region) {
+          duplicates.push(`${name}: ${owner} and ${region}`);
+        }
+        home.set(name, region);
+      }
+    }
+    expect(duplicates).toEqual([]);
+  });
+
+  test('a control that claims to change the map changes it', async ({ page }) => {
+    await openMap(page);
+    const before = await page.locator('.react-flow__node').count();
+    await page.getByRole('button', { name: 'Add a waypoint' }).click();
+    await expect.poll(() => page.locator('.react-flow__node').count()).toBe(before + 1);
+    await expect(page.getByRole('button', { name: 'Undo' })).toBeEnabled();
+  });
+});

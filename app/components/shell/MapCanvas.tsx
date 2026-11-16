@@ -5,34 +5,90 @@ import {
   BackgroundVariant,
   Controls,
   ReactFlow,
+  useNodesState,
   type Edge as FlowEdge,
   type NodeTypes,
 } from '@xyflow/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { WaypointNode, type WaypointNodeType } from '@/app/components/shell/WaypointNode';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { WAYPOINT_TYPES } from '@/app/lib/theme/tokens';
-import type { Edge, Waypoint } from '@/app/lib/workspace/types';
+import type { Edge, Position, Waypoint } from '@/app/lib/workspace/types';
 
 const nodeTypes: NodeTypes = { waypoint: WaypointNode };
+
+const ARROWS: Record<string, Position> = {
+  ArrowUp: { x: 0, y: -1 },
+  ArrowDown: { x: 0, y: 1 },
+  ArrowLeft: { x: -1, y: 0 },
+  ArrowRight: { x: 1, y: 0 },
+};
+
+function nextWaypoint(waypoints: Waypoint[], from: string | null, step: Position): Waypoint | null {
+  const origin = waypoints.find(waypoint => waypoint.id === from) ?? null;
+  if (!origin) {
+    return waypoints[0] ?? null;
+  }
+  let best: Waypoint | null = null;
+  let bestScore = Number.POSITIVE_INFINITY;
+  for (const candidate of waypoints) {
+    if (candidate.id === origin.id) {
+      continue;
+    }
+    const dx = candidate.position.x - origin.position.x;
+    const dy = candidate.position.y - origin.position.y;
+    const ahead = dx * step.x + dy * step.y;
+    if (ahead <= 0) {
+      continue;
+    }
+    const score = ahead + Math.abs(dx * step.y - dy * step.x);
+    if (score < bestScore) {
+      bestScore = score;
+      best = candidate;
+    }
+  }
+  return best;
+}
 
 export function MapCanvas({
   waypoints,
   edges,
   selectedId,
   onSelect,
+  onMove,
   dimmedIds,
+  readOnly,
 }: {
   waypoints: Waypoint[];
   edges: Edge[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  onMove: (id: string, position: Position) => void;
   dimmedIds: Set<string> | null;
+  readOnly: boolean;
 }) {
   const [query, setQuery] = useState('');
   const [type, setType] = useState<string>('all');
+  const search = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const typing =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target?.isContentEditable === true;
+      if (event.key !== '/' || typing || event.metaKey || event.ctrlKey) {
+        return;
+      }
+      event.preventDefault();
+      search.current?.focus();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -52,15 +108,38 @@ export function MapCanvas({
         id: waypoint.id,
         type: 'waypoint',
         position: waypoint.position,
-        selected: waypoint.id === selectedId,
+        draggable: !readOnly,
         data: {
           label: waypoint.label,
           type: waypoint.type,
           dimmed: dimmedIds ? !dimmedIds.has(waypoint.id) : false,
         },
       })),
-    [visible, selectedId, dimmedIds]
+    [visible, dimmedIds, readOnly]
   );
+
+  const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<WaypointNodeType>(nodes);
+  const selectedRef = useRef(selectedId);
+
+  useEffect(() => {
+    selectedRef.current = selectedId;
+  }, [selectedId]);
+
+  useEffect(() => {
+    setFlowNodes(nodes.map(node => ({ ...node, selected: node.id === selectedRef.current })));
+  }, [nodes, setFlowNodes]);
+
+  useEffect(() => {
+    setFlowNodes(current =>
+      current.map(node => {
+        const shouldSelect = node.id === selectedId;
+        if (Boolean(node.selected) === shouldSelect) {
+          return node;
+        }
+        return { ...node, selected: shouldSelect };
+      })
+    );
+  }, [selectedId, setFlowNodes]);
 
   const flowEdges = useMemo<FlowEdge[]>(
     () =>
@@ -85,6 +164,7 @@ export function MapCanvas({
             Search waypoints
           </Label>
           <Input
+            ref={search}
             id="map-search"
             placeholder="Search waypoints"
             value={query}
@@ -125,21 +205,44 @@ export function MapCanvas({
             </div>
           </div>
         ) : (
-          <ReactFlow
-            nodes={nodes}
-            edges={flowEdges}
-            nodeTypes={nodeTypes}
-            onlyRenderVisibleElements
-            onNodeClick={(_, node) => onSelect(node.id)}
-            onPaneClick={() => onSelect(null)}
-            fitView
-            minZoom={0.2}
-            maxZoom={2}
-            proOptions={{ hideAttribution: false }}
+          <div
+            role="group"
+            aria-label="Map"
+            tabIndex={0}
+            className="h-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onKeyDown={event => {
+              const step = ARROWS[event.key];
+              if (!step || event.metaKey || event.ctrlKey || event.altKey) {
+                return;
+              }
+              const target = nextWaypoint(visible, selectedId, step);
+              if (!target) {
+                return;
+              }
+              event.preventDefault();
+              onSelect(target.id);
+            }}
           >
-            <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--canvas-grid)" />
-            <Controls showInteractive={false} />
-          </ReactFlow>
+            <ReactFlow
+              nodes={flowNodes}
+              onNodesChange={onNodesChange}
+              edges={flowEdges}
+              nodeTypes={nodeTypes}
+              onlyRenderVisibleElements
+              nodesDraggable={!readOnly}
+              nodesConnectable={false}
+              onNodeClick={(_, node) => onSelect(node.id)}
+              onNodeDragStop={(_, node) => onMove(node.id, node.position)}
+              onPaneClick={() => onSelect(null)}
+              fitView
+              minZoom={0.2}
+              maxZoom={2}
+              proOptions={{ hideAttribution: false }}
+            >
+              <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--canvas-grid)" />
+              <Controls showInteractive={false} />
+            </ReactFlow>
+          </div>
         )}
       </div>
     </div>

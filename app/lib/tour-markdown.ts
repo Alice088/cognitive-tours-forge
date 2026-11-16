@@ -1,4 +1,3 @@
-import { WAYPOINT_TYPES } from '@/app/lib/theme/tokens';
 import type { Tour, Waypoint } from '@/app/lib/workspace/types';
 
 export function tourSlug(name: string): string {
@@ -83,30 +82,6 @@ export function generateTourMarkdown(tour: Tour, waypoints: Waypoint[], { projec
       lines.push(`> ${stop.narrative}`);
       lines.push('');
     }
-  });
-
-  return lines.join('\n');
-}
-
-export function generateFullMapMarkdown(waypoints: Waypoint[], { projectName }: ExportContext = {}): string {
-  const lines: string[] = [];
-  lines.push(projectName ? `# Full Map: ${projectName}` : '# Full Map');
-  lines.push('');
-  lines.push(`*${waypoints.length} waypoint${waypoints.length === 1 ? '' : 's'}*`);
-  lines.push('');
-
-  WAYPOINT_TYPES.forEach(type => {
-    const group = waypoints.filter(waypoint => waypoint.type === type).sort((a, b) => a.label.localeCompare(b.label));
-    if (group.length === 0) {
-      return;
-    }
-    lines.push(`## ${type} Waypoints`);
-    lines.push('');
-    group.forEach(waypoint => {
-      lines.push(`### ${waypoint.label}`);
-      lines.push('');
-      pushWaypointBody(lines, waypoint);
-    });
   });
 
   return lines.join('\n');

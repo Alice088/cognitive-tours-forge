@@ -16,7 +16,7 @@ export interface AppShellProps {
   announcement?: string;
 }
 
-const NARROW_QUERY = '(max-width: 1023px)';
+const NARROW_QUERY = '(max-width: 767px)';
 function subscribeNarrow(onChange: () => void) {
   const query = window.matchMedia(NARROW_QUERY);
   query.addEventListener('change', onChange);
@@ -78,9 +78,10 @@ export function AppShell({
     <div className="flex h-dvh w-full overflow-hidden bg-background text-foreground">
       <aside
         data-region="rail"
+        data-collapsed={railCollapsed ? 'true' : 'false'}
         className={cn(
-          'hidden shrink-0 flex-col border-r border-border bg-rail text-rail-foreground md:flex',
-          railCollapsed ? 'w-14 [&_[data-rail-label]]:hidden [&_[data-rail-wide]]:hidden' : 'w-14 lg:w-60'
+          'hidden shrink-0 flex-col border-r border-border bg-rail text-rail-foreground md:flex md:w-14',
+          railCollapsed ? 'xl:w-14' : 'xl:w-60'
         )}
       >
         <div className="min-h-0 flex-1">{rail}</div>
@@ -119,22 +120,22 @@ export function AppShell({
           </Button>
         </div>
 
-        <div data-region="canvas" className="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-canvas">
+        <div data-region="dock" className="order-2 shrink-0 border-t border-border bg-dock text-dock-foreground">
+          {dock}
+        </div>
+
+        <div data-region="canvas" className="relative order-1 min-h-0 min-w-0 flex-1 overflow-hidden bg-canvas">
           <p aria-live="polite" className="sr-only">
             {announcement}
           </p>
           {canvas}
-        </div>
-
-        <div data-region="dock" className="shrink-0 border-t border-border bg-dock text-dock-foreground">
-          {dock}
         </div>
       </div>
 
       {!narrow ? (
         <>
           {inspectorCollapsed ? (
-            <div className="hidden shrink-0 border-l border-border bg-background p-1 lg:block">
+            <div className="hidden shrink-0 border-l border-border bg-background p-1 md:block">
               <Button
                 variant="ghost"
                 size="icon"
@@ -147,7 +148,7 @@ export function AppShell({
           ) : (
             <aside
               data-region="inspector"
-              className="hidden shrink-0 flex-col border-l border-border bg-background lg:flex lg:w-80"
+              className="hidden shrink-0 flex-col border-l border-border bg-background md:flex md:w-[300px] xl:w-80"
             >
               <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
                 <span className="text-sm font-medium">Inspector</span>

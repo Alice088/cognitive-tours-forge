@@ -1,36 +1,4 @@
-import type { MapState } from '@/app/lib/store/map-store';
-import { SUPPORTED_TOURS, SUPPORTED_WAYPOINTS, type Waypoint } from '@/app/lib/workspace/types';
-
-export const selectWaypoints = (state: MapState): Waypoint[] => state.document?.waypoints ?? [];
-
-export const selectTours = (state: MapState) => state.document?.tours ?? [];
-
-export const selectEdges = (state: MapState) => state.document?.edges ?? [];
-
-export const selectActiveTour = (state: MapState) =>
-  state.document?.tours.find(tour => tour.id === state.activeTourId) ?? null;
-
-export const selectSelectedWaypoint = (state: MapState) =>
-  state.document?.waypoints.find(waypoint => waypoint.id === state.selectedWaypointId) ?? null;
-
-export const selectWaypointById = (state: MapState, id: string) =>
-  state.document?.waypoints.find(waypoint => waypoint.id === id) ?? null;
-
-export const selectStopWaypoint = (state: MapState): Waypoint | null => {
-  const tour = selectActiveTour(state);
-  if (!tour) {
-    return null;
-  }
-  const stop = tour.stops[state.step];
-  if (!stop) {
-    return null;
-  }
-  return selectWaypointById(state, stop.waypointId);
-};
-
-export const selectIsOversized = (state: MapState): boolean =>
-  (state.document?.waypoints.length ?? 0) > SUPPORTED_WAYPOINTS ||
-  (state.document?.tours.length ?? 0) > SUPPORTED_TOURS;
+import type { Edge, Waypoint } from '@/app/lib/workspace/types';
 
 export function nextWaypointId(waypoints: Waypoint[]): string {
   let index = waypoints.length + 1;
@@ -48,4 +16,13 @@ export function nextTourId(tours: Array<{ id: string }>): string {
     index += 1;
   }
   return `t-${index}`;
+}
+
+export function nextEdgeId(edges: Edge[]): string {
+  let index = edges.length + 1;
+  const taken = new Set(edges.map(edge => edge.id));
+  while (taken.has(`e-${index}`)) {
+    index += 1;
+  }
+  return `e-${index}`;
 }

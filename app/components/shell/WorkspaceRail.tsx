@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { AddProjectDialog } from '@/app/components/shell/AddProjectDialog';
 import { CreateMapDialog } from '@/app/components/shell/CreateMapDialog';
 import { ProjectGroup } from '@/app/components/shell/ProjectGroup';
-import { RelinkDialog } from '@/app/components/shell/RelinkDialog';
 import { ThemeToggle } from '@/app/components/shell/ThemeToggle';
 import { Button } from '@/app/components/ui/button';
 import { createMap } from '@/app/lib/workspace/use-workspace';
@@ -26,7 +25,6 @@ export function WorkspaceRail({
   const router = useRouter();
   const [adding, setAdding] = useState(false);
   const [mapProject, setMapProject] = useState<ProjectSummary | null>(null);
-  const [relinking, setRelinking] = useState<ProjectSummary | null>(null);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -50,7 +48,6 @@ export function WorkspaceRail({
                 project={project}
                 activeMapFile={project.id === activeProjectId ? activeMapFile : null}
                 onCreateMap={setMapProject}
-                onRelink={setRelinking}
               />
             ))}
           </ul>
@@ -79,16 +76,6 @@ export function WorkspaceRail({
             router.push(`/p/${project.id}/${first.file}`);
           }
         }}
-      />
-
-      <RelinkDialog
-        project={relinking}
-        onOpenChange={open => {
-          if (!open) {
-            setRelinking(null);
-          }
-        }}
-        onRelinked={onChanged}
       />
 
       <CreateMapDialog

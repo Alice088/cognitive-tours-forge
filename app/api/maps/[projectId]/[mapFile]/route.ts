@@ -1,5 +1,5 @@
-import { mapMtime, readMap, writeMap } from '@/app/lib/workspace/map-file';
-import { projectById } from '@/app/lib/workspace/service';
+import { mapMtime, writeMap } from '@/app/lib/workspace/map-file';
+import { loadMap, projectById, rememberMap } from '@/app/lib/workspace/service';
 import { fail, handleError, ok } from '@/app/lib/workspace/http';
 import type { MapDocument } from '@/app/lib/workspace/types';
 
@@ -8,10 +8,8 @@ export const dynamic = 'force-dynamic';
 export async function GET(_request: Request, { params }: { params: Promise<{ projectId: string; mapFile: string }> }) {
   try {
     const { projectId, mapFile } = await params;
-    const project = await projectById(projectId);
-    const { document, report } = await readMap(project.path, decodeURIComponent(mapFile));
-    const mtimeMs = await mapMtime(project.path, decodeURIComponent(mapFile));
-    return ok({ document, report, mtimeMs });
+    const payload = await loadMap(projectId, decodeURIComponent(mapFile));
+    return ok(payload);
   } catch (error) {
     return handleError(error);
   }
@@ -36,6 +34,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ proj
       }
     }
     const result = await writeMap(project.path, file, body.document);
+    await rememberMap(projectId, file, body.document).catch(() => undefined);
     return ok(result);
   } catch (error) {
     return handleError(error);

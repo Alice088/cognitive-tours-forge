@@ -1,11 +1,14 @@
 import { constants, promises as fs } from 'node:fs';
 import path from 'node:path';
 import { isWithinHome } from '@/app/lib/fs/safe-path';
+import { listCachedMaps, readCachedMap, writeCachedMap } from '@/app/lib/workspace/cache';
 import {
   MapFileError,
   emptyDocument,
   mapDisplayName,
   mapFileName,
+  mapMtime,
+  readMap,
   toursDir,
   writeMap,
 } from '@/app/lib/workspace/map-file';
@@ -17,7 +20,15 @@ import {
   workspaceHome,
   writeLastView,
 } from '@/app/lib/workspace/registry';
-import type { Availability, MapRef, ProjectSummary, ViewState, WorkspaceRegistry } from '@/app/lib/workspace/types';
+import type {
+  Availability,
+  LoadReport,
+  MapDocument,
+  MapRef,
+  ProjectSummary,
+  ViewState,
+  WorkspaceRegistry,
+} from '@/app/lib/workspace/types';
 
 export type WorkspaceCode =
   | 'not-a-directory'
@@ -56,7 +67,7 @@ export async function listProjects(home: string = workspaceHome()): Promise<Proj
   const registry = await readRegistry(home);
   const summaries: ProjectSummary[] = [];
   for (const project of registry.projects) {
-    summaries.push(await summarise(project.id, project.name, project.path, project.addedAt));
+    summaries.push(await summarise(project.id, project.name, project.path, project.addedAt, home));
   }
   return summaries;
 }
@@ -67,10 +78,16 @@ export async function projectById(projectId: string, home: string = workspaceHom
   if (!project) {
     throw new WorkspaceError('unknown-project', 'That project is no longer in your workspace.', 404);
   }
-  return summarise(project.id, project.name, project.path, project.addedAt);
+  return summarise(project.id, project.name, project.path, project.addedAt, home);
 }
 
-async function summarise(id: string, name: string, target: string, addedAt: string): Promise<ProjectSummary> {
+async function summarise(
+  id: string,
+  name: string,
+  target: string,
+  addedAt: string,
+  home: string
+): Promise<ProjectSummary> {
   const maps: MapRef[] = [];
   let availability: Availability;
   let error: string | null = null;
@@ -91,8 +108,36 @@ async function summarise(id: string, name: string, target: string, addedAt: stri
   } catch {
     availability = 'unavailable';
     error = `Not found at ${target}`;
+    maps.push(...(await listCachedMaps(home, id)));
   }
   return { id, name, path: target, addedAt, availability, maps, error };
+}
+
+export async function loadMap(
+  projectId: string,
+  file: string,
+  home: string = workspaceHome()
+): Promise<{ document: MapDocument; report: LoadReport; mtimeMs: number | null; readOnly: boolean }> {
+  const project = await projectById(projectId, home);
+  if (project.availability === 'unavailable') {
+    const cached = await readCachedMap(home, projectId, file);
+    if (!cached) {
+      throw new WorkspaceError('project-unavailable', 'That project folder cannot be reached.', 409);
+    }
+    return { ...cached, mtimeMs: null, readOnly: true };
+  }
+  const { document, report } = await readMap(project.path, file);
+  await rememberMap(projectId, file, document, home).catch(() => undefined);
+  return { document, report, mtimeMs: await mapMtime(project.path, file), readOnly: false };
+}
+
+export async function rememberMap(
+  projectId: string,
+  file: string,
+  document: MapDocument,
+  home: string = workspaceHome()
+): Promise<void> {
+  await writeCachedMap(home, projectId, file, document);
 }
 
 export async function addProject(target: string, home: string = workspaceHome()): Promise<ProjectSummary> {
@@ -123,7 +168,7 @@ export async function addProject(target: string, home: string = workspaceHome())
     throw new WorkspaceError('already-registered', `Already in your workspace as ${existing.name}.`, 409);
   }
   const project = await registerProject(resolved, home);
-  return summarise(project.id, project.name, project.path, project.addedAt);
+  return summarise(project.id, project.name, project.path, project.addedAt, home);
 }
 
 export async function relink(
@@ -137,7 +182,7 @@ export async function relink(
     throw new WorkspaceError('not-a-directory', 'That folder does not exist.', 400);
   }
   const project = await relinkProject(projectId, resolved, home);
-  return summarise(project.id, project.name, project.path, project.addedAt);
+  return summarise(project.id, project.name, project.path, project.addedAt, home);
 }
 
 export async function forgetProject(projectId: string, home: string = workspaceHome()): Promise<void> {

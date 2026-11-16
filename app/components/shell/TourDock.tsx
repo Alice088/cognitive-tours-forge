@@ -1,6 +1,14 @@
 'use client';
 
-import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon, PencilIcon, Redo2Icon, Undo2Icon } from 'lucide-react';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  DownloadIcon,
+  PencilIcon,
+  PlusIcon,
+  Redo2Icon,
+  Undo2Icon,
+} from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Separator } from '@/app/components/ui/separator';
@@ -13,6 +21,7 @@ export function TourDock({
   step,
   onTourChange,
   onStep,
+  onCreateTour,
   editing,
   onEditingChange,
   overview,
@@ -23,12 +32,15 @@ export function TourDock({
   onUndo,
   onRedo,
   saveStatus,
+  disabled,
+  readOnly,
 }: {
   tours: Tour[];
   activeTourId: string | null;
   step: number;
   onTourChange: (tourId: string | null) => void;
   onStep: (step: number) => void;
+  onCreateTour: () => void;
   editing: boolean;
   onEditingChange: (editing: boolean) => void;
   overview: boolean;
@@ -39,14 +51,17 @@ export function TourDock({
   onUndo: () => void;
   onRedo: () => void;
   saveStatus: SaveStatus;
+  disabled: boolean;
+  readOnly: boolean;
 }) {
   const tour = tours.find(item => item.id === activeTourId) ?? null;
   const total = tour?.stops.length ?? 0;
+  const frozen = disabled || readOnly;
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto px-3 py-2">
       <Select value={tour?.id ?? 'none'} onValueChange={value => onTourChange(value === 'none' ? null : value)}>
-        <SelectTrigger aria-label="Current tour" className="w-52 shrink-0">
+        <SelectTrigger aria-label="Current tour" className="w-52 shrink-0" disabled={disabled}>
           <SelectValue placeholder="No tour" />
         </SelectTrigger>
         <SelectContent>
@@ -59,6 +74,10 @@ export function TourDock({
         </SelectContent>
       </Select>
 
+      <Button variant="ghost" size="icon" aria-label="New tour" disabled={frozen} onClick={onCreateTour}>
+        <PlusIcon aria-hidden="true" />
+      </Button>
+
       <p className="shrink-0 text-sm tabular-nums text-muted-foreground" aria-live="polite">
         {tour ? `Step ${Math.min(step + 1, Math.max(total, 1))} of ${total}` : 'No tour selected'}
       </p>
@@ -68,7 +87,7 @@ export function TourDock({
           variant="ghost"
           size="icon"
           aria-label="Previous stop"
-          disabled={!tour || step <= 0}
+          disabled={disabled || !tour || step <= 0}
           onClick={() => onStep(step - 1)}
         >
           <ChevronLeftIcon aria-hidden="true" />
@@ -77,7 +96,7 @@ export function TourDock({
           variant="ghost"
           size="icon"
           aria-label="Next stop"
-          disabled={!tour || step >= total - 1}
+          disabled={disabled || !tour || step >= total - 1}
           onClick={() => onStep(step + 1)}
         >
           <ChevronRightIcon aria-hidden="true" />
@@ -86,7 +105,7 @@ export function TourDock({
           variant={overview ? 'default' : 'outline'}
           size="sm"
           aria-pressed={overview}
-          disabled={!tour}
+          disabled={disabled || !tour}
           onClick={() => onOverviewChange(!overview)}
         >
           Whole tour
@@ -95,13 +114,13 @@ export function TourDock({
           variant={editing ? 'default' : 'outline'}
           size="sm"
           aria-pressed={editing}
-          disabled={!tour}
+          disabled={frozen || !tour}
           onClick={() => onEditingChange(!editing)}
         >
           <PencilIcon aria-hidden="true" />
           Edit tour
         </Button>
-        <Button variant="ghost" size="sm" disabled={!tour || !onExport} onClick={onExport ?? undefined}>
+        <Button variant="ghost" size="sm" disabled={disabled || !tour || !onExport} onClick={onExport ?? undefined}>
           <DownloadIcon aria-hidden="true" />
           Export
         </Button>
@@ -112,7 +131,7 @@ export function TourDock({
       <div className="flex shrink-0 items-center gap-1">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Undo" disabled={!canUndo} onClick={onUndo}>
+            <Button variant="ghost" size="icon" aria-label="Undo" disabled={frozen || !canUndo} onClick={onUndo}>
               <Undo2Icon aria-hidden="true" />
             </Button>
           </TooltipTrigger>
@@ -120,7 +139,7 @@ export function TourDock({
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Redo" disabled={!canRedo} onClick={onRedo}>
+            <Button variant="ghost" size="icon" aria-label="Redo" disabled={frozen || !canRedo} onClick={onRedo}>
               <Redo2Icon aria-hidden="true" />
             </Button>
           </TooltipTrigger>
@@ -129,13 +148,15 @@ export function TourDock({
       </div>
 
       <p className="ml-auto shrink-0 text-xs text-muted-foreground" aria-live="polite">
-        {saveStatus === 'pending'
-          ? 'Saving'
-          : saveStatus === 'saved'
-            ? 'Saved'
-            : saveStatus === 'failed'
-              ? 'Not saved'
-              : 'Up to date'}
+        {disabled
+          ? 'Waiting'
+          : saveStatus === 'pending'
+            ? 'Saving'
+            : saveStatus === 'saved'
+              ? 'Saved'
+              : saveStatus === 'failed'
+                ? 'Not saved'
+                : 'Up to date'}
       </p>
     </div>
   );

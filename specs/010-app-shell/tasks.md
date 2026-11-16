@@ -123,7 +123,7 @@ Single Next.js project at the repository root: `app/`, `app/components/`, `app/l
 
 - [x] T035 [US3] Make navigation a route change in `app/components/shell/WorkspaceRail.tsx` and `ProjectGroup.tsx` (`/p/[projectId]/[mapFile]?tour=&step=`), updating `PUT /api/workspace/view-state` on every navigation so FR-009 and FR-029 share one mechanism
 - [x] T036 [US3] Implement restore-on-launch in `app/page.tsx`: apply the stored view, degrading one level at a time (step → tour → map → workspace root) when a value no longer resolves, and never blocking the launch
-- [ ] T037 [US3] Implement the unavailable project path: rail marker with a tooltip naming the missing path, read-only opening from the last cached document, and "Choose a new location" reusing the picker from T046 to call `POST /api/workspace` after removing the stale entry
+- [x] T037 [US3] Implement the unavailable project path: rail marker with a tooltip naming the missing path, read-only opening from the last cached document, and "Choose a new location" reusing the picker from T046 to call `POST /api/workspace` after removing the stale entry
 - [x] T038 [US3] Implement rail collapse and reopen in `app/components/shell/AppShell.tsx` — collapsing returns the space to the canvas (grid column, not visibility), and one control that is always present reopens it
 - [x] T039 [US3] Delete `app/lib/project.ts`, `app/lib/repo.ts`, `app/lib/code-folder.ts` and `app/lib/sites.ts` if no file imports them after the rail rewrite; run the unit and acceptance suites and record the run in `TEST_RESULTS.md`
 
@@ -268,6 +268,30 @@ Each later phase is independently demonstrable: US2 dark mode, US3 project switc
 - A task that deletes code is not a cleanup afterthought: it is what keeps the constitution's "no dead code" rule true at every commit
 - Commit after each phase at minimum; the pre-commit hook runs prettier and `tsc --noEmit`
 - History is per map and per session by design (FR-023); never persist it
-- T037 stays open on one point: an unavailable project is marked, can be
-  repointed, and refuses writes, but it does not yet open read-only from a
-  cached copy of the map — that cache belongs to the import/export feature
+- T037 closed in Phase 10: the last saved copy of each map is kept in
+  `~/.ctour/cache/<project>/`, and an unavailable project opens it read only,
+  with one action to choose a new location
+- T076 landed as `docs/adr/009-local-first-shell.md` rather than
+  `0001-local-first-shell.md`, to follow the numbering already used by the eight
+  ADRs in that folder; the four ADRs it replaces are marked superseded
+
+---
+
+## Phase 10: Convergence
+
+- [x] T064 [US6] Make a waypoint's position changeable from the canvas: add a single-entry move action to `app/lib/store/map-store.ts` (no-op when the position is unchanged), wire `onNodesChange`/`onNodeDragStop` in `app/components/shell/MapCanvas.tsx` to it, and cover one drag producing exactly one history entry in `tests/unit/history.test.ts` per FR-020, FR-024, T054 (`missing`)
+- [x] T065 [US6] Give links and tours a place in the interface: create and delete a link and create and delete a tour from `app/components/shell/Inspector.tsx` and `app/components/shell/TourDock.tsx` against the existing `addEdge`/`deleteEdge`/`addTour`/`deleteTour` actions, each producing exactly one history entry, with the actions removed from `app/lib/store/map-store.ts` if the decision is that they stay out of scope per FR-020, T054 (`missing`)
+- [x] T066 [US3] Open an unavailable project read-only instead of only marking it: keep its last known maps in `app/lib/workspace/service.ts`, serve them through `GET /api/maps/[projectId]/[mapFile]` from the registry record without touching disk, disable every mutating control in the shell while the project is unavailable, and make the "read only" badge in `app/components/shell/ProjectGroup.tsx` reachable per FR-010, US3/AC3, T037 (`partial`)
+- [x] T067 [US6] Make a failed save recoverable: show the failure reason and one retry in `app/components/shell/TourDock.tsx` or the notice area of `app/components/shell/MapWorkspace.tsx`, keeping the person's text, and letting `409 stale-document` remain the two-action case it already is per T052, FR-003 (`partial`)
+- [x] T068 [US6] Add the twenty-change replay to `tests/acceptance/editing.spec.ts`: creates, edits, deletes and reorders stepped back to the beginning and forward to the end, comparing every intermediate document against the sequence recorded on the way in, plus a new change after stepping back discarding the forward branch, per SC-009, T049 (`missing`)
+- [x] T069 [US4] Put the width bands back on the contract in `app/components/shell/AppShell.tsx`: expanded 240 px rail only at `>=1280px`, icon-only 56 px rail with labels on hover and focus at `768px-1279px`, docked 300 px inspector across the whole medium band, drawers only below `768px`, and extend `tests/acceptance/responsive.spec.ts` to assert the per-band rail and inspector per contract §2, FR-012, US4 (`contradicts`)
+- [x] T070 [US1] Complete the keyboard contract in `app/components/shell/MapCanvas.tsx` and `app/components/shell/MapWorkspace.tsx`: `/` focusing the map search, arrow keys moving between waypoints inside the focused canvas, and `Escape` closing the tour and then the selection after dialogs and drawers, with `tests/acceptance/keyboard.spec.ts` covering each and asserting the tab order rail → dock → canvas → inspector per contract §4, FR-016 (`partial`)
+- [x] T071 [US4] Extend `tests/acceptance/performance.spec.ts` past search typing to pan, zoom, select and drag on the 250 waypoint map, each asserted to produce a visible change within 100 ms per SC-010, T057 (`partial`)
+- [x] T072 [US2] Verify the theme where it is not yet verified: a live system theme change applying within one second, and a computed-style sweep over every `data-region` subtree plus the open dialog, tooltip and badge asserting no surface, text or border resolves to the other theme's colour, per FR-004, SC-003, T029 (`partial`)
+- [x] T073 [US1] Remove what the shell no longer uses: the unused selectors in `app/lib/store/selectors.ts` (or route the canvas and dock through them as the plan states), `generateFullMapMarkdown` and `tourByline` in `app/lib/tour-markdown.ts`, `WAYPOINT_TYPE_TOKEN` in `app/lib/theme/tokens.ts` and the unused `state-new` token in `app/globals.css` per plan: Structure Decision, Additional Constraints (`contradicts`)
+- [x] T074 [US5] Make "a project with no map" a reachable surface: opening a project in the rail without maps renders `EmptyProject` in the canvas column with its one create action, using a route or rail action that exists rather than the degenerate case in `app/components/shell/HomeView.tsx` per US5/AC3, FR-014 (`partial`)
+- [x] T075 [US6] Surface validation in `app/components/shell/WaypointEditor.tsx` and `app/components/shell/TourEditor.tsx`: an empty label, an absolute `file` path, a duplicate id and a stop pointing at a missing waypoint each produce the map-file contract's message next to the field instead of only a "Not saved" dock status per T050, contract `map-file.md` (`partial`)
+- [x] T076 Write `docs/adr/0001-local-first-shell.md` recording why hosting, Prisma and per-team sites were removed, as T061 requires and the README's architecture section already assumes per T061 (`missing`)
+- [x] T077 [US5] Make the loading and project-without-map states each offer exactly one primary action and assert the count for all four states in `tests/acceptance/states.spec.ts`, which currently checks only the empty workspace and the failed load per SC-007, T045 (`partial`)
+- [x] T078 [US1] Extend the control scan in `tests/acceptance/shell.spec.ts` from accessible names to the two remaining claims of SC-002: every visible control changes something observable, and no action is exposed in more than one region per SC-002, T019 (`partial`)
+- [x] T079 [US3] Cover the remaining restore guarantees: three close-and-reopen cycles returning to the same project, map, tour and stop, and the one-level-at-a-time degradation of a stored view whose tour or step no longer resolves, per SC-011, T036 (`partial`)

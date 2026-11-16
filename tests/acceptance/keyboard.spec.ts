@@ -5,25 +5,28 @@ test.beforeAll(async ({ request }) => {
   await ensureProject(request);
 });
 
-test('reaches every region with the keyboard and shows focus', async ({ page }) => {
+test('reaches every region with the keyboard in the contract order', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openSample(page);
 
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
-  const seen = new Set<string>();
-  for (let index = 0; index < 40; index += 1) {
+  const order: string[] = [];
+  for (let index = 0; index < 60; index += 1) {
     await page.keyboard.press('Tab');
     const region = await page.evaluate(() => {
       const active = document.activeElement as HTMLElement | null;
       return active?.closest('[data-region]')?.getAttribute('data-region') ?? null;
     });
-    if (region) {
-      seen.add(region);
+    if (region && order[order.length - 1] !== region) {
+      order.push(region);
     }
   }
   for (const region of ['rail', 'canvas', 'dock', 'inspector']) {
-    expect(seen.has(region), `tab never reached ${region}`).toBe(true);
+    expect(order, `tab never reached ${region}`).toContain(region);
   }
+  expect(order[0]).toBe('rail');
+  expect(order.indexOf('dock')).toBeLessThan(order.indexOf('canvas'));
+  expect(order.indexOf('inspector')).toBeGreaterThan(order.indexOf('canvas'));
 });
 
 test('shows a visible focus ring on a keyboard-focused control', async ({ page }) => {
@@ -63,4 +66,40 @@ test('undo inside a text field stays text undo', async ({ page }) => {
   await page.getByLabel('Description').press('Control+z');
   await page.waitForTimeout(300);
   await expect(undo).toBeDisabled();
+});
+
+test('focuses the map search with a slash', async ({ page }) => {
+  await openSample(page);
+  await page.locator('[data-region="canvas"]').click({ position: { x: 20, y: 20 } });
+  await page.keyboard.press('/');
+  await expect(page.getByLabel('Search waypoints')).toBeFocused();
+});
+
+test('moves between waypoints with the arrow keys', async ({ page }) => {
+  await openSample(page);
+  await page.getByText('Understanding is the deliverable').click();
+  await expect(page.getByLabel('Description')).toHaveValue('People need to see how the code fits together.');
+
+  await page.locator('[role="group"][aria-label="Map"]').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByLabel('Description')).toHaveValue('');
+
+  await page.keyboard.press('ArrowDown');
+  await expect(page.locator('#waypoint-label')).toHaveValue('Config is read from disk');
+});
+
+test('dismisses the tour before the selection', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openSample(page);
+  await page.getByText('Understanding is the deliverable').click();
+  await page.getByRole('button', { name: 'Edit tour' }).click();
+  await expect(page.getByLabel('Tour name')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByLabel('Tour name')).toBeHidden();
+  await expect(page.getByLabel('Description')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByLabel('Description')).toBeHidden();
+  await expect(page.getByText('Select a waypoint on the map to edit it here')).toBeVisible();
 });
