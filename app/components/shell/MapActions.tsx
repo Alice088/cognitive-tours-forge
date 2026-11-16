@@ -1,7 +1,13 @@
 'use client';
 
-import { CopyIcon, FilesIcon } from 'lucide-react';
+import { CopyIcon, FilesIcon, MoreHorizontalIcon } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/app/components/ui/dropdown-menu';
 
 export function MapActions({
   onSaveCopy,
@@ -15,32 +21,46 @@ export function MapActions({
   allDisabled?: boolean;
 }) {
   return (
-    <div
-      data-region="map-actions"
-      className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-md border border-border bg-background p-1 shadow-sm"
-    >
+    <>
       <Button
         variant="ghost"
         size="sm"
-        className="gap-2"
+        className="hidden gap-2 md:inline-flex"
         aria-label="Save a copy"
         disabled={disabled}
         onClick={onSaveCopy}
       >
         <CopyIcon aria-hidden="true" />
-        <span className="hidden md:inline">Save a copy</span>
+        <span>Save a copy</span>
       </Button>
       <Button
         variant="ghost"
         size="sm"
-        className="gap-2"
+        className="hidden gap-2 md:inline-flex"
         aria-label="Export all maps"
         disabled={allDisabled}
         onClick={onExportAll}
       >
         <FilesIcon aria-hidden="true" />
-        <span className="hidden md:inline">Export all maps</span>
+        <span>Export all maps</span>
       </Button>
-    </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="md:hidden" aria-label="More map actions">
+            <MoreHorizontalIcon aria-hidden="true" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem aria-label="Save a copy" disabled={disabled} onSelect={onSaveCopy}>
+            <CopyIcon aria-hidden="true" />
+            Save a copy
+          </DropdownMenuItem>
+          <DropdownMenuItem aria-label="Export all maps" disabled={allDisabled} onSelect={onExportAll}>
+            <FilesIcon aria-hidden="true" />
+            Export all maps
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 }

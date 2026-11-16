@@ -86,6 +86,20 @@ test.describe('US1 one coherent workspace', () => {
     expect(canvas.x + canvas.w).toBeLessThanOrEqual(inspector.x + 1);
   });
 
+  test('leaves the map corner to the map', async ({ page }) => {
+    await openMap(page);
+    const map = page.locator('[role="group"][aria-label="Map"]');
+    await expect(map).toBeVisible();
+    const box = await map.boundingBox();
+    expect(box).not.toBeNull();
+    const reachesPane = await page.evaluate(
+      point => document.elementFromPoint(point.x, point.y)?.closest('.react-flow__pane') !== null,
+      { x: box!.x + box!.width - 16, y: box!.y + 16 }
+    );
+    expect(reachesPane).toBe(true);
+    await expect(page.locator('[data-region="map-actions"]')).toHaveCount(0);
+  });
+
   test('keeps every tour fact in the dock', async ({ page }) => {
     await openMap(page);
     const dock = page.locator('[data-region="dock"]');
@@ -167,7 +181,7 @@ test.describe('US5 next actions', () => {
 test.describe('US6 editing', () => {
   test('autosaves a description to the map file', async ({ page }) => {
     await openMap(page);
-    await page.getByText('Understanding is the deliverable').click();
+    await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
     const field = page.getByLabel('Description');
     await field.fill('Rewritten by the shell.');
     await page.locator('[data-region="canvas"]').click({ position: { x: 400, y: 400 } });
@@ -179,7 +193,7 @@ test.describe('US6 editing', () => {
 
   test('undoes and redoes a change', async ({ page }) => {
     await openMap(page);
-    await page.getByText('Understanding is the deliverable').click();
+    await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
     await page.getByLabel('Description').fill('First rewrite.');
     await page.locator('[data-region="canvas"]').click({ position: { x: 10, y: 10 } });
     await waitForSaved(page);
@@ -193,7 +207,7 @@ test.describe('US6 editing', () => {
 
   test('keeps the map visible while editing', async ({ page }) => {
     await openMap(page);
-    await page.getByText('Understanding is the deliverable').click();
+    await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
     await expect(page.getByLabel('Description')).toBeVisible();
     await expect(page.locator('[data-region="canvas"]')).toBeVisible();
   });

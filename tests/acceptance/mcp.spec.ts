@@ -101,12 +101,14 @@ test('removes a waypoint the agent deletes', async ({ page }) => {
   const agent = await startAgent();
   try {
     await page.goto(`/p/${PROJECT_ID}/${mapFile}`);
-    await expect(page.getByText('Waypoints carry meaning')).toBeVisible();
+    await expect(page.locator('.react-flow__node', { hasText: 'Waypoints carry meaning' })).toBeVisible();
 
     const state = String((await agent.tool('read_map', { project: PROJECT_ID, map: mapFile })).state);
     await agent.tool('delete_waypoint', { project: PROJECT_ID, map: mapFile, state, waypoint: 'w-2' });
 
-    await expect(page.getByText('Waypoints carry meaning')).toHaveCount(0, { timeout: 1000 });
+    await expect(page.locator('.react-flow__node', { hasText: 'Waypoints carry meaning' })).toHaveCount(0, {
+      timeout: 1000,
+    });
   } finally {
     agent.close();
   }
@@ -116,7 +118,7 @@ test('lets a person keep their own edit when the agent writes meanwhile', async 
   const agent = await startAgent();
   try {
     await page.goto(`/p/${PROJECT_ID}/${mapFile}`);
-    await page.getByText('Config is read from disk').click();
+    await page.locator('.react-flow__node', { hasText: 'Config is read from disk' }).click();
     const notes = page.getByLabel('Notes');
     await notes.fill('Half-written thought');
 

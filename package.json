@@ -1,8 +1,27 @@
 {
   "name": "ctour",
   "version": "0.1.0",
-  "description": "A local-first cognitive map of a repository, opened with one command",
+  "description": "Maps and guided tours of your code, written by you, linking why to how",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alice088/cognitive-tours-forge.git"
+  },
+  "homepage": "https://github.com/Alice088/cognitive-tours-forge#readme",
+  "bugs": {
+    "url": "https://github.com/Alice088/cognitive-tours-forge/issues"
+  },
+  "keywords": [
+    "cognitive-tours",
+    "codebase",
+    "code-map",
+    "onboarding",
+    "documentation",
+    "architecture",
+    "tours",
+    "mcp",
+    "local-first"
+  ],
   "engines": {
     "node": ">=20"
   },
@@ -12,6 +31,13 @@
   "files": [
     "dist/",
     ".next/standalone/",
+    "!.next/standalone/tests/",
+    "!.next/standalone/specs/",
+    "!.next/standalone/docs/",
+    "!.next/standalone/tours/",
+    "!.next/standalone/resources/",
+    "!.next/standalone/test-results/",
+    "!.next/standalone/.tmp/",
     "README.md",
     "LICENSE"
   ],

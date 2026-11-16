@@ -54,3 +54,6 @@ resources/
 
 # Bundled command
 /dist/
+
+# Packed tarball
+*.tgz

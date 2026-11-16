@@ -1,320 +1,195 @@
 # Cognitive Tours
 
-Cognitive Tours is a map of how a piece of software actually works, kept next to
-the code it describes.
-еа
-depend on each other. A **tour** is an ordered walk through the map with a
-spoken narrative at each stop, so a newcomer can be shown the shape of the system
-in ten minutes instead of six months.
+**Maps and guided tours of your code, written by you, linking why to how.**
 
-The map is a file in the repository: `.ctour/<name>.tour.json`. It is versioned
-with the code, reviewed in the same pull request, and diffed like anything else.
-When the code changes, the map is wrong in the same commit, and someone can fix
-it there.
+[Install](#install) · [Quick start](#quick-start) · [Guides](#guides) · [The research](#the-research)
+
+![A tour in Cognitive Tours: the map of waypoints, and the stop being read in the corner of the canvas](docs/images/graph-view.png)
+
+Cognitive Tours turns a software project into a graph of the things that matter —
+goals, user needs, features, decisions, code, tests, risks, open questions,
+deprecated parts — and lets you record why they are shaped that way. A **tour** is
+an ordered walk through that graph, with a written narrative at each stop: ten
+minutes of reading instead of six months of archaeology.
+
+The map is a file in the repository, `.ctour/<name>.tour.json`. It is committed,
+reviewed and diffed like the code it describes, and it travels with a clone.
+Everything runs on your machine: nothing is uploaded, there is no account, there is
+no server to log in to.
+
+## Why
+
+- **Code outruns understanding.** With AI writing more of it, teams ship code
+  nobody fully understands and lose track of _why_ it is the way it is. Storey
+  calls the two debts this leaves behind **cognitive debt** and **intent debt**:
+  what the team no longer knows about its own system, and what it no longer
+  remembers about what the system was for.
+- **Writing the tour is how you get it back.** You place waypoints, connect them,
+  and write the walk from why to how. Writing it rebuilds your own understanding;
+  sharing it passes some of that on.
+- **AI is a scaffold, not a substitute.** An agent can draft a starting map, ask
+  the questions you skipped, and keep the map in step with the code. The
+  understanding stays yours — a map nobody wrote by hand is a map nobody trusts.
+
+## Where it comes from
+
+Cognitive Tours started as research by
+[Margaret-Anne Storey](https://github.com/margaretstorey) on how people understand
+software. A codebase is not only its code, and questions like _why is it shaped
+this way_ or _what would break if we moved this_ have no home in a repository. The
+idea is twenty years old: waypoints came from TagSEA (CSCW 2006), tours of a
+codebase from ICSE 2007. Both papers are in `docs/papers/`.
+
+**This repository is the Forge build**: the same idea, rebuilt as a local-first
+product you can use on a real project. The research prototype needs a deployment, a
+database and an accounts conversation before it shows you a map; the Forge build
+needs one command and a folder of code.
+
+| The prototype                            | The Forge build                                           |
+| ---------------------------------------- | --------------------------------------------------------- |
+| A hosted site per team, with a database  | A local application, started by `ctour init`              |
+| The map lives in a server                | The map is `.ctour/<name>.tour.json`, committed with code |
+| One map per deployment                   | Every project and map in one window, from one rail        |
+| Edits are saved when they are saved      | The file is followed live; conflicts are never silent     |
+| An agent reads a public URL              | An agent reads and writes the same file over `ctour mcp`  |
+| Sharing means exporting Markdown         | Save a copy, import with a preview, move a workspace      |
+| A prototype with its author's own layout | Responsive at every width, real light and dark themes     |
+
+## What a map is
+
+A waypoint is one fact, typed, written in a sentence or two, and linked to the
+waypoints around it. The ten types are not decoration: they set the colour, the
+filter, and the question the waypoint answers.
+
+| Type           | It answers                                            |
+| -------------- | ----------------------------------------------------- |
+| Goal           | What is this product for?                             |
+| User Need      | What does someone outside the code need from it?      |
+| Feature        | What does the product do about that need?             |
+| ADR            | Which decision was made, and what did it cost?        |
+| Code Component | Where does it live, and what is it responsible for?   |
+| Test           | What promise is checked, and by what?                 |
+| Risk           | What can hurt us, and how would we notice?            |
+| AI Instruction | What must an agent working here know before it edits? |
+| Open Question  | What do we not know yet?                              |
+| Deprecated     | What is on its way out, and what replaced it?         |
+
+Three rules keep a map worth reading:
+
+1. **The map says what the code cannot.** A waypoint that repeats a function
+   signature is noise. A waypoint that says _why_ the signature is that shape is
+   the point.
+2. **The map belongs to the code.** It is a file under `.ctour/`, next to the
+   source — never stored in a service that outlives or forgets the code.
+3. **Reading comes first.** A tour is for a person who does not know the system
+   yet. Nothing on the screen matters more than the words the author wrote for the
+   stop being read.
 
 ## Who this is for
 
-Someone joining a codebase and needing to know why it is shaped this way.
-Someone leaving a codebase and wanting the reason to survive them. A team that
-keeps re-litigating a decision because nobody remembers the constraint that
-produced it.
+Someone joining a codebase and needing to know why it is shaped this way. Someone
+leaving a codebase and wanting the reason to survive them. A team that keeps
+re-litigating a decision because nobody remembers the constraint that produced it.
+An AI agent that has to change the code without breaking the assumptions behind it.
 
-## What it does today
-
-- One command starts a local application. Nothing is uploaded, no account is
-  made, no data leaves the machine.
-- The navigation rail lists every project you have added and the maps inside
-  each one.
-- The map shows waypoints as typed cards with their links, searchable and
-  filterable by type.
-- The tour dock walks a tour stop by stop, with a whole-tour overview.
-- The inspector edits a waypoint or a tour without hiding the map.
-- Edits save themselves into `.ctour/*.tour.json`; undo and redo work like a
-  browser's, per session and per map.
-- Light, dark and follow-the-system themes, at any window width down to a phone.
-- The map is reachable by a coding agent through a local protocol: it reads the
-  projects this machine knows, reads one map in full, and adds or changes
-  waypoints, links and tours in the same file the person has open.
-- A map can leave the project as one file and come back: save a copy wherever you
-  like, bring a file in after seeing exactly what will be added, take a whole
-  project's maps at once. `ctour workspace export` and `ctour workspace import`
-  carry what the machine remembers — its projects, the last place opened, and the
-  last known copy of every map it has seen — to another machine.
-
-## What it does not do yet
-
-The command line entry point (`ctour init`, `ctour serve`), the MCP server that
-lets an AI agent read and write the same map, and the skill files that teach an
-agent the map format. The application currently starts with `npm run dev` from a
-checkout. Those pieces plug into this shell and are specified separately.
-
-## Architecture
-
-Three regions of state, each with exactly one owner.
-
-| State                    | Lives in                            | Survives              |
-| ------------------------ | ----------------------------------- | --------------------- |
-| Workspace registry       | `~/.ctour/workspace.json`           | restarts, per machine |
-| Map document             | `<project>/.ctour/<name>.tour.json` | restarts, git, clones |
-| Selection, history, drag | the running application             | the session           |
-
-The registry is machine-local on purpose: which projects you have open is a fact
-about your machine, not about the repository. The map is the opposite — it
-belongs to the code.
-
-### The screen
-
-Four regions, each the single home of its content: the navigation rail (projects
-and their maps), the map canvas, the inspector (the selected waypoint or the
-tour being edited), and the tour dock (the current tour, its position, its
-controls). A fact that appears in two regions is a defect, not a convenience.
-
-Width bands: at 1280 px and wider all four are visible, with a 240 px rail and
-a 320 px inspector; between 768 and 1279 px the rail is 56 px of icons whose
-labels appear on hover or focus and the inspector stays docked at 300 px; below
-768 px the rail and inspector become drawers over the canvas and the dock
-becomes a single scrollable row.
-
-### Design tokens
-
-Every colour is a semantic custom property in `app/globals.css`, defined once for
-light and once for dark: surfaces (`background`, `card`, `rail`, `dock`,
-`canvas`), interaction (`primary`, `accent`, `destructive`, `ring`, `input`),
-the ten waypoint types, and three states. Components use `bg-canvas`,
-`text-waypoint-goal-foreground`; a literal `bg-gray-100` fails lint. A unit test
-reads the stylesheet and fails if any text pair drops below WCAG AA, so the
-themes cannot silently rot.
-
-### Reading and writing the map
-
-`app/lib/workspace/map-file.ts` owns the format. Reads validate and normalise,
-and never rewrite the file they just read. Writes serialise with a fixed key
-order, sort collections by id, keep tour stop order exactly as authored, write a
-temporary file and rename it over the target. A crash mid-save cannot truncate a
-map, and adding one waypoint produces a one-line diff.
-
-### Following the file while it is open
-
-The server watches the project's `.ctour/` folder, never the map file itself:
-every save renames a temporary file over the target, which replaces the inode
-and silently kills a watcher attached to the file. A change is read, parsed and
-normalised, and compared with the canonical text last delivered; equal text
-produces no event, which is also why the application's own saves do not echo
-back — the write records the same normalised text a read will produce, so
-clearing a field cannot make the application's own save look like an outside
-one. The browser receives events over one local stream per open map, so nothing
-leaves the machine. A comparison loop runs every two seconds alongside the
-watcher rather than only after a watch error: some network mounts and container
-volumes accept a watch and then report nothing, and a silent watcher would stop
-the map from following the file at all.
-
-When the file changes under unsaved typing the map-level notice says what
-changed and offers two actions: reload the file's version, which restarts the
-history and says so, or keep mine, which writes the open document over the file
-without a second notice. A save refused only because the file's timestamp moved
-— a formatter, `git checkout` of the same branch — is retried without a notice
-when the two documents say the same thing.
-
-Reads for sync are strict. The load surface repairs a map it partly understands;
-while a map is open, a document whose repair would drop a waypoint, a link, a
-stop or a file path is refused, and the message names what would be lost. A
-deleted file is never recreated by an autosave: the notice offers to write it
-back, and typing continues on the copy in memory until that choice is made. When
-the map cannot be read at all, the same notice offers to write the map over the
-file.
-
-### When the folder is not there any more
-
-Every successful read and write also refreshes a copy of the map in
-`~/.ctour/cache/<project>/`. If the project folder is renamed, moved or deleted,
-the project stays in the rail, marked, and opening a map serves the last copy
-saved on this machine, read only: every editing control is disabled and the only
-action is to choose a new location for the project. The cache is a fallback, not
-a source of truth — nothing is ever read from it while the folder is reachable.
-
-### Server routes exist because the browser cannot touch the disk
-
-`app/api/workspace/*` and `app/api/maps/*` are the only code that reads or writes
-files. They validate that every path resolves inside the project root before any
-filesystem call. Nothing is fetched over the network; the application is a local
-server the browser talks to.
-
-### What travels and what stays
-
-A map is a file, but it is only a file while it stays in `.ctour/`. Export writes
-a copy into a folder the person picks; it copies the bytes and never parses them,
-so what leaves is what the project holds, including a hand-edited layout the
-reader would otherwise reformat. An existing file is never replaced — the copy
-takes the next free name and says which one it used.
-
-An import is previewed before anything is written: the name the map will get, the
-counts it holds, and the entries this product cannot represent. Those entries are
-written away only when the person confirms a screen that states how many there
-are, and a refusal leaves the folder identical. The write itself creates the file
-exclusively, so a name taken in the meantime gets a suffix instead of an
-overwrite.
-
-What stays behind is the machine: the registry at `~/.ctour/workspace.json`, the
-project ids, and the last known copies under `~/.ctour/cache/`. `ctour workspace
-export` packs the names, the recorded folders, the last view and those cached
-maps into one JSON file; `ctour workspace import` matches each project to a
-folder — the recorded one, the one you name with `--project`, or none at all —
-and never decides silently. A project folder always beats a travelled copy, and
-nothing is added twice.
-
-### How the agent reaches the map
-
-`ctour mcp` speaks a newline-delimited protocol on standard input and output and
-offers nine capabilities: list the projects, read one map, and change the map —
-add, change and remove a waypoint, link and unlink two waypoints, create a tour
-and set its stops. The layer is written in `cli/mcp/` and calls the same
-map-file modules the interface uses, so the agent and the person cannot disagree
-about the format.
-
-A read returns a state token, the first sixteen hex characters of the sha256 of
-the file bytes. Every change sends that token back. A mismatch whose content is
-identical after normalisation is reported as "nothing changed"; any other
-mismatch is refused and carries the current map, so the agent re-reads instead of
-overwriting a newer edit.
-
-There is no channel between the protocol server and the running interface: the
-agent writes the file, and the interface notices it as an outside change, exactly
-as it notices an editor (see 011). With the interface closed, everything still
-works; the interface is a view of the folder, not a requirement.
-
-The instructions an agent needs — read, change, read back, the ten waypoint
-types, what a refusal means — travel in the protocol's own handshake, from
-`cli/mcp/instructions.ts`, so no per-agent skill file can drift away from the
-product.
-
-`ctour mcp install` finds the agents on the machine (Claude Code, Cursor, Gemini
-CLI, Codex), adds the entry to the agent's own configuration, and leaves every
-other byte of that file alone; running it twice writes nothing. `ctour doctor`
-reports whether each detected agent is connected and whether the command it
-points at still exists.
-
-### Editing
-
-One zustand store per open map, wrapped in temporal history limited to fifty
-steps and scoped to the document — selection and loading flags are not edits and
-never enter the history. A text field commits to the store when the person
-pauses or leaves the field, so one edit is one undo step. A waypoint is moved by
-dragging it on the canvas and one drag is one undo step. Links and tours are
-created from the inspector and the tour dock, so every change the interface can
-make is also a change the history can step back through. The store is watched by
-an autosave that writes 800 ms after the last change and reports pending, saved
-or failed in the dock. Saves are serialised, so a burst of changes cannot put two
-writes in flight at once. A save that would overwrite a file changed on disk is
-refused with a 409 and shown in the same map-level notice as an outside change,
-with the same two actions; any other failure names the reason and offers one
-retry without losing the text. Loading a map is not an edit, so opening one no
-longer writes it back.
-
-## Technical detail
-
-### Requirements
-
-Node.js 20 or newer (22 tested).
-
-### Run it
-
-Once installed on the machine:
+## Install
 
 ```bash
-ctour init        # in a project folder: creates .ctour/, registers it, opens the map
-ctour serve       # later: opens the interface again, writes nothing
-ctour status      # every registered project, with map counts
-ctour doctor      # what is wrong and which command fixes it, agent included
-ctour mcp         # the map protocol on standard input and output, for an agent
-ctour mcp install # connect the agent found on this machine
+curl -fsSL https://raw.githubusercontent.com/Alice088/cognitive-tours-forge/main/install.sh | sh
 ```
 
-`init` prints one address that opens that project's map, and picks a free port
-from 4317 upwards when the first one is taken. Nothing is sent anywhere: the
-server listens on `127.0.0.1` only.
+One line: it installs the `ctour` command, adds nothing to your projects, and asks
+for no configuration. You need Node.js 20 or newer; the installer builds the
+interface on your machine the first time (a couple of minutes), then installs the
+command into the machine-wide npm prefix, or into `~/.local` when that prefix is
+not writable.
 
-Working on this repository itself:
+Other ways in, for people who prefer them:
 
 ```bash
-npm install
-npm run dev        # the interface on :3000, with hot reload
-npm run build:all  # standalone build + packed assets + the bundled command in dist/
-node dist/cli.mjs init .   # the command as it will ship
+npm install -g ctour                                         # once it is on the registry
+sh install.sh --prefix ~/.local                              # from a checkout
+npm install && npm run build:all && node dist/cli.mjs init .  # to work on it
 ```
 
-### The command
-
-`cli/` holds the command, bundled by esbuild into `dist/cli.mjs`: `init`,
-`serve`, `status`, `doctor`, `mcp` and `workspace`, with `--port`, `--json`,
-`--project`, `--skip`, `--help`, `--version`.
-`next build` produces `.next/standalone`, which the published package carries, so
-the command starts the interface with no installed dependencies. Exit codes:
-`0` fine, `1` problems found, `2` usage, `3` environment refusal (not a folder,
-outside `$HOME`, home itself, not writable), `4` no free address in the range,
-`5` nothing to connect when `mcp install` finds no agent.
-
-### Environment
-
-| Variable     | Default    | Purpose                                                                     |
-| ------------ | ---------- | --------------------------------------------------------------------------- |
-| `CTOUR_HOME` | `~/.ctour` | where the workspace registry lives; tests point it at a temporary directory |
-
-There is no other configuration. No database, no API keys, no accounts.
-
-### Commands
+## Quick start
 
 ```bash
-npm run dev        # local application on :3000
-npm run build      # production build
-npm run typecheck  # tsc --noEmit
-npm run lint       # eslint, including the design-token rule
-npm run test:unit  # vitest: two projects — unit (jsdom) and cli (node)
-npm run test:e2e   # playwright: the user stories, on a temporary workspace
+cd ~/code/your-project
+ctour init        # creates .ctour/, registers the project, prints one address
 ```
 
-### Test layout
+Open that address and the map is there. The interface is a local process; close
+the terminal and it stops. When you want it back:
 
-- `tests/unit` — logic that must be right without a browser: undo semantics, map
-  file round-trips and ordering, registry recovery, path containment, WCAG
-  contrast of every token pair.
-- `tests/cli` — the command without a browser: target resolution and refusals,
-  port probing, readiness, server stop, status and doctor against damaged
-  fixtures, dispatch and exit codes, and a source scan proving nothing in the
-  command talks to a remote address. `mcp-*` covers the protocol: frames,
-  handshake, reads, writes, every refusal, placement, agent configuration edits
-  and the isolation scan.
-- `tests/acceptance` — the shell's user stories in a real browser against a real
-  `.ctour/` directory created per run, plus `cli.spec.ts`, which spawns the built
-  command, opens the address it prints, and interrupts it. `exchange.spec.ts`
-  drives saving a copy and bringing a map in through the dialogs;
-  `workspace-bundle.spec.ts` exports on one machine, imports on another and opens
-  the result.
+```bash
+ctour serve       # opens the interface again, writes nothing
+```
 
-Playwright starts the application with `CTOUR_HOME=./.tmp/e2e-home` and builds its
-fixture under `.tmp/`, so a test run never touches a real workspace.
+Then write a few waypoints, link them, and walk a tour. `ctour status` lists every
+project this machine knows; `ctour doctor` names what is wrong and which command
+fixes it; `ctour mcp install` connects the coding agent you already use so it can
+read and write the same map.
 
-### Troubleshooting
+Step by step, with what to click and what to expect:
+[docs/QUICKSTART.md](docs/QUICKSTART.md).
 
-| Symptom                                            | Cause                                                            |
-| -------------------------------------------------- | ---------------------------------------------------------------- |
-| Empty workspace after a restart                    | `CTOUR_HOME` was set during that run; the registry is elsewhere  |
-| "That folder does not exist" when adding a project | the path is outside `$HOME`, or it is a file                     |
-| The dock says "Not saved"                          | the file was changed on disk; reload or keep yours               |
-| A colour change is rejected by lint                | use a token from `app/globals.css`                               |
-| `ctour doctor` reports `leftover-tours`            | maps moved from `.tours/` to `.ctour/`; move them and delete it  |
-| The agent does not see the map                     | run `ctour mcp install`, then restart the agent                  |
-| `ctour doctor` says an agent command is gone       | the configured path moved; `ctour mcp install` rewrites it       |
-| `ctour init` refuses the folder                    | it is `$HOME`, outside `$HOME`, not a folder, or not writable    |
-| The command says the built interface is missing    | run `npm run build:all` before `node dist/cli.mjs`               |
-| An import is refused with one sentence             | the file is not a map, or its version is newer than this product |
-| `ctour workspace import` says a folder is missing  | the recorded path does not exist here; rerun with `--project`    |
+## Guides
 
-## Contributing
+| Guide                                                         | It covers                                                                   |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [Mapping a project](docs/guides/mapping-a-project.md)         | waypoints, links, file paths, layout, several maps in one repository        |
+| [Writing a tour](docs/guides/writing-a-tour.md)               | stops, narration, the reading surface, the whole-tour view, export          |
+| [Working with an agent](docs/guides/working-with-an-agent.md) | `ctour mcp`, connecting Claude Code / Cursor / Gemini CLI / Codex, refusals |
+| [Moving maps between projects](docs/guides/moving-maps.md)    | saving a copy, importing with a preview, the whole-workspace bundle         |
 
-The map format is a contract: `specs/010-app-shell/contracts/map-file.md`.
-Changes to ordering or field meaning need a version bump and a reader that still
-opens version 1. Feature work is specified before it is built; see `specs/`.
+## How it fits together
+
+Three regions of state, each with one owner: the workspace registry in
+`~/.ctour/workspace.json` (which projects this machine has opened), the map
+document in `<project>/.ctour/<name>.tour.json` (the thing that belongs to the
+code), and the running application (selection, undo history, what is being
+dragged). The screen has four regions — rail, canvas, inspector, dock — and a fact
+that appears in two of them is a defect, not a convenience.
+
+The map is read and written by a local server, saved atomically, and followed while
+it is open, so an edit in your editor, a `git checkout` or an agent shows up in the
+interface without a reload. A coding agent reaches the same file through `ctour
+mcp`, which speaks a small protocol on standard input and output and writes through
+the same code the interface uses, so the two cannot disagree about the format.
+
+The decisions, the mechanisms and the trade-offs behind that are in
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): the reading surface, design tokens,
+the map format, live sync, the offline copy, exchange, the agent protocol and
+editing.
+
+## The research
+
+| Where                                                                                                                           | What                                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [Cognitive Tours: Making Understanding a Deliverable in AI-Assisted Development](https://arxiv.org/abs/2611.08456)              | the paper behind this build (ICSE 2027 demo, under review)                                |
+| [From Technical Debt to Cognitive and Intent Debt](https://arxiv.org/abs/2603.22106)                                            | Storey, 2026: the research foundation                                                     |
+| [Presentations by Programmers for Programmers](https://doi.org/10.1109/ICSE.2007.67)                                            | Cheng, Desmond and Storey, ICSE 2007 — tours of a codebase (`docs/papers/tours-2006.pdf`) |
+| [Shared Waypoints and Social Tagging to Support Collaboration in Software Development](https://doi.org/10.1145/1180875.1180906) | Storey, Cheng, Bull and Rigby, CSCW 2006 — waypoints in TagSEA                            |
+| [margaretstorey/cognitive-tours](https://github.com/margaretstorey/cognitive-tours)                                             | the original prototype this build descends from                                           |
+| [An early demo video](https://www.youtube.com/watch?v=I2S5Ee3bzi8)                                                              | four minutes, October 2026                                                                |
+
+The original prototype is self-documenting: its own map and tours describe how it
+was built, and reading them is the onboarding. That habit is the point of the
+product, not a curiosity of the prototype.
+
+## Building and testing
+
+`npm install`, `npm run dev`, `npm run build:all`, `npm run test:unit`,
+`npm run test:e2e`, `npm run lint`, `npm run typecheck` — with the test layout, the
+command's internals, the environment and a troubleshooting table for every symptom
+the product can produce: [docs/DEVELOPING.md](docs/DEVELOPING.md).
+
+Feature work is specified before it is built; see `specs/`. The map format is a
+contract, `specs/010-app-shell/contracts/map-file.md`: changes to ordering or field
+meaning need a version bump and a reader that still opens version 1. The
+constitution the work follows is `.specify/memory/constitution.md`.
 
 ## License
 
-MIT.
+MIT. See [LICENSE](LICENSE).

@@ -21,7 +21,7 @@ test('never applies content it cannot read', async ({ page }) => {
     await expect(page.locator('[data-notice="unreadable"]')).toBeVisible({ timeout: 2000 });
     await expect(page.locator('[data-notice="unreadable"]')).toContainText('main.tour.json');
     await expect(page.locator('.react-flow__node')).toHaveCount(3);
-    await expect(page.getByText('Understanding is the deliverable')).toBeVisible();
+    await expect(page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' })).toBeVisible();
   }
 
   await page.waitForTimeout(1200);
@@ -83,7 +83,7 @@ test('refuses a file that would lose a waypoint', async ({ page }) => {
   await expect(page.locator('[data-notice="unreadable"]')).toBeVisible({ timeout: 2000 });
   await expect(page.locator('[data-notice="unreadable"]')).toContainText('waypoint');
   await expect(page.locator('.react-flow__node')).toHaveCount(3);
-  await expect(page.getByText('Understanding is the deliverable')).toBeVisible();
+  await expect(page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' })).toBeVisible();
 });
 
 test('writes over a file that cannot be read', async ({ page }) => {

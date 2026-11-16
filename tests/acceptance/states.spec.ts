@@ -27,7 +27,7 @@ test('an empty workspace adds a project itself', async ({ page, request }) => {
 
   await page.waitForURL(/\/p\/e2e-fixture\/main\.tour\.json/);
   await expect(page.getByRole('navigation', { name: 'Projects and maps' })).toBeVisible();
-  await expect(page.getByText('Understanding is the deliverable')).toBeVisible();
+  await expect(page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' })).toBeVisible();
 });
 
 test('a failed load says what failed and offers one retry', async ({ page }) => {
@@ -85,9 +85,9 @@ test('opens an unreachable project read-only from the last saved copy', async ({
     await page.reload();
     await expect(page.getByRole('status')).toContainText('read only');
     await expect(page.getByRole('button', { name: 'Choose a new location' })).toHaveCount(1);
-    await expect(page.getByText('Understanding is the deliverable')).toBeVisible();
+    await expect(page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' })).toBeVisible();
 
-    await page.getByText('Understanding is the deliverable').click();
+    await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
     await expect(page.getByLabel('Description')).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Delete waypoint' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'New tour' })).toBeDisabled();

@@ -1,6 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
+import { BookOpenIcon } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
 import { AppShell } from '@/app/components/shell/AppShell';
@@ -11,8 +12,11 @@ import { MapCanvas } from '@/app/components/shell/MapCanvas';
 import { MapNotice, type MapNoticeState } from '@/app/components/shell/MapNotice';
 import { RelinkDialog } from '@/app/components/shell/RelinkDialog';
 import { TourDock } from '@/app/components/shell/TourDock';
+import { TourReading } from '@/app/components/shell/TourReading';
 import { WorkspaceRail } from '@/app/components/shell/WorkspaceRail';
 import { FailedSurface, LoadingSurface } from '@/app/components/shell/states';
+import { Button } from '@/app/components/ui/button';
+import { stopView } from '@/app/lib/tour-reading';
 import { clearHistory, redo, undo } from '@/app/lib/store/history';
 import type { MapStore } from '@/app/lib/store/map-store';
 import { nextTourId } from '@/app/lib/store/selectors';
@@ -45,6 +49,7 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
   const [exportMode, setExportMode] = useState<'one' | 'all' | null>(null);
   const [liveMessage, setLiveMessage] = useState<string | null>(null);
   const [oversizedDismissed, setOversizedDismissed] = useState(false);
+  const [dismissedKey, setDismissedKey] = useState<string | null>(null);
   const pendingSave = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saving = useRef(false);
   const dirty = useRef(false);
@@ -429,6 +434,16 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
     return new Set(tour.stops.map(stop => stop.waypointId));
   }, [tour, overview]);
 
+  const readingStops = tour
+    ? tour.stops.map((stop, index) =>
+        stopView(stop, waypoints.find(item => item.id === stop.waypointId) ?? null, index, tour.stops.length)
+      )
+    : [];
+  const readingKey = `${mapFile}:${activeTourId ?? ''}`;
+  const readingDismissed = dismissedKey === readingKey;
+  const readingVisible = Boolean(tour) && !readingDismissed && !editing;
+  const focusedStop = tour ? (waypoints.find(item => item.id === tour.stops[step]?.waypointId) ?? null) : null;
+
   const oversized = waypoints.length > SUPPORTED_WAYPOINTS || tours.length > SUPPORTED_TOURS;
   const frozen = status !== 'ready';
   const project = snapshot?.projects.find(item => item.id === projectId) ?? null;
@@ -456,6 +471,60 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
       }
     : null;
 
+  const goToStep = (value: number) => {
+    store.getState().setStep(value);
+    store.getState().selectWaypoint(tour?.stops[value]?.waypointId ?? null);
+  };
+
+  const actions = (
+    <>
+      {tour && readingDismissed && !editing ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-2"
+          aria-label="Show the tour text"
+          onClick={() => setDismissedKey(null)}
+        >
+          <BookOpenIcon aria-hidden="true" />
+          <span className="hidden md:inline">Show the tour text</span>
+        </Button>
+      ) : null}
+      <MapActions
+        onSaveCopy={() => setExportMode('one')}
+        onExportAll={() => setExportMode('all')}
+        allDisabled={frozen}
+      />
+    </>
+  );
+
+  const readingPanel =
+    overview && tour && readingVisible ? (
+      <TourReading
+        shape="panel"
+        tour={tour}
+        stops={readingStops}
+        step={step}
+        onRead={index => {
+          goToStep(index);
+          setOverview(false);
+        }}
+        onClose={() => setOverview(false)}
+      />
+    ) : null;
+
+  const readingCard =
+    !overview && tour && readingVisible ? (
+      <TourReading
+        shape="card"
+        tour={tour}
+        stops={readingStops}
+        step={step}
+        onRead={goToStep}
+        onClose={() => setDismissedKey(readingKey)}
+      />
+    ) : null;
+
   const rail = (
     <WorkspaceRail
       projects={snapshot?.projects ?? []}
@@ -471,24 +540,37 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
     ) : status === 'failed' ? (
       <FailedSurface message={failure?.message ?? 'This map could not be loaded.'} onRetry={() => void load()} />
     ) : (
-      <div className="relative h-full">
-        <MapCanvas
-          waypoints={waypoints}
-          edges={edges}
-          selectedId={selectedId}
-          readOnly={readOnly}
-          onSelect={id => {
-            store.getState().selectWaypoint(id);
-            setInspectorOpen(id !== null);
-          }}
-          onMove={(id, position) => store.getState().moveWaypoint(id, position)}
-          dimmedIds={dimmed}
-        />
-        <MapActions
-          onSaveCopy={() => setExportMode('one')}
-          onExportAll={() => setExportMode('all')}
-          allDisabled={frozen}
-        />
+      <div className="flex h-full min-h-0">
+        {readingPanel}
+        <div className="relative min-w-0 flex-1">
+          <MapCanvas
+            waypoints={waypoints}
+            edges={edges}
+            selectedId={selectedId}
+            readOnly={readOnly}
+            onSelect={id => {
+              store.getState().selectWaypoint(id);
+              setInspectorOpen(id !== null);
+            }}
+            onMove={(id, position) => store.getState().moveWaypoint(id, position)}
+            dimmedIds={dimmed}
+            actions={actions}
+            reading={readingCard}
+            focusedStop={focusedStop}
+            onTourArrow={
+              tour && !editing
+                ? direction => {
+                    const next = direction === 'next' ? step + 1 : step - 1;
+                    if (next < 0 || next >= tour.stops.length) {
+                      return true;
+                    }
+                    goToStep(next);
+                    return true;
+                  }
+                : undefined
+            }
+          />
+        </div>
       </div>
     );
 
@@ -504,11 +586,7 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
         setOverview(false);
         setEditing(false);
       }}
-      onStep={value => {
-        store.getState().setStep(value);
-        const stop = tour?.stops[value];
-        store.getState().selectWaypoint(stop?.waypointId ?? null);
-      }}
+      onStep={goToStep}
       onCreateTour={() => {
         if (!mapDocument) {
           return;

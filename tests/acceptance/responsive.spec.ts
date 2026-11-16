@@ -113,7 +113,7 @@ test('opens one drawer at a time and returns focus to its opener', async ({ page
   await expect(page.getByRole('navigation', { name: 'Projects and maps' })).toBeHidden();
   await expect(opener).toBeFocused();
 
-  await page.getByText('Understanding is the deliverable').click();
+  await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
   await expect(page.getByLabel('Description')).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Projects and maps' })).toBeHidden();
 });
@@ -121,7 +121,7 @@ test('opens one drawer at a time and returns focus to its opener', async ({ page
 test('edits are saved once at the end of a pause', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openSample(page);
-  await page.getByText('Understanding is the deliverable').click();
+  await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
   await page.getByLabel('Description').fill('Typed in one pause.');
   await page.locator('[data-region="canvas"]').click({ position: { x: 500, y: 400 } });
   await waitForSaved(page);

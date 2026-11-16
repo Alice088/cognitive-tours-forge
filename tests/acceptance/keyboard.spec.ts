@@ -50,7 +50,7 @@ test('shows a visible focus ring on a keyboard-focused control', async ({ page }
 test('Escape closes the inspector drawer before anything else', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 });
   await openSample(page);
-  await page.getByText('Understanding is the deliverable').click();
+  await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
   await expect(page.getByLabel('Description')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByLabel('Description')).toBeHidden();
@@ -59,7 +59,7 @@ test('Escape closes the inspector drawer before anything else', async ({ page })
 
 test('undo inside a text field stays text undo', async ({ page }) => {
   await openSample(page);
-  await page.getByText('Waypoints carry meaning').click();
+  await page.locator('.react-flow__node', { hasText: 'Waypoints carry meaning' }).click();
   const undo = page.getByRole('button', { name: 'Undo' });
   await expect(undo).toBeDisabled();
   await page.getByLabel('Description').fill('typing that is not committed');
@@ -75,9 +75,11 @@ test('focuses the map search with a slash', async ({ page }) => {
   await expect(page.getByLabel('Search waypoints')).toBeFocused();
 });
 
-test('moves between waypoints with the arrow keys', async ({ page }) => {
+test('moves between waypoints with the arrow keys when no tour is read', async ({ page }) => {
   await openSample(page);
-  await page.getByText('Understanding is the deliverable').click();
+  await page.getByRole('combobox', { name: 'Current tour' }).click();
+  await page.getByRole('option', { name: 'No tour' }).click();
+  await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
   await expect(page.getByLabel('Description')).toHaveValue('People need to see how the code fits together.');
 
   await page.locator('[role="group"][aria-label="Map"]').focus();
@@ -91,7 +93,7 @@ test('moves between waypoints with the arrow keys', async ({ page }) => {
 test('dismisses the tour before the selection', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openSample(page);
-  await page.getByText('Understanding is the deliverable').click();
+  await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
   await page.getByRole('button', { name: 'Edit tour' }).click();
   await expect(page.getByLabel('Tour name')).toBeVisible();
 

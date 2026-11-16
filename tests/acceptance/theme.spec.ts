@@ -70,7 +70,7 @@ test('keeps a dialog and a tooltip on the dark surface', async ({ page }) => {
   expect(dialogBackground).not.toBe(light.background);
   await page.getByRole('button', { name: 'Cancel' }).click();
 
-  await page.getByText('Understanding is the deliverable').click();
+  await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
   await page.getByLabel('Notes').fill('A note so undo becomes available.');
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   await expect(page.getByRole('button', { name: 'Undo' })).toBeEnabled();

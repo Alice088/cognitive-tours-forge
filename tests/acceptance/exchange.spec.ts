@@ -74,7 +74,7 @@ test('saves a copy of the open map that holds exactly what the map holds', async
 test('carries a note that has not reached the project yet', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openSample(page);
-  await page.getByText('Understanding is the deliverable').click();
+  await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
   await page.getByLabel('Label').fill('Typed a moment ago');
 
   await page.getByRole('button', { name: 'Save a copy' }).click();
@@ -106,7 +106,7 @@ test('delivers no copy when the map cannot be written back', async ({ page }) =>
   await openSample(page);
   chmodSync(MAP_DIR, 0o555);
   try {
-    await page.getByText('Understanding is the deliverable').click();
+    await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
     await page.getByLabel('Description').fill('A change that cannot be written.');
     await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
 

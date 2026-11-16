@@ -97,3 +97,71 @@ export async function openSample(page: Page): Promise<void> {
 export async function waitForSaved(page: Page): Promise<void> {
   await expect(page.getByText('Saved', { exact: true })).toBeVisible({ timeout: 8000 });
 }
+
+export const readingDocument = {
+  version: 1,
+  project: { name: 'e2e reading', createdAt: '2026-11-16T09:12:00.000Z' },
+  waypoints: [
+    {
+      id: 'w-1',
+      label: 'A ticket arrives',
+      type: 'User Need',
+      description: 'A person writes in and expects an answer.',
+      position: { x: 0, y: 0 },
+    },
+    { id: 'w-2', label: 'The queue holds it', type: 'Code Component', position: { x: 600, y: 0 } },
+    { id: 'w-3', label: 'Triage decides', type: 'Goal', position: { x: 0, y: 400 } },
+    {
+      id: 'w-4',
+      label: 'An answer leaves',
+      type: 'Feature',
+      description: 'The reply is sent back to the person.',
+      position: { x: 600, y: 400 },
+    },
+  ],
+  edges: [
+    { id: 'e-1', source: 'w-1', target: 'w-2' },
+    { id: 'e-2', source: 'w-2', target: 'w-3' },
+    { id: 'e-3', source: 'w-3', target: 'w-4' },
+  ],
+  tours: [
+    {
+      id: 't-read',
+      name: "A ticket's life",
+      stops: [
+        { waypointId: 'w-1', narrative: 'Every ticket starts in one queue.' },
+        { waypointId: 'w-2' },
+        { waypointId: 'w-3', narrative: 'Triage is where the queue turns into work.' },
+        { waypointId: 'w-4', narrative: 'The answer is the point of the whole trip.' },
+      ],
+    },
+    {
+      id: 't-dry',
+      name: 'No words',
+      stops: [{ waypointId: 'w-1' }, { waypointId: 'w-2' }],
+    },
+    { id: 't-empty', name: 'Not written yet', stops: [] },
+  ],
+};
+
+export function writeReadingMap(): void {
+  writeRawMap(`${JSON.stringify(readingDocument, null, 2)}\n`);
+}
+
+export function writeLongTourMap(): void {
+  const waypoints = Array.from({ length: 40 }, (_, index) => ({
+    id: `w-${index + 1}`,
+    label: `Stop ${index + 1}`,
+    type: 'Goal',
+    position: { x: (index % 8) * 280, y: Math.floor(index / 8) * 160 },
+  }));
+  const tour = {
+    id: 't-long',
+    name: 'Forty stops',
+    stops: waypoints.map((waypoint, index) => ({
+      waypointId: waypoint.id,
+      narrative: `Narration for stop ${index + 1}.`,
+    })),
+  };
+  writeRawMap(`${JSON.stringify({ ...readingDocument, waypoints, tours: [tour] }, null, 2)}\n`);
+}

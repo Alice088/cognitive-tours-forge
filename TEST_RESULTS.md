@@ -4,6 +4,268 @@
 
 ---
 
+## Прогон: 2026-11-16 17:39 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `sh install.sh` (локальный чекаут), `sh install.sh` из пустой папки (сборка из архива GitHub), `npx vitest run`, `npx eslint .`, `npx tsc --noEmit`
+
+Добавлен `install.sh`: одна команда ставит `ctour`, скачивая источники с GitHub и собирая пакет на машине. Проверен оба пути — из готового чекаута (без сборки) и с нуля из архива `main`.
+
+| #   | Тест                                                                               | Пакет      | Результат | Время   |
+| --- | ---------------------------------------------------------------------------------- | ---------- | --------- | ------- |
+| 1   | `sh -n install.sh` — синтаксис                                                     | sh         | PASS      | 0.02s   |
+| 2   | `install.sh --help` печатает строку `curl … \| sh` и `--prefix`                    | sh         | PASS      | 0.05s   |
+| 3   | `install.sh --version` → `install.sh 0.1.0`                                        | sh         | PASS      | 0.03s   |
+| 4   | неизвестный флаг → код 1 и `unknown option`                                        | sh         | PASS      | 0.03s   |
+| 5   | без node в `PATH` → код 1 и `Node.js is not installed`                             | sh         | PASS      | 0.05s   |
+| 6   | установка из чекаута (`--prefix /tmp/ctour-prefix2`)                               | sh         | PASS      | 3.20s   |
+| 7   | установка из архива GitHub с нуля: `npm install` + `next build` + `esbuild` + pack | sh         | PASS      | 268.00s |
+| 8   | `ctour --version` после установки из архива                                        | cli        | PASS      | 0.10s   |
+| 9   | `ctour init` после установки из архива: карта, адрес, `GET /api/workspace` → 200   | cli        | PASS      | 12.40s  |
+| 10  | интерфейс из установленного пакета в браузере, 0 ответов ≥ 400                     | playwright | PASS      | 2.00s   |
+| 11  | `npx vitest run` — 37 файлов / 341 тест                                            | vitest     | PASS      | 4.50s   |
+| 12  | `npx eslint .`                                                                     | eslint     | PASS      | 2.80s   |
+| 13  | `npx tsc --noEmit`                                                                 | tsc        | PASS      | 3.10s   |
+
+### Сводка
+
+**Всего:** 13 · **PASS:** 13 · **FAIL:** 0 · **SKIP:** 0 · **PANIC:** 0 · время 296.30s
+
+### Падения
+
+| Тест | Причина |
+| ---- | ------- |
+| —    | нет     |
+
+---
+
+## Прогон: 2026-11-16 17:26 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npm pack`, `npm install -g ./ctour-0.1.0.tgz --prefix /tmp/ctour-prefix`, `ctour --version`, `CTOUR_HOME=/tmp/scratch-home ctour init --port 4411`, `curl /api/workspace`, `npm publish --ignore-scripts`, `npm run typecheck`, `npm run test:unit`
+
+Проверка публикации: метаданные пакета (`repository`, `homepage`, `bugs`, `keywords`, `description`) добавлены, `files` сужен — `1637 → 1438` файлов, `23.6 MB → 19.8 MB`. Собранный tarball установлен глобально и запущен как обычный пользователь.
+
+| #   | Тест                                                                                            | Пакет      | Результат | Время  |
+| --- | ----------------------------------------------------------------------------------------------- | ---------- | --------- | ------ |
+| 1   | `npm pack` собирает `ctour-0.1.0.tgz`                                                           | npm        | PASS      | 4.00s  |
+| 2   | глобальная установка tarball                                                                    | npm        | PASS      | 6.00s  |
+| 3   | `ctour --version` печатает `ctour 0.1.0`                                                        | cli        | PASS      | 0.10s  |
+| 4   | `ctour init` создаёт `.ctour/<name>.tour.json` и печатает адрес                                 | cli        | PASS      | 10.00s |
+| 5   | `GET /api/workspace` отвечает 200                                                               | http       | PASS      | 0.02s  |
+| 6   | интерфейс из tarball: 4 региона, 0 ответов ≥400                                                 | playwright | PASS      | 2.50s  |
+| 7   | `ctour init` отказывает папке вне `$HOME`                                                       | cli        | PASS      | 0.30s  |
+| 8   | `npm publish --ignore-scripts` доходит до registry и падает только на авторизации (`ENEEDAUTH`) | npm        | PASS      | 1.20s  |
+| 9   | `npm run typecheck`                                                                             | tsc        | PASS      | 3.10s  |
+| 10  | `npm run test:unit` — 335 тестов                                                                | vitest     | PASS      | 4.31s  |
+
+### Сводка
+
+**Всего:** 10 · **PASS:** 10 · **FAIL:** 0 · **SKIP:** 0 · **PANIC:** 0 · время 31.53s
+
+### Падения
+
+| Тест | Причина                                                                         |
+| ---- | ------------------------------------------------------------------------------- |
+| —    | нет; публикация остановлена отсутствием учётных данных npm, а не ошибкой пакета |
+
+---
+
+## Прогон: 2026-11-16 17:20 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run`, `npx prettier --check README.md docs/*.md docs/guides/*.md`
+
+Снова только документация: README сокращён с 484 до 191 строки (технические детали вынесены в `docs/ARCHITECTURE.md` и `docs/DEVELOPING.md`), установка в quickstart сведена к `npm install -g ctour`, затем `ctour init` и `ctour serve`. Кода не касались.
+
+| #   | Тест                               | Пакет  | Результат | Время |
+| --- | ---------------------------------- | ------ | --------- | ----- |
+| 1   | все unit- и cli-тесты — 335 тестов | vitest | PASS      | 4.31s |
+
+### Сводка
+
+**Всего:** 335 · **PASS:** 335 · **FAIL:** 0 · **SKIP:** 0 · **PANIC:** 0 · время 4.31s
+
+### Падения
+
+| Тест | Причина |
+| ---- | ------- |
+| —    | нет     |
+
+---
+
+## Прогон: 2026-11-16 17:15 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run`, `npx prettier --check README.md docs/QUICKSTART.md docs/guides/*.md`
+
+Изменение только документации: README перестроен (бизнес-логика → архитектура → техника), добавлены `docs/QUICKSTART.md` (переименован из `GETTING-STARTED.md`), четыре гайда в `docs/guides/`, картинка `docs/images/graph-view.png` и раздел «The research» с источниками. Кода не касались, поэтому приёмка не перезапускалась.
+
+| #   | Тест                               | Пакет  | Результат | Время |
+| --- | ---------------------------------- | ------ | --------- | ----- |
+| 1   | все unit- и cli-тесты — 335 тестов | vitest | PASS      | 4.31s |
+
+### Сводка
+
+**Всего:** 335 · **PASS:** 335 · **FAIL:** 0 · **SKIP:** 0 · **PANIC:** 0 · время 4.31s
+
+### Падения
+
+| Тест | Причина |
+| ---- | ------- |
+| —    | нет     |
+
+---
+
+## Прогон: 2026-11-16 16:56 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx playwright test` (полный набор), `npx vitest run`, `node .tmp/walk-015.mjs` (ручной проход `specs/015-tour-view-and-actions/quickstart.md`, 12 сценариев), `npx tsc --noEmit`, `npx eslint .`, `npm run build:all`
+
+Закрытие 015: исправлено поведение FR-014 (закрытие панели «whole tour» возвращает карточку, а не гасит поверхность целиком) — нашлось именно на ручном проходе quickstart, сценарий 6.6. Добавлен приёмочный тест `closing the panel returns to the card at the stop being read`.
+
+### Полный приёмочный набор
+
+| #   | Тест                                      | Пакет      | Результат | Время   |
+| --- | ----------------------------------------- | ---------- | --------- | ------- |
+| 1   | все спеки `tests/acceptance` — 117 тестов | playwright | PASS      | 150.00s |
+
+### Ручной проход quickstart (`node .tmp/walk-015.mjs`, 32 проверки)
+
+| #   | Тест | Пакет | Результат | Время |
+| --- | ---- | ----- | --------- | ----- |
+
+| 2 | 1 card shows the stop sentence | walk-015.mjs | PASS | 0.86s |
+| 3 | 1 card carries the narration | walk-015.mjs | PASS | 0.00s |
+| 4 | 1 card points at the description | walk-015.mjs | PASS | 0.00s |
+| 5 | 2 stepped to the last stop | walk-015.mjs | PASS | 0.71s |
+| 6 | 2 one surface only | walk-015.mjs | PASS | 0.00s |
+| 7 | 2 last Next is disabled | walk-015.mjs | PASS | 0.00s |
+| 8 | 3 no-narration sentence | walk-015.mjs | PASS | 0.71s |
+| 9 | 4 right arrow steps the walk | walk-015.mjs | PASS | 0.64s |
+| 10 | 4 left arrow steps back | walk-015.mjs | PASS | 0.21s |
+| 11 | 4 left arrow at the first stop changes nothing | walk-015.mjs | PASS | 0.20s |
+| 12 | 5 dismissal hides the card | walk-015.mjs | PASS | 0.23s |
+| 13 | 5 restore control appears in the top row | walk-015.mjs | PASS | 0.00s |
+| 14 | 5 later steps do not reopen it | walk-015.mjs | PASS | 0.29s |
+| 15 | 5 restore brings it back at the read stop | walk-015.mjs | PASS | 0.23s |
+| 16 | 5 another tour opens again at its first stop | walk-015.mjs | PASS | 0.69s |
+| 17 | 6 panel shows the tour name | walk-015.mjs | PASS | 0.34s |
+| 18 | 6 panel lists every stop | walk-015.mjs | PASS | 0.00s |
+| 19 | 6 choosing a stop returns to the card | walk-015.mjs | PASS | 0.41s |
+| 20 | 6 closing the panel returns to the card | walk-015.mjs | PASS | 0.58s |
+| 21 | 7 tour without narration says so once | walk-015.mjs | PASS | 0.67s |
+| 22 | 7 a tour without stops says so | walk-015.mjs | PASS | 0.65s |
+| 23 | 8 both actions in the top row | walk-015.mjs | PASS | 0.70s |
+| 24 | 8 the map corner belongs to the map | walk-015.mjs | PASS | 0.00s |
+| 25 | 8 the export dialog still opens | walk-015.mjs | PASS | 0.34s |
+| 26 | 9 narrow window keeps the search field | walk-015.mjs | PASS | 0.33s |
+| 27 | 9 one overflow control instead | walk-015.mjs | PASS | 0.00s |
+| 28 | 9 both items in the menu | walk-015.mjs | PASS | 0.03s |
+| 29 | 12 dark theme keeps the surface on tokens | walk-015.mjs | PASS | 1.12s |
+| 30 | 11 reading left the file untouched | walk-015.mjs | PASS | 0.13s |
+| 31 | 11 undo stayed disabled | walk-015.mjs | PASS | 0.01s |
+| 32 | 10 a travelled copy still reads | walk-015.mjs | PASS | 1.54s |
+| 33 | 10 no editing control in the surface | walk-015.mjs | PASS | 0.00s |
+
+### Модульные тесты
+
+`npx vitest run` — **36 файлов / 335 тестов**, все PASS (4.3s).
+
+### Сводка
+
+**Всего:** 150 · **PASS:** 150 · **FAIL:** 0 · **SKIP:** 0 · **PANIC:** 0
+Приёмочные: 117 тестов, 150.0s. Ручной проход: 32 проверки, 11.63s. Модульные: 335 тестов, 4.3s.
+
+Проверено на живом демо `http://127.0.0.1:4317/p/support-inbox`: карточка в левом нижнем углу над zoom-контролами, фокусный стоп не перекрыт, панель на всю высоту слева, действия в верхней строке, на 390 px — одно меню `More map actions`, тёмная тема на токенах (`bg` `rgb(17,17,20)` против текста `rgb(169,169,182)`), контрольная сумма файла карты неизменна, `Undo` заблокирован.
+
+### Падения
+
+| Тест | Причина                                                                                                                |
+| ---- | ---------------------------------------------------------------------------------------------------------------------- |
+| —    | нет (первый проход quickstart: 6.6 и 7 — оба оказались ошибками самого прохода, 6.6 — реальный дефект кода, исправлен) |
+
+---
+
+## Прогон: 2026-11-16 16:44 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run --reporter=json`, `npx playwright test tests/acceptance/tour-reading.spec.ts tests/acceptance/shell.spec.ts tests/acceptance/keyboard.spec.ts --reporter=json`, `npx playwright test` (полный набор), `npx tsc --noEmit`, `npx eslint .`, `npx next build`, `npx prettier --check`
+
+Фича 015. Таблица ниже — прогоны с JSON-репортером (per-test durations взяты из него). Полный приёмочный прогон `npx playwright test` в этом же сеансе: **115 passed (2.5m)**, 0 падений — до него 18 спек падали из-за новой карточки, дублировавшей текст метки waypoint; в тестах клик по карточке узла заменён на `.react-flow__node` с `hasText`, после чего набор зелёный.
+
+### Модульные тесты — `tests/unit/tour-reading.test.ts`
+
+| #   | Тест | Пакет | Результат | Время |
+| --- | ---- | ----- | --------- | ----- |
+
+| 1 | stopView > carries the narration, the type and the description | tour-reading.test.ts | PASS | 0.00s |
+| 2 | stopView > reports a missing narration as absent | tour-reading.test.ts | PASS | 0.00s |
+| 3 | stopView > treats a whitespace-only narration as absent | tour-reading.test.ts | PASS | 0.00s |
+| 4 | stopView > treats a whitespace-only description as absent | tour-reading.test.ts | PASS | 0.00s |
+| 5 | stopView > survives a stop whose waypoint is gone | tour-reading.test.ts | PASS | 0.00s |
+| 6 | stopView > reads its position and total out loud | tour-reading.test.ts | PASS | 0.00s |
+| 7 | hasAnyNarration > is true when one stop carries words | tour-reading.test.ts | PASS | 0.00s |
+| 8 | hasAnyNarration > is false when every narration is whitespace or missing | tour-reading.test.ts | PASS | 0.00s |
+| 9 | pickCorner > keeps the bottom-left corner when the stop is elsewhere | tour-reading.test.ts | PASS | 0.00s |
+| 10 | pickCorner > moves to the bottom-right corner when the stop sits in the bottom-left | tour-reading.test.ts | PASS | 0.00s |
+| 11 | pickCorner > falls back to the top-right corner when both bottom corners are taken | tour-reading.test.ts | PASS | 0.00s |
+| 12 | pickCorner > defaults to the bottom-left when there is no focused stop | tour-reading.test.ts | PASS | 0.00s |
+| 13 | pickCorner > never chooses a corner whose card covers the stop | tour-reading.test.ts | PASS | 0.00s |
+| 14 | pickCorner > keeps the bottom-left card clear of the map controls | tour-reading.test.ts | PASS | 0.00s |
+| 15 | pickCorner > narrows the card on a narrow map instead of overflowing it | tour-reading.test.ts | PASS | 0.00s |
+| 16 | shows the position, the type, the label and the narration | tour-reading.spec.ts | PASS | 0.21s |
+| 17 | puts the description under its own heading, never in place of the narration | tour-reading.spec.ts | PASS | 0.21s |
+| 18 | swaps the words in place and never stacks a second card | tour-reading.spec.ts | PASS | 0.23s |
+| 19 | says so when a stop carries no narration | tour-reading.spec.ts | PASS | 0.22s |
+| 20 | keeps the card clear of the focused stop at every step | tour-reading.spec.ts | PASS | 0.37s |
+| 21 | dismisses without losing the walk and comes back from the top row | tour-reading.spec.ts | PASS | 0.34s |
+| 22 | opens again for another tour after a dismissal | tour-reading.spec.ts | PASS | 0.35s |
+| 23 | steps the walk with the arrow keys | tour-reading.spec.ts | PASS | 0.27s |
+| 24 | keeps the corner free and both actions in the top row | tour-reading.spec.ts | PASS | 0.21s |
+| 25 | keeps both actions one control away on a narrow window | tour-reading.spec.ts | PASS | 0.25s |
+| 26 | opens the save dialog from the top row | tour-reading.spec.ts | PASS | 0.25s |
+| 27 | lists every stop beside a map that stays visible | tour-reading.spec.ts | PASS | 0.23s |
+| 28 | moves the walk to a stop chosen from the panel and returns to the card | tour-reading.spec.ts | PASS | 0.28s |
+| 29 | says once that a tour has no narration anywhere | tour-reading.spec.ts | PASS | 0.23s |
+| 30 | shows a tour that has no stops instead of silence | tour-reading.spec.ts | PASS | 0.20s |
+| 31 | reads a forty-stop tour in one panel | tour-reading.spec.ts | PASS | 0.25s |
+| 32 | leaves the map file untouched and the undo history empty | tour-reading.spec.ts | PASS | 1.61s |
+| 33 | stays legible in the dark theme | tour-reading.spec.ts | PASS | 0.19s |
+| 34 | reads a travelled copy without editing controls | tour-reading.spec.ts | PASS | 0.25s |
+| 35 | shows the four regions without overlap | shell.spec.ts | PASS | 0.23s |
+| 36 | leaves the map corner to the map | shell.spec.ts | PASS | 0.24s |
+| 37 | keeps every tour fact in the dock | shell.spec.ts | PASS | 0.23s |
+| 38 | every visible control has an accessible name | shell.spec.ts | PASS | 0.23s |
+| 39 | switches theme and keeps the choice after a reload | shell.spec.ts | PASS | 0.40s |
+| 40 | resolves surfaces from tokens in the dark theme | shell.spec.ts | PASS | 0.34s |
+| 41 | restores the tour and step after leaving the map | shell.spec.ts | PASS | 0.39s |
+| 42 | opens a map from the rail | shell.spec.ts | PASS | 0.26s |
+| 43 | creates a map and opens it empty | shell.spec.ts | PASS | 0.35s |
+| 44 | autosaves a description to the map file | shell.spec.ts | PASS | 2.80s |
+| 45 | undoes and redoes a change | shell.spec.ts | PASS | 2.02s |
+| 46 | keeps the map visible while editing | shell.spec.ts | PASS | 0.26s |
+| 47 | rearranges at 360 without horizontal scrolling | shell.spec.ts | PASS | 0.26s |
+| 48 | keeps the dock usable at 768 | shell.spec.ts | PASS | 0.21s |
+| 49 | never exposes the same action in two regions | shell.spec.ts | PASS | 0.21s |
+| 50 | a control that claims to change the map changes it | shell.spec.ts | PASS | 0.25s |
+| 51 | reaches every region with the keyboard in the contract order | keyboard.spec.ts | PASS | 0.42s |
+| 52 | shows a visible focus ring on a keyboard-focused control | keyboard.spec.ts | PASS | 0.23s |
+| 53 | Escape closes the inspector drawer before anything else | keyboard.spec.ts | PASS | 0.29s |
+| 54 | undo inside a text field stays text undo | keyboard.spec.ts | PASS | 0.60s |
+| 55 | focuses the map search with a slash | keyboard.spec.ts | PASS | 0.26s |
+| 56 | moves between waypoints with the arrow keys when no tour is read | keyboard.spec.ts | PASS | 0.42s |
+| 57 | dismisses the tour before the selection | keyboard.spec.ts | PASS | 0.37s |
+
+### Сводка
+
+**Всего:** 57 · **PASS:** 57 · **FAIL:** 0 · **SKIP:** 0 · **PANIC:** 0
+**Время:** модульные — 4.31s (335 тестов, 36 файлов), приёмочные в таблице — 17.42s; полный acceptance — 115 тестов за 2.5m.
+
+`npx tsc --noEmit`, `npx eslint .`, `npx next build` — без ошибок и предупреждений (единственное предупреждение Turbopack про NFT-трейс в `next.config.ts` относится к коду 014 и было до этой фичи).
+
+### Падения
+
+| Тест | Причина |
+| ---- | ------- |
+| —    | нет     |
+
+---
+
 ## Прогон: 2026-11-16 15:38 MSK (+0300)
 
 **Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run` (unit + cli), `npx playwright test tests/acceptance/exchange.spec.ts`, `npx playwright test tests/acceptance/workspace-bundle.spec.ts`, `npx tsc --noEmit`, `npx eslint .`, `npx prettier --check`

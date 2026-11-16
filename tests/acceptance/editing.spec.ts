@@ -50,7 +50,7 @@ test('moves a waypoint by dragging it on the map', async ({ page }) => {
 
 test('adds and removes a link between two waypoints', async ({ page }) => {
   await openSample(page);
-  await page.getByText('Understanding is the deliverable').click();
+  await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
 
   await page.getByLabel('Connect to a waypoint').click();
   await page.getByRole('option', { name: 'Config is read from disk' }).click();
@@ -90,7 +90,7 @@ test('says why a save failed and offers one retry', async ({ page }) => {
   await openSample(page);
   chmodSync(MAP_DIR, 0o555);
   try {
-    await page.getByText('Understanding is the deliverable').click();
+    await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
     await page.getByLabel('Description').fill('A change that cannot be written.');
     await blurEverything(page);
 
@@ -109,7 +109,7 @@ test('says why a save failed and offers one retry', async ({ page }) => {
 
 test('refuses an empty label and an absolute path in the editor', async ({ page }) => {
   await openSample(page);
-  await page.getByText('Understanding is the deliverable').click();
+  await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
 
   await page.getByLabel('Label').fill('');
   await expect(page.getByText('A waypoint needs a label.')).toBeVisible();
@@ -127,7 +127,7 @@ test('refuses an empty label and an absolute path in the editor', async ({ page 
 test('replays twenty changes back to the beginning and forward to the end', async ({ page }) => {
   test.setTimeout(240_000);
   await openSample(page);
-  await page.getByText('Understanding is the deliverable').click();
+  await page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' }).click();
 
   const recorded: string[] = [readFileSync(MAP_PATH, 'utf8')];
   for (let index = 0; index < 20; index += 1) {

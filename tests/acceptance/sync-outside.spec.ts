@@ -34,7 +34,7 @@ test('does nothing when the file is rewritten with the same content', async ({ p
   mutateMapFile(document => document);
   await page.waitForTimeout(600);
 
-  await expect(page.getByText('Understanding is the deliverable')).toBeVisible();
+  await expect(page.locator('.react-flow__node', { hasText: 'Understanding is the deliverable' })).toBeVisible();
   await expect(page.locator('[data-notice]')).toHaveCount(0);
 });
 
