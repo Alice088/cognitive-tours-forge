@@ -1,5 +1,7 @@
-import CognitiveToursApp from './components/CognitiveToursApp';
+import { HomeView } from '@/app/components/shell/HomeView';
+
+export const dynamic = 'force-dynamic';
 
 export default function Page() {
-  return <CognitiveToursApp />;
+  return <HomeView />;
 }

@@ -1,226 +1,167 @@
 # Cognitive Tours
 
-**Maps and guided tours of your code that you write yourself, linking why to how.**
+Cognitive Tours is a map of how a piece of software actually works, kept next to
+the code it describes.
 
-**[Try the demo](https://cognitive-tours-demo.vercel.app)** · [Install](#install) · [Quick start](#quick-start) · [Things to try](#things-to-try) · [The research](#the-research)
+depend on each other. A **tour** is an ordered walk through the map with a
+spoken narrative at each stop, so a newcomer can be shown the shape of the system
+in ten minutes instead of six months.
 
-[![A tour in Cognitive Tours: the map of waypoints on the left, the current stop and the bridge to the next one in Tour Controls on the right](docs/images/graph-view.png)](https://cognitive-tours-demo.vercel.app)
+The map is a file in the repository: `.tours/<name>.tour.json`. It is versioned
+with the code, reviewed in the same pull request, and diffed like anything else.
+When the code changes, the map is wrong in the same commit, and someone can fix
+it there.
 
-## Why
+## Who this is for
 
-- **Code outruns understanding.** With AI writing more of it, teams ship code nobody fully understands, and lose track of *why* it is the way it is (cognitive debt and intent debt).
-- **Writing the tour is how you get it back.** You place waypoints (goals, needs, decisions, code, tests, risks, open questions), connect them, and write guided tours that walk from why to how. Tours you write yourself rebuild your own understanding; tours you share pass some of it on.
-- **AI is a scaffold, not a substitute.** Claude Code skills can draft a starting map or ask you the right questions, but the understanding stays yours.
+Someone joining a codebase and needing to know why it is shaped this way.
+Someone leaving a codebase and wanting the reason to survive them. A team that
+keeps re-litigating a decision because nobody remembers the constraint that
+produced it.
 
-**Status:** a research prototype, built by its author with AI assistance (Claude Code), and used on itself: the map and tours describe how it was built. Feedback and ideas are welcome.
+## What it does today
 
-## Try it in two minutes, no install
+- One command starts a local application. Nothing is uploaded, no account is
+  made, no data leaves the machine.
+- The navigation rail lists every project you have added and the maps inside
+  each one.
+- The map shows waypoints as typed cards with their links, searchable and
+  filterable by type.
+- The tour dock walks a tour stop by stop, with a whole-tour overview.
+- The inspector edits a waypoint or a tour without hiding the map.
+- Edits save themselves into `.tours/*.tour.json`; undo and redo work like a
+  browser's, per session and per map.
+- Light, dark and follow-the-system themes, at any window width down to a phone.
 
-- **[The demo](https://cognitive-tours-demo.vercel.app):** a real map, of Cognitive Tours itself. Click **Start here** for a one-minute walkthrough, then pick **"A Research Story Behind Cognitive Tours"** and step through it. Anyone can edit it; it resets every hour.
-- **A sandbox of your own** to write waypoints and tours: ask the author for one.
+## What it does not do yet
 
-More in **[Getting started](docs/GETTING-STARTED.md)**, including a map of Flask, a codebase the author didn't write.
-
-## Install
-
-The Claude Code plugin **cognitive-tours** works in any repo. In your terminal:
-
-```
-claude plugin install cognitive-tours --marketplace margaretstorey/cognitive-tours
-```
-
-Then restart Claude Code. Details, other ways to install, and updating: [Skills for Claude Code](#skills-for-claude-code).
-
-## Quick start
-
-1. Open your repo in Claude Code.
-2. Ask: **"Make a starting map of this repo."** The first time, use the full command from your site's **Claude Code skills** button, which tells the skill which map is yours; it offers to remember it.
-3. Read the drafted map on your site, then rewrite it in your own words: it's marked as drafted by Claude until you do.
-
-## Things to try
-
-| Ask Claude Code | On the map |
-|---|---|
-| "Make a starting map of this repo" | Click **Start here** for the walkthrough |
-| "Help me record what I just did" | Pick a tour and step through it with **Next** |
-| "Add this to a tour" | Open a stop's file in VS Code or on GitHub |
-| "Is my map out of date with the code?" | Write the bridge from one stop to the next in **Edit tour** |
-| "Which of my tours are stale?" | Filter by layer (intent, technical) to see one view of the map |
-
-## The research
-
-- [From Technical Debt to Cognitive and Intent Debt](https://arxiv.org/abs/2603.22106) (Storey, 2026), the research foundation.
-- [*Cognitive Tours: Making Understanding a Deliverable in AI-Assisted Development*](https://arxiv.org/abs/2611.08456) (arXiv, 2026), a longer version of the ICSE 2027 demo paper, which is under review.
-- [An early demo video](https://www.youtube.com/watch?v=I2S5Ee3bzi8) (4 min, Oct 23, 2026); newer walkthroughs coming soon.
-- **Earlier work, 20 years ago:** [*Shared waypoints and social tagging to support collaboration in software development*](https://doi.org/10.1145/1180875.1180906) (Storey, Cheng, Bull and Rigby, CSCW 2006), which introduced waypoints in TagSEA, and [*Presentations by programmers for programmers*](https://doi.org/10.1109/ICSE.2007.67) (Cheng, Desmond and Storey, ICSE 2007), which introduced tours of code ([PDF](docs/papers/tours-2006.pdf)).
-
----
-
-## What it does
-
-Cognitive Tours lets you place waypoints on an interactive graph — each 
-waypoint is a meaningful place in your project: a user need, a design 
-decision, a risk, a key component, a test, or an open question. You then 
-connect waypoints into guided tours that tell the story of your codebase.
-
-The app is self-documenting: the waypoints and tours in the live app 
-describe Cognitive Tours itself.
-
-Tours support **docent mode** — per-step narrative written by the tour author 
-that guides the reader between waypoints, like a museum audio guide. Tours can 
-also be toggled to a **markdown view** and exported as dated snapshots to the 
-`tours/` folder. The graph panel has a **search/filter bar** to find nodes 
-quickly as the map grows.
-
-New waypoints, whether a skill added them, a teammate did, or you just made 
-one, wear a **red halo** until you click into their description, so nothing 
-slips in unnoticed; the filter panel's **New to you only** shows just those. 
-Come back to the tab after running a skill and the map **reloads by itself**, 
-so what it added appears, with its halo. 
-When something new lands on top of others, the map **makes room** by nudging 
-only the waypoints in the way, so the layout you know stays put. Deleting a 
-waypoint or a link can be **undone** (Undo, or Ctrl/⌘-Z).
-
----
-
-## Ontology (in progress!)
-
-Waypoints are typed - and for now hardcoded.  Edges are not typed.
-Waypoints can be of type: Goal, User need, feature, ADR, risk, open question, code components
-Tours link waypoints according to a goal (name of the tour)
-
----
-
-## Skills for Claude Code
-
-A Claude Code plugin, **cognitive-tours**, bundles five skills that work in
-any repo. Install it once, **in your terminal**:
-
-```
-claude plugin install cognitive-tours --marketplace margaretstorey/cognitive-tours
-```
-
-or **inside Claude Code** (at Claude's prompt, not the shell's):
-
-```
-/plugin install cognitive-tours --marketplace margaretstorey/cognitive-tours
-```
-
-(Older Claude Code: `/plugin marketplace add margaretstorey/cognitive-tours`,
-then `/plugin install cognitive-tours@cognitive-tours`.) Restart any open
-Claude Code session to pick up the skills. To get a newer version later:
-`claude plugin update cognitive-tours`.
-
-You don't have to remember the commands: ask Claude Code in your own words,
-such as "make a starting map of this repo", "help me record what I just
-did", "add this to a tour" or "which of my tours are stale?", and it picks
-the right skill.
-
-- **`/cognitive-tours:first-tours site <url>`**: no blank page on a repo you
-  don't know yet. It reads the repo and, after you OK the plan, adds a
-  starting map: about a dozen waypoints and two short tours (the user's view
-  and the builder's view), marked as drafted by Claude for you to check and
-  rewrite. An empty map's **Copy command** button gives you this command
-  with the site filled in.
-- **`suggest-waypoint`, `suggest-tour`**: record recent work. After you OK
-  each small batch, they add the waypoints (placed beside related ones) or
-  the tour stops for you; you write the descriptions and narratives in the
-  app, with help if you ask.
-- **`audit-waypoints`, `audit-tours`**: report where the map has drifted from
-  the code: descriptions that no longer match their files, file paths that
-  no longer exist (with the commit that removed them), stale tour
-  narratives, and edge labels drifting apart.
-
-**Try the skills on the demo.** The skills run in a copy of the repo a map
-describes, and the demo maps this repo. In a terminal:
-
-```
-git clone https://github.com/margaretstorey/cognitive-tours && cd cognitive-tours && claude
-```
-
-Then copy a command from the demo's **Claude Code skills** button (it has
-the demo's address filled in) and paste it into Claude Code. The demo has
-no passcode, and it resets every hour, so nothing you add there lasts.
-
-Or try it on a blank sandbox of your own (ask the author for one).
-Details in [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md#3-the-ai-skills-claude-code).
-The plugin's files are in [`plugins/cognitive-tours/`](plugins/cognitive-tours/).
-
----
-
-## Running your own instance
-See [SETUP.md](./SETUP.md) for instructions on cloning this to run against your own database and project.
-
-## Running locally
-
-```bash
-git clone https://github.com/margaretstorey/cognitive-tours
-cd cognitive-tours
-npm install
-npx prisma generate
-npx prisma migrate dev
-npm run dev
-```
-
-Open http://localhost:3000.
-
-### Environment variables
-
-To connect to the shared Turso database, 
-create a `.env.local` file:
-
-TURSO_DATABASE_URL=your-turso-url
-
-TURSO_AUTH_TOKEN=your-turso-token
-
-Contact Margaret-Anne for the credentials.
-
-**Note:** The shared database has no conflict protection. If two people 
-edit simultaneously, changes can overwrite each other silently. Coordinate 
-with Margaret-Anne before making significant changes, and back up `/api/data` 
-first. Alternatively, create your own Turso database at turso.tech for 
-isolated local development.
-
-The app uses SQLite locally via Prisma. The production deployment uses 
-Turso (hosted SQLite) on Vercel.
-
----
+The command line entry point (`ctour init`, `ctour serve`), the MCP server that
+lets an AI agent read and write the same map, and the skill files that teach an
+agent the map format. The application currently starts with `npm run dev` from a
+checkout. Those pieces plug into this shell and are specified separately.
 
 ## Architecture
 
-- **Next.js 16 + TypeScript + Tailwind + React Flow**
-- **Three-panel layout:** graph (left), waypoint detail (right), tour bar (top)
-- **Persistence:** SQLite + Prisma locally, Turso in production
-- **State:** single root component `CognitiveToursApp.tsx` owns all app state
+Three regions of state, each with exactly one owner.
 
-See `CLAUDE.md` for the full project state, key decisions, and backlog.
+| State                    | Lives in                            | Survives              |
+| ------------------------ | ----------------------------------- | --------------------- |
+| Workspace registry       | `~/.ctour/workspace.json`           | restarts, per machine |
+| Map document             | `<project>/.tours/<name>.tour.json` | restarts, git, clones |
+| Selection, history, drag | the running application             | the session           |
 
----
+The registry is machine-local on purpose: which projects you have open is a fact
+about your machine, not about the repository. The map is the opposite — it
+belongs to the code.
+
+### The screen
+
+Four regions, each the single home of its content: the navigation rail (projects
+and their maps), the map canvas, the inspector (the selected waypoint or the
+tour being edited), and the tour dock (the current tour, its position, its
+controls). A fact that appears in two regions is a defect, not a convenience.
+
+Width bands: at 1280 px and wider all four are visible; below that the rail
+becomes icons only; below 768 px the rail and inspector become drawers over the
+canvas and the dock becomes a single scrollable row.
+
+### Design tokens
+
+Every colour is a semantic custom property in `app/globals.css`, defined once for
+light and once for dark: surfaces (`background`, `card`, `rail`, `dock`,
+`canvas`), interaction (`primary`, `accent`, `destructive`, `ring`, `input`),
+the ten waypoint types, and three states. Components use `bg-canvas`,
+`text-waypoint-goal-foreground`; a literal `bg-gray-100` fails lint. A unit test
+reads the stylesheet and fails if any text pair drops below WCAG AA, so the
+themes cannot silently rot.
+
+### Reading and writing the map
+
+`app/lib/workspace/map-file.ts` owns the format. Reads validate and normalise,
+and never rewrite the file they just read. Writes serialise with a fixed key
+order, sort collections by id, keep tour stop order exactly as authored, write a
+temporary file and rename it over the target. A crash mid-save cannot truncate a
+map, and adding one waypoint produces a one-line diff.
+
+### Server routes exist because the browser cannot touch the disk
+
+`app/api/workspace/*` and `app/api/maps/*` are the only code that reads or writes
+files. They validate that every path resolves inside the project root before any
+filesystem call. Nothing is fetched over the network; the application is a local
+server the browser talks to.
+
+### Editing
+
+One zustand store per open map, wrapped in temporal history limited to fifty
+steps and scoped to the document — selection and loading flags are not edits and
+never enter the history. A text field commits to the store when the person
+pauses or leaves the field, so one edit is one undo step. The store is watched by
+an autosave that writes 800 ms after the last change and reports pending, saved
+or failed in the dock. A save that would overwrite a file changed on disk is
+refused with a 409 and shown as a choice between reloading and keeping yours.
+
+## Technical detail
+
+### Requirements
+
+Node.js 20 or newer (22 tested).
+
+### Run it
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`. The first launch shows an empty workspace with one
+action: add a project. Pick a folder that holds your code; a map is created on
+demand and stored in `.tours/` inside it.
+
+### Environment
+
+| Variable     | Default    | Purpose                                                                     |
+| ------------ | ---------- | --------------------------------------------------------------------------- |
+| `CTOUR_HOME` | `~/.ctour` | where the workspace registry lives; tests point it at a temporary directory |
+
+There is no other configuration. No database, no API keys, no accounts.
+
+### Commands
+
+```bash
+npm run dev        # local application on :3000
+npm run build      # production build
+npm run typecheck  # tsc --noEmit
+npm run lint       # eslint, including the design-token rule
+npm run test:unit  # vitest: history, map file, registry, paths, token contrast
+npm run test:e2e   # playwright: the user stories, on a temporary workspace
+```
+
+### Test layout
+
+- `tests/unit` — logic that must be right without a browser: undo semantics, map
+  file round-trips and ordering, registry recovery, path containment, WCAG
+  contrast of every token pair.
+- `tests/acceptance` — the shell's user stories in a real browser against a real
+  `.tours/` directory created per run.
+
+Playwright starts the application with `CTOUR_HOME=./.tmp/e2e-home` and builds its
+fixture under `.tmp/`, so a test run never touches a real workspace.
+
+### Troubleshooting
+
+| Symptom                                            | Cause                                                           |
+| -------------------------------------------------- | --------------------------------------------------------------- |
+| Empty workspace after a restart                    | `CTOUR_HOME` was set during that run; the registry is elsewhere |
+| "That folder does not exist" when adding a project | the path is outside `$HOME`, or it is a file                    |
+| The dock says "Not saved"                          | the file was changed on disk; reload or keep yours              |
+| A colour change is rejected by lint                | use a token from `app/globals.css`                              |
 
 ## Contributing
 
-**If you are a new collaborator, start here:** open the demo and follow 
-the tours before reading any code. "A Research Story Behind Cognitive Tours" 
-explains the research motivation, and "Architecture of the Cognitive Tours 
-App Code" walks through the code. The app is self-documenting: the tours are 
-the onboarding.
-
-Read `CLAUDE.md` before touching any code. It is the cognitive layer — the 
-bridge between intent, understanding, and code.
-
-This project uses a two-Claude workflow: one Claude instance handles 
-planning and architecture (working from CLAUDE.md), another handles 
-implementation via Claude Code. If you are contributing as a developer, 
-start Claude Code from the repo root and it will read CLAUDE.md 
-automatically.
-
-**Note for collaborators:** Before making significant changes, visit 
-/api/data and save the JSON as a backup. Deleting a waypoint or a link can 
-be undone; nothing else can.
-
-The constitution (8 principles) lives at `.specify/memory/constitution.md`. 
-Read it before adding any feature.
+The map format is a contract: `specs/010-app-shell/contracts/map-file.md`.
+Changes to ordering or field meaning need a version bump and a reader that still
+opens version 1. Feature work is specified before it is built; see `specs/`.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT.

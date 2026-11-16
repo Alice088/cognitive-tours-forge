@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { Analytics } from '@vercel/analytics/next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import { PROJECT_NAME } from './lib/project';
+import { ThemeProvider } from '@/app/components/shell/ThemeProvider';
+import { TooltipProvider } from '@/app/components/ui/tooltip';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: PROJECT_NAME ? `${PROJECT_NAME} · Cognitive Tours` : 'Cognitive Tours',
+  title: 'Cognitive Tours',
   description: 'Navigate code, intent, and understanding together',
 };
 
@@ -25,10 +25,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        {children}
-        <Analytics />
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full">
+        <ThemeProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

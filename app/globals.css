@@ -1,27 +1,254 @@
 @import 'tailwindcss';
 @import '@xyflow/react/dist/style.css';
 
+@custom-variant dark (&:is(.dark *));
+
 :root {
+  --radius: 0.625rem;
+
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0d0d10;
+  --card: #ffffff;
+  --card-foreground: #0d0d10;
+  --popover: #ffffff;
+  --popover-foreground: #0d0d10;
+  --primary: #1f3bd8;
+  --primary-foreground: #ffffff;
+  --secondary: #e9e9ee;
+  --secondary-foreground: #1a1a20;
+  --muted: #eeeef1;
+  --muted-foreground: #55555f;
+  --accent: #e4e4ea;
+  --accent-foreground: #14141a;
+  --destructive: #c2261a;
+  --destructive-foreground: #ffffff;
+  --border: #dfdfe4;
+  --input: #8b8b96;
+  --ring: #3d5afe;
+
+  --canvas: #f6f6f8;
+  --canvas-grid: #d7d7dd;
+  --rail: #f1f1f4;
+  --rail-foreground: #121216;
+  --dock: #fafafb;
+  --dock-foreground: #121216;
+
+  --waypoint-goal: #fdf6e2;
+  --waypoint-goal-foreground: #846b1f;
+  --waypoint-user-need: #e2f4fd;
+  --waypoint-user-need-foreground: #21698c;
+  --waypoint-feature: #e2fdf1;
+  --waypoint-feature-foreground: #1d7c50;
+  --waypoint-adr: #f4e2fd;
+  --waypoint-adr-foreground: #69218c;
+  --waypoint-code-component: #e2ebfd;
+  --waypoint-code-component-foreground: #21438c;
+  --waypoint-test: #e2fdfa;
+  --waypoint-test-foreground: #1d7c6f;
+  --waypoint-risk: #fde8e2;
+  --waypoint-risk-foreground: #8c3621;
+  --waypoint-ai-instruction: #fde2fd;
+  --waypoint-ai-instruction-foreground: #8c218c;
+  --waypoint-open-question: #fdf1e2;
+  --waypoint-open-question-foreground: #8c5a21;
+  --waypoint-deprecated: #e9e9ee;
+  --waypoint-deprecated-foreground: #45454f;
+
+  --overlay: #08080a;
+
+  --state-new: #3d5afe;
+  --state-dimmed: #f6f6f8;
+  --state-selected: #1f3bd8;
+}
+
+.dark {
+  --background: #111114;
+  --foreground: #f2f2f5;
+  --card: #17171c;
+  --card-foreground: #f2f2f5;
+  --popover: #1a1a20;
+  --popover-foreground: #f2f2f5;
+  --primary: #7f95ff;
+  --primary-foreground: #0a0a12;
+  --secondary: #24242c;
+  --secondary-foreground: #f0f0f5;
+  --muted: #212129;
+  --muted-foreground: #a9a9b6;
+  --accent: #2a2a34;
+  --accent-foreground: #f2f2f5;
+  --destructive: #ff6b5e;
+  --destructive-foreground: #1a0806;
+  --border: #2e2e38;
+  --input: #7b7b8a;
+  --ring: #8fa2ff;
+
+  --canvas: #0c0c0f;
+  --canvas-grid: #2b2b33;
+  --rail: #17171c;
+  --rail-foreground: #ececf1;
+  --dock: #15151a;
+  --dock-foreground: #ececf1;
+
+  --waypoint-goal: #3e3419;
+  --waypoint-goal-foreground: #f2da92;
+  --waypoint-user-need: #19313e;
+  --waypoint-user-need-foreground: #92d2f2;
+  --waypoint-feature: #193e2d;
+  --waypoint-feature-foreground: #92f2c5;
+  --waypoint-adr: #31193e;
+  --waypoint-adr-foreground: #d292f2;
+  --waypoint-code-component: #19253e;
+  --waypoint-code-component-foreground: #92b0f2;
+  --waypoint-test: #193e39;
+  --waypoint-test-foreground: #92f2e5;
+  --waypoint-risk: #3e2019;
+  --waypoint-risk-foreground: #f2a592;
+  --waypoint-ai-instruction: #3e193e;
+  --waypoint-ai-instruction-foreground: #f292f2;
+  --waypoint-open-question: #3e2d19;
+  --waypoint-open-question-foreground: #f2c592;
+  --waypoint-deprecated: #26262e;
+  --waypoint-deprecated-foreground: #bcbcc8;
+
+  --overlay: #000000;
+
+  --state-new: #8fa2ff;
+  --state-dimmed: #0c0c0f;
+  --state-selected: #7f95ff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-canvas: var(--canvas);
+  --color-canvas-grid: var(--canvas-grid);
+  --color-rail: var(--rail);
+  --color-rail-foreground: var(--rail-foreground);
+  --color-dock: var(--dock);
+  --color-dock-foreground: var(--dock-foreground);
+
+  --color-waypoint-goal: var(--waypoint-goal);
+  --color-waypoint-goal-foreground: var(--waypoint-goal-foreground);
+  --color-waypoint-user-need: var(--waypoint-user-need);
+  --color-waypoint-user-need-foreground: var(--waypoint-user-need-foreground);
+  --color-waypoint-feature: var(--waypoint-feature);
+  --color-waypoint-feature-foreground: var(--waypoint-feature-foreground);
+  --color-waypoint-adr: var(--waypoint-adr);
+  --color-waypoint-adr-foreground: var(--waypoint-adr-foreground);
+  --color-waypoint-code-component: var(--waypoint-code-component);
+  --color-waypoint-code-component-foreground: var(--waypoint-code-component-foreground);
+  --color-waypoint-test: var(--waypoint-test);
+  --color-waypoint-test-foreground: var(--waypoint-test-foreground);
+  --color-waypoint-risk: var(--waypoint-risk);
+  --color-waypoint-risk-foreground: var(--waypoint-risk-foreground);
+  --color-waypoint-ai-instruction: var(--waypoint-ai-instruction);
+  --color-waypoint-ai-instruction-foreground: var(--waypoint-ai-instruction-foreground);
+  --color-waypoint-open-question: var(--waypoint-open-question);
+  --color-waypoint-open-question-foreground: var(--waypoint-open-question-foreground);
+  --color-waypoint-deprecated: var(--waypoint-deprecated);
+  --color-waypoint-deprecated-foreground: var(--waypoint-deprecated-foreground);
+
+  --color-overlay: var(--overlay);
+
+  --color-state-new: var(--state-new);
+  --color-state-dimmed: var(--state-dimmed);
+  --color-state-selected: var(--state-selected);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.react-flow__background {
+  background: var(--canvas);
+}
+
+.react-flow__edge-path {
+  stroke: var(--input);
+  stroke-width: 1.5;
+}
+
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:focus .react-flow__edge-path {
+  stroke: var(--state-selected);
+}
+
+.react-flow__edge-text {
+  fill: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.react-flow__edge-textbg {
+  fill: var(--canvas);
+}
+
+.react-flow__handle {
+  background: var(--input);
+  border-color: var(--canvas);
+}
+
+.react-flow__attribution {
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 10px;
+}
+
+.react-flow__controls button {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--card-foreground);
+  fill: currentColor;
+}
+
+.react-flow__controls button:hover {
+  background: var(--accent);
+}
+
+.react-flow__minimap {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.react-flow__selection {
+  background: color-mix(in oklab, var(--state-selected) 12%, transparent);
+  border: 1px dashed var(--state-selected);
 }

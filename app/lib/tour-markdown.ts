@@ -1,6 +1,5 @@
-import type { Tour, Waypoint } from './types';
-import { WAYPOINT_TYPES } from './types';
-import { githubFileLink } from './repo';
+import { WAYPOINT_TYPES } from '@/app/lib/theme/tokens';
+import type { Tour, Waypoint } from '@/app/lib/workspace/types';
 
 export function tourSlug(name: string): string {
   return name
@@ -9,40 +8,30 @@ export function tourSlug(name: string): string {
     .replace(/^-|-$/g, '');
 }
 
-/** Context a deployment adds to exports; both optional. */
 export interface ExportContext {
   projectName?: string | null;
-  repoUrl?: string | null;
 }
 
-function pushWaypointBody(lines: string[], wp: Waypoint, repoUrl?: string | null): void {
-  if (wp.description?.trim()) {
-    lines.push(wp.description);
+function pushWaypointBody(lines: string[], waypoint: Waypoint): void {
+  if (waypoint.description?.trim()) {
+    lines.push(waypoint.description);
     lines.push('');
   }
-
-  if (wp.notes?.trim()) {
-    lines.push(wp.notes);
+  if (waypoint.notes?.trim()) {
+    lines.push(waypoint.notes);
     lines.push('');
   }
-
-  if (wp.filePath?.trim()) {
-    // Exports are shared and committed, so no one's local folder belongs in
-    // them; a GitHub link is the same for everyone, so it does.
-    const link = githubFileLink(repoUrl ?? null, wp.filePath);
-    lines.push(link ? `[\`${wp.filePath}\`](${link})` : `\`${wp.filePath}\``);
+  if (waypoint.file?.trim()) {
+    lines.push(`\`${waypoint.file}\``);
     lines.push('');
   }
 }
 
-/**
- * One-line byline for a tour, e.g. "By Margaret-Anne · Updated 24 Sep 2026".
- * "By …" is omitted when the tour has no author; returns '' if there is
- * nothing to show.
- */
 export function tourByline(tour: Tour): string {
   const parts: string[] = [];
-  if (tour.author) parts.push(`By ${tour.author}`);
+  if (tour.author) {
+    parts.push(`By ${tour.author}`);
+  }
   if (tour.updatedAt) {
     const date = new Date(tour.updatedAt).toLocaleDateString('en-GB', {
       day: 'numeric',
@@ -54,12 +43,8 @@ export function tourByline(tour: Tour): string {
   return parts.join(' · ');
 }
 
-export function generateTourMarkdown(
-  tour: Tour,
-  waypoints: Waypoint[],
-  { projectName, repoUrl }: ExportContext = {}
-): string {
-  const waypointMap = new Map(waypoints.map(w => [w.id, w]));
+export function generateTourMarkdown(tour: Tour, waypoints: Waypoint[], { projectName }: ExportContext = {}): string {
+  const waypointMap = new Map(waypoints.map(waypoint => [waypoint.id, waypoint]));
   const lines: string[] = [];
 
   lines.push(`# ${tour.name}`);
@@ -76,7 +61,7 @@ export function generateTourMarkdown(
     lines.push('');
   }
 
-  if (tour.description.trim()) {
+  if (tour.description?.trim()) {
     lines.push(tour.description);
     lines.push('');
   }
@@ -85,16 +70,15 @@ export function generateTourMarkdown(
   lines.push('');
 
   tour.stops.forEach((stop, index) => {
-    const wp = waypointMap.get(stop.waypointId);
-    if (!wp) return;
-
+    const waypoint = waypointMap.get(stop.waypointId);
+    if (!waypoint) {
+      return;
+    }
     lines.push('---');
     lines.push('');
-    lines.push(`## Stop ${index + 1}: ${wp.label} (${wp.type})`);
+    lines.push(`## Stop ${index + 1}: ${waypoint.label} (${waypoint.type})`);
     lines.push('');
-
-    pushWaypointBody(lines, wp, repoUrl);
-
+    pushWaypointBody(lines, waypoint);
     if (stop.narrative?.trim()) {
       lines.push(`> ${stop.narrative}`);
       lines.push('');
@@ -104,28 +88,24 @@ export function generateTourMarkdown(
   return lines.join('\n');
 }
 
-export function generateFullMapMarkdown(waypoints: Waypoint[], { projectName, repoUrl }: ExportContext = {}): string {
+export function generateFullMapMarkdown(waypoints: Waypoint[], { projectName }: ExportContext = {}): string {
   const lines: string[] = [];
-
   lines.push(projectName ? `# Full Map: ${projectName}` : '# Full Map');
   lines.push('');
   lines.push(`*${waypoints.length} waypoint${waypoints.length === 1 ? '' : 's'}*`);
   lines.push('');
 
   WAYPOINT_TYPES.forEach(type => {
-    const group = waypoints.filter(w => w.type === type).sort((a, b) => a.label.localeCompare(b.label));
-    if (group.length === 0) return;
-
+    const group = waypoints.filter(waypoint => waypoint.type === type).sort((a, b) => a.label.localeCompare(b.label));
+    if (group.length === 0) {
+      return;
+    }
     lines.push(`## ${type} Waypoints`);
     lines.push('');
-
-    group.forEach(wp => {
-      lines.push('---');
+    group.forEach(waypoint => {
+      lines.push(`### ${waypoint.label}`);
       lines.push('');
-      lines.push(`### ${wp.label}`);
-      lines.push('');
-
-      pushWaypointBody(lines, wp, repoUrl);
+      pushWaypointBody(lines, waypoint);
     });
   });
 
