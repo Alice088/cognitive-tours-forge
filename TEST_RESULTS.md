@@ -4,6 +4,36 @@
 
 ---
 
+## Прогон: 2026-11-16 17:47 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `curl -fsSL …/main/install.sh | sh -s -- --prefix /tmp/release-prefix`, `curl -fsSL …/main/install.sh | sh`, `ctour --version`, `CTOUR_HOME=/tmp/release-home ctour init --port 4414`
+
+Проверка опубликованного релиза: `install.sh` в `main` совпадает с локальным, ассет `v0.1.0/ctour-0.1.0.tgz` (19 785 867 байт) на месте, установщик берёт его вместо сборки.
+
+| #   | Тест                                                                               | Пакет      | Результат | Время  |
+| --- | ---------------------------------------------------------------------------------- | ---------- | --------- | ------ |
+| 1   | `GET releases/download/v0.1.0/ctour-0.1.0.tgz` → 302 на ассет                      | github     | PASS      | 0.60s  |
+| 2   | ассет в API: `ctour-0.1.0.tgz`, 19 785 867 байт                                    | github     | PASS      | 0.50s  |
+| 3   | `raw.githubusercontent.com/.../main/install.sh` → 200                              | github     | PASS      | 0.40s  |
+| 4   | скачанный `install.sh` байт в байт равен локальному                                | github     | PASS      | 0.30s  |
+| 5   | установка из релиза с `--prefix`: сообщение `Using the packed release`, без сборки | sh         | PASS      | 13.00s |
+| 6   | `ctour --version` после установки из релиза                                        | cli        | PASS      | 0.10s  |
+| 7   | `ctour init --port 4414`: карта, адрес, `/api/workspace` → 200                     | cli        | PASS      | 11.00s |
+| 8   | интерфейс из релиза: 4 региона, 0 ответов ≥400, обе кнопки в верхней строке        | playwright | PASS      | 2.00s  |
+| 9   | та же команда без `--prefix`: `ctour` на `PATH` (`~/.nvm/…/bin/ctour`)             | sh         | PASS      | 14.00s |
+
+### Сводка
+
+**Всего:** 9 · **PASS:** 9 · **FAIL:** 0 · **SKIP:** 0 · **PANIC:** 0 · время 41.90s
+
+### Падения
+
+| Тест | Причина |
+| ---- | ------- |
+| —    | нет     |
+
+---
+
 ## Прогон: 2026-11-16 17:39 MSK (+0300)
 
 **Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `sh install.sh` (локальный чекаут), `sh install.sh` из пустой папки (сборка из архива GitHub), `npx vitest run`, `npx eslint .`, `npx tsc --noEmit`
