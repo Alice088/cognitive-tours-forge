@@ -66,8 +66,8 @@ Single Next.js application: `app/` for product code, `tests/unit/` and `tests/ac
 - [ ] T015 [US1] Add `applyExternal({ document, report, mtimeMs })` to `app/lib/store/map-store.ts` per T014
 - [ ] T016 [US1] Create `app/lib/workspace/use-map-sync.ts`: one `EventSource` per open map, `parseSyncEvent` on `message`, callbacks `onChanged`, `onUnreadable`, `onGone`, `onListChanged`; opens nothing when `readOnly`; closes on unmount; on `visibilitychange` to visible fetches `/api/maps/{projectId}/{mapFile}` once and hands the result to `onChanged`
 - [ ] T017 [US1] Wire the hook into `app/components/shell/MapWorkspace.tsx`: on `map-changed` with nothing unsaved call `applyExternal`, and announce the update in the existing live region without moving focus (FR-017)
-- [ ] T018 [US1] Wire `maps-changed` to `refresh()` from `useWorkspace` so the rail follows the folder, and keep the current map open when its own file is the one that changed
-- [ ] T019 [US1] Run the Phase 3 tests and fix what fails
+- [ ] T018 [US1] Wire `maps-changed` to `refresh()` from `useWorkspace` in `app/components/shell/MapWorkspace.tsx` so the rail follows the folder, and keep the current map open when its own file is the one that changed
+- [ ] T019 [US1] Run `tests/acceptance/sync-outside.spec.ts`, `tests/acceptance/sync-rail.spec.ts` and `tests/unit/map-store-external.test.ts`, and fix what fails
 
 **Checkpoint**: US1 works alone — the map follows the disk and the rail follows `.tours/`.
 
@@ -89,7 +89,7 @@ Single Next.js application: `app/` for product code, `tests/unit/` and `tests/ac
 
 - [ ] T023 [US2] Make the autosave path in `app/components/shell/MapWorkspace.tsx` treat the save in flight as "nothing changed": an event equal to the saved document updates `mtimeMs` only, and a second save scheduled during a burst sends the newest document once (FR-020)
 - [ ] T024 [US2] Confirm the 409 race path cannot fire for an own write: `expectedMtimeMs` comes from the last save result or the last applied external change in `app/components/shell/MapWorkspace.tsx`
-- [ ] T025 [US2] Run the Phase 4 tests and fix what fails
+- [ ] T025 [US2] Run `tests/acceptance/sync-own.spec.ts` and `tests/unit/sync-own-write.test.ts`, and fix what fails
 
 **Checkpoint**: US1 and US2 both hold — the map follows the disk and never reacts to itself.
 
@@ -117,7 +117,7 @@ Single Next.js application: `app/` for product code, `tests/unit/` and `tests/ac
 - [ ] T034 [US3] Add the pending outside change to `app/components/shell/MapWorkspace.tsx`: hold the incoming document, show `MapNotice` with `summariseChange`, keep typing untouched, and replace the notice rather than stacking (FR-019)
 - [ ] T035 [US3] Implement both actions in `app/components/shell/MapWorkspace.tsx`: Reload applies the held document, clears history, adopts its `mtimeMs`, and announces the restart; Keep mine writes the current document immediately and dismisses the notice (FR-007)
 - [ ] T036 [US3] Route the existing `stale-document` failure into the same notice kind so the two paths cannot both be visible (contract `map-file-errors.md`)
-- [ ] T037 [US3] Run the Phase 5 tests and fix what fails
+- [ ] T037 [US3] Run `tests/unit/diff.test.ts` and `tests/acceptance/sync-conflict.spec.ts`, and fix what fails
 
 **Checkpoint**: US1–US3 hold — the map follows the disk, ignores itself, and asks rather than losing work.
 
@@ -139,7 +139,7 @@ Single Next.js application: `app/` for product code, `tests/unit/` and `tests/ac
 
 - [ ] T041 [US4] Add the comparison loop to `app/lib/workspace/sync.ts`: `pollMs` default 2000, injectable for tests, started only while a subscription exists, cleared on the last close, and chosen when `fs.watch` throws or is unavailable
 - [ ] T042 [US4] Handle a `null` filename from `fs.watch` in `app/lib/workspace/sync.ts` by re-reading each subscription's own file, so an event without a name can neither be missed nor doubled
-- [ ] T043 [US4] Run the Phase 6 tests and fix what fails
+- [ ] T043 [US4] Run `tests/unit/sync-poll.test.ts` and the visibility test in `tests/acceptance/sync-outside.spec.ts`, and fix what fails
 
 **Checkpoint**: US4 holds on a filesystem with no notifications, and the fast path is unaffected.
 
@@ -163,7 +163,7 @@ Single Next.js application: `app/` for product code, `tests/unit/` and `tests/ac
 - [ ] T048 [US5] Add the `map-unreadable` and `map-gone` transitions to `app/lib/workspace/sync.ts` using `MapFileError` codes, and make T047 pass
 - [ ] T049 [US5] Handle both events in `app/lib/workspace/use-map-sync.ts` and `app/components/shell/MapWorkspace.tsx`: invalid content is never applied, the document is untouched, and the notice carries the file name and the reason
 - [ ] T050 [US5] Add the write-back action for a deleted file in `app/components/shell/MapWorkspace.tsx`, saving with `expectedMtimeMs: null` so the missing file is not treated as a stale one
-- [ ] T051 [US5] Run the Phase 7 tests and fix what fails
+- [ ] T051 [US5] Run `tests/unit/sync-invalid.test.ts` and `tests/acceptance/sync-invalid.spec.ts`, and fix what fails
 
 **Checkpoint**: all five stories hold independently.
 
@@ -177,7 +177,7 @@ Single Next.js application: `app/` for product code, `tests/unit/` and `tests/ac
 - [ ] T055 [P] Write `docs/adr/010-live-file-sync.md`: directory watch over file watch, canonical-text suppression, browser-owned conflict decision, poll fallback, with the alternatives from `research.md`
 - [ ] T056 Remove what this feature made dead: the banners left in `app/components/shell/MapWorkspace.tsx`, any duplicated reload or retry control, and unused exports found by `tsc --noEmit`
 - [ ] T057 Run `npm run test:unit` and `npm run test:e2e`, then record both in `TEST_RESULTS.md` with the command, branch and per-test durations from the JSON reporters
-- [ ] T058 Run `npm run typecheck`, `npm run lint` and `npm run build`, and fix anything that is not clean
+- [ ] T058 Run `npm run typecheck`, `npm run lint` and `npm run build` from `package.json`, and fix anything that is not clean
 - [ ] T059 Walk `quickstart.md` scenarios 1–8 by hand where no test covers them, and correct the document where reality differs
 
 ---
