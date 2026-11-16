@@ -1,114 +1,74 @@
 # Getting started with Cognitive Tours
 
-Cognitive Tours is a map of a software project: **waypoints** for what
-matters (goals, user needs, features, decisions, code, tests, risks, open
-questions), linked to each other, and **tours** that walk a reader through
-them in order, with a short narrative between stops. You build the map
-yourself; writing it is how the understanding gets built. See the
-[README](../README.md) for the ideas behind it.
+Cognitive Tours is a map of a software project: **waypoints** for what matters
+(goals, user needs, features, decisions, code, tests, risks, open questions),
+linked to each other, and **tours** that walk a reader through them in order,
+with a short narrative between stops. You build the map yourself; writing it is
+how the understanding gets built. See the [README](../README.md) for the ideas
+behind it.
 
-## 1. Try it (nothing to install)
+## 1. Start it
 
-| Site | What it's for |
-|---|---|
-| [The demo](https://cognitive-tours-demo.vercel.app) | A copy of the author's own map of Cognitive Tours. Choose **"A Research Story Behind Cognitive Tours"** in the tour selector and step through it with **Next**. It's reset every hour, so edits don't last. |
-| [The Flask example](https://cognitive-tours-demo-flask.vercel.app) | The same tool used on a codebase its author didn't write (a fork of Flask). |
-| **A sandbox of your own** | A blank map for writing your own waypoints and tours: ask the author for one. |
+Cognitive Tours runs on your machine and nothing leaves it. You need Node 22 or
+newer and a git checkout:
 
-**Things to try in a sandbox:**
-- **Add Waypoint** (in the waypoint panel): give it a label, a type and, if it
-  belongs to a file, the file's path in your repo.
-- Drag from one waypoint to another to connect them, and name the link
-  (for example "motivates" or "implemented by").
-- **+ New Tour**: pick waypoints in order and write the narrative for each
-  stop. Then step through it with **Next**, or switch to **Markdown View**.
-
-**Point a sandbox at your code.** Both settings belong to your browser, so
-each person sets their own:
-- **"View on GitHub":** on a waypoint with a file path, choose **Set your
-  team's GitHub repo** and paste the repo's URL.
-- **"Open in VS Code":** enter **Your code folder**, the folder where the repo
-  is checked out on this computer.
-
-A file path can also be a full `https://` link (a doc, notes in another
-repo); it's used as it is.
-
-**Keep your work.** Anyone can edit a sandbox, and its map may be cleared.
-Use **Download backup** (top right) to save a copy, and **Export tour** or
-**Export full map** for a readable Markdown version.
-
-## 2. Use it on your own project
-
-- **Ask for a site.** Each team in the author's course gets its own site and
-  database, with an empty map.
-- **Or run your own copy,** locally or deployed: see [SETUP.md](../SETUP.md).
-
-## 3. The AI skills (Claude Code)
-
-Five [Claude Code](https://claude.com/claude-code) skills come as one
-plugin, **cognitive-tours**. Install it once and it works in every repo you
-open Claude Code in. **In your terminal:**
-
-```
-claude plugin install cognitive-tours --marketplace margaretstorey/cognitive-tours
+```bash
+git clone https://github.com/margaretstorey/cognitive-tours.git
+cd cognitive-tours
+npm install
+npm run dev
 ```
 
-**Or inside Claude Code** (at Claude's prompt; typed into the shell, a
-`/plugin` command fails with "no such file or directory"):
+Open `http://localhost:3000`. The first screen is empty on purpose: it asks for a
+project.
 
-```
-/plugin install cognitive-tours --marketplace margaretstorey/cognitive-tours
-```
+## 2. Add your project
 
-(On an older Claude Code, use two commands: `/plugin marketplace add
-margaretstorey/cognitive-tours`, then `/plugin install
-cognitive-tours@cognitive-tours`.) Restart any open Claude Code session to
-pick up the skills.
+Press **Add project** and pick the folder that holds your code. A project needs
+no preparation — the map is created inside it on the first **Create map**, in
+`.tours/`.
 
-| Skill | What it does |
-|---|---|
-| `/cognitive-tours:first-tours` | For a repo you **don't know yet**: reads it and, after you OK the plan, adds a starting map to an empty site (about a dozen waypoints and two short tours, the user's view and the builder's view), all marked as drafted by Claude. You then check it and rewrite it in your own words. |
-| `/cognitive-tours:suggest-waypoint` | Finds recent work worth recording (decisions first) and, after you OK each small batch, adds the waypoints and links to the map, beside the waypoints they relate to. You write each description in the app (double-click the waypoint); it reads them back if you ask. |
-| `/cognitive-tours:suggest-tour` | Suggests where new waypoints fit in tours and, after you OK it, makes the change, one tour at a time, keeping every existing narrative. You write the tour description and the new narratives in **Edit tour**. |
-| `/cognitive-tours:audit-waypoints` | Checks code, ADR and test waypoints against the files they link to, and lists what has drifted, and checks every waypoint's file path still exists (naming the commit that removed a missing file). |
-| `/cognitive-tours:audit-tours` | Finds recently changed files that no waypoint or tour covers, stale or repetitive narratives, redundant links, and edge labels drifting apart (near-duplicates, reversed directions). |
+Each map is a file: `.tours/<name>.tour.json`. It travels with the repository,
+so it is committed, reviewed and cloned like the code it describes. A repository
+can hold several maps; the rail lists them.
 
-**Every site's header has a Claude Code skills button** that lists these
-commands with that site's address already filled in, each with a Copy
-button: copy one, paste it into Claude Code, press Return.
+Which projects you have open is remembered separately, in
+`~/.ctour/workspace.json` — a fact about this machine, not about the repository.
 
-**What they write.** `first-tours` writes a whole starting map, marked as
-drafted. The suggest skills write only what you've just approved (new
-waypoints, links and tour stops) and leave the descriptions and narratives,
-the understanding, to you. They never delete anything or change text you
-wrote without asking. Each time, they also offer to let you make the change
-yourself in the app instead: the more you do by hand, the more you'll
-remember. The audit skills only read the map and report.
+## 3. Write a few waypoints
 
-**Which map.** The map lives on a website, so each skill needs the site's
-address. Give it with the command (`site https://<your-site>`), or let the
-skill ask once: it offers to remember it for that repo as a line in
-`CLAUDE.local.md` (`Cognitive Tours site: https://<your-site>`), only if git
-ignores that file. Each map is its own site, so a new repo needs a site of
-its own (or a sandbox, to try things out).
+With a map open:
 
-**Edit passcodes.** If your site has an edit passcode, the skills need it
-to add things. Don't paste it into the chat. On a Mac, store it once in
-the Keychain (it asks for the passcode without showing it), with your
-site's address in place of `<your-site>`:
+- **Add a waypoint** in the inspector. Give it a label, a type, and, if it
+  belongs to a file, the file's path inside the project.
+- Drag a waypoint on the canvas to move it. Press **Connect to a waypoint** in
+  the inspector to link two of them and name the link ("motivates", "implemented
+  by", "tested by").
+- Write the description in your own words. This is the part that has to be
+  yours: the map is worth nothing if it repeats what the code already says.
+- **Add a waypoint** again, link it, and you have a small piece of a map.
 
-```
-security add-generic-password -a "$USER" -s "cognitive-tours-edit:<your-site>.vercel.app" -w
-```
+Every change is saved 800 ms after you stop, straight into the `.tours/` file,
+and every change can be undone — `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z`.
 
-From then on the skills read it from there and never ask. Elsewhere,
-they'll ask once per session and suggest a safe way to hand it over.
+## 4. Walk a tour
 
-Run them from your repo's folder; they use `git log` to see what changed.
-If your repo uses [Bram](https://github.com/judell/bram), the suggest skills
-also read its worklist history for the "why" behind changes. Not needed.
+**New tour** in the dock, then **Edit tour** to choose stops in order and write
+the narrative for each. Step through it with the next and previous buttons;
+`Export` writes the tour as Markdown.
+
+A tour is the part other people read. A map nobody can walk through is a pile of
+notes.
+
+## 5. What it does not do yet
+
+The `ctour` command line entry point, the MCP server that lets an AI agent read
+and write the same map, and the skill files that teach an agent the map format
+are specified separately and not built yet. Today the application is started
+with `npm run dev` from a checkout, and the map is edited in the browser.
 
 ## Before you share a link
 
-There's **no login**, and **undo only for deletes** (in that browser, until
-you reload): anyone with a site's link can change its map. Download a backup before sharing it, and again after a working session.
+The application has no login because it has no server to log in to: it is a
+local process reading local files. Sharing a map means sharing the repository,
+which is the point — the map is reviewed next to the code it explains.
