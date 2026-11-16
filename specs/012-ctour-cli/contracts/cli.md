@@ -103,6 +103,7 @@ Both are one JSON document and nothing else on stdout. Human diagnostics for a f
 | 2    | Usage error: unknown command, unknown flag, missing argument, unknown project                                       |
 | 3    | Environment refusal: not a directory, outside home, home itself, not writable, damaged workspace for `init`/`serve` |
 | 4    | No free address in the probed range                                                                                 |
+| 5    | Nothing to connect: `mcp install` found no agent                                                                    |
 
 ## Guarantees
 

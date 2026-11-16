@@ -1,7 +1,9 @@
 import { constants, promises as fs } from 'node:fs';
+import { homedir } from 'node:os';
 import path from 'node:path';
 import { isMapFile, mapDir, readMapStrict } from '@/app/lib/workspace/map-file';
 import { emptyRegistry, parseRegistry, registryPath, workspaceHome } from '@/app/lib/workspace/registry';
+import { reportAgents } from '../mcp/agents';
 import type { DiagnosticReport, DoctorCheck } from '../lib/report';
 import { isReportOk } from '../lib/report';
 
@@ -83,7 +85,7 @@ async function checkProject(project: { id: string; path: string }): Promise<Doct
   return checks;
 }
 
-export async function runDoctor(home = workspaceHome()): Promise<DiagnosticReport> {
+export async function runDoctor(home = workspaceHome(), userHome = homedir()): Promise<DiagnosticReport> {
   const file = registryPath(home);
   const text = await fs.readFile(file, 'utf8').catch(() => null);
   const checks: DoctorCheck[] = [await checkWorkspace(home)];
@@ -99,6 +101,16 @@ export async function runDoctor(home = workspaceHome()): Promise<DiagnosticRepor
 
   for (const project of registry.projects) {
     checks.push(...(await checkProject(project)));
+  }
+
+  for (const agent of await reportAgents(userHome)) {
+    checks.push({
+      id: agent.id,
+      target: agent.detail,
+      ok: agent.ok,
+      reason: agent.ok ? null : agent.detail,
+      fix: agent.ok ? null : agent.fix,
+    });
   }
 
   return { ok: isReportOk(checks), checks };

@@ -4,6 +4,378 @@
 
 ---
 
+## Прогон: 2026-11-16 14:42 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run --reporter=json` (проекты unit + cli), `npx playwright test` (workers=1, production build), `npx tsc --noEmit`, `npx eslint .`, `npm pack --dry-run`
+
+### Приёмочные тесты (`playwright test`)
+
+| #   | Тест                                                                       | Пакет                 | Результат | Время  |
+| --- | -------------------------------------------------------------------------- | --------------------- | --------- | ------ |
+| 1   | changes no file when it runs a second time                                 | cli.spec.ts           | PASS      | 0.85s  |
+| 2   | opens the map for a repository in one command                              | cli.spec.ts           | PASS      | 1.75s  |
+| 3   | opens the workspace screen where there is no project                       | cli.spec.ts           | PASS      | 1.03s  |
+| 4   | returns the terminal within a second of the interrupt                      | cli.spec.ts           | PASS      | 0.40s  |
+| 5   | takes another address when the first is busy                               | cli.spec.ts           | PASS      | 1.87s  |
+| 6   | adds and removes a link between two waypoints                              | editing.spec.ts       | PASS      | 2.60s  |
+| 7   | creates a tour and deletes it again                                        | editing.spec.ts       | PASS      | 1.95s  |
+| 8   | moves a waypoint by dragging it on the map                                 | editing.spec.ts       | PASS      | 3.67s  |
+| 9   | refuses an empty label and an absolute path in the editor                  | editing.spec.ts       | PASS      | 3.40s  |
+| 10  | replays twenty changes back to the beginning and forward to the end        | editing.spec.ts       | PASS      | 61.37s |
+| 11  | says why a save failed and offers one retry                                | editing.spec.ts       | PASS      | 1.23s  |
+| 12  | dismisses the tour before the selection                                    | keyboard.spec.ts      | PASS      | 0.32s  |
+| 13  | Escape closes the inspector drawer before anything else                    | keyboard.spec.ts      | PASS      | 0.28s  |
+| 14  | focuses the map search with a slash                                        | keyboard.spec.ts      | PASS      | 0.26s  |
+| 15  | moves between waypoints with the arrow keys                                | keyboard.spec.ts      | PASS      | 0.29s  |
+| 16  | reaches every region with the keyboard in the contract order               | keyboard.spec.ts      | PASS      | 0.37s  |
+| 17  | shows a visible focus ring on a keyboard-focused control                   | keyboard.spec.ts      | PASS      | 0.22s  |
+| 18  | undo inside a text field stays text undo                                   | keyboard.spec.ts      | PASS      | 0.58s  |
+| 19  | lets a person keep their own edit when the agent writes meanwhile          | mcp.spec.ts           | PASS      | 0.56s  |
+| 20  | removes a waypoint the agent deletes                                       | mcp.spec.ts           | PASS      | 0.42s  |
+| 21  | shows a waypoint the agent adds within a second, twenty times              | mcp.spec.ts           | PASS      | 4.10s  |
+| 22  | clamps a stored step that no longer exists                                 | navigation.spec.ts    | PASS      | 0.19s  |
+| 23  | drops a stored tour that no longer exists                                  | navigation.spec.ts    | PASS      | 0.38s  |
+| 24  | returns to the same project, map, tour and stop three times                | navigation.spec.ts    | PASS      | 0.56s  |
+| 25  | pans, zooms, selects and drags inside the interaction budget               | performance.spec.ts   | PASS      | 0.90s  |
+| 26  | reports a map larger than the supported size                               | performance.spec.ts   | PASS      | 0.37s  |
+| 27  | stays inside the interaction budget on a 250 waypoint map                  | performance.spec.ts   | PASS      | 0.38s  |
+| 28  | edits are saved once at the end of a pause                                 | responsive.spec.ts    | PASS      | 3.76s  |
+| 29  | gives the space of a collapsed rail back to the canvas                     | responsive.spec.ts    | PASS      | 0.26s  |
+| 30  | keeps the rail labels reachable at the medium band                         | responsive.spec.ts    | PASS      | 0.27s  |
+| 31  | opens one drawer at a time and returns focus to its opener                 | responsive.spec.ts    | PASS      | 0.34s  |
+| 32  | rearranges itself at the wide, medium and narrow bands                     | responsive.spec.ts    | PASS      | 0.73s  |
+| 33  | a control that claims to change the map changes it                         | shell.spec.ts         | PASS      | 0.26s  |
+| 34  | autosaves a description to the map file                                    | shell.spec.ts         | PASS      | 2.82s  |
+| 35  | creates a map and opens it empty                                           | shell.spec.ts         | PASS      | 0.37s  |
+| 36  | every visible control has an accessible name                               | shell.spec.ts         | PASS      | 0.22s  |
+| 37  | keeps every tour fact in the dock                                          | shell.spec.ts         | PASS      | 0.21s  |
+| 38  | keeps the dock usable at 768                                               | shell.spec.ts         | PASS      | 0.21s  |
+| 39  | keeps the map visible while editing                                        | shell.spec.ts         | PASS      | 0.26s  |
+| 40  | never exposes the same action in two regions                               | shell.spec.ts         | PASS      | 0.21s  |
+| 41  | opens a map from the rail                                                  | shell.spec.ts         | PASS      | 0.23s  |
+| 42  | rearranges at 360 without horizontal scrolling                             | shell.spec.ts         | PASS      | 0.25s  |
+| 43  | resolves surfaces from tokens in the dark theme                            | shell.spec.ts         | PASS      | 0.32s  |
+| 44  | restores the tour and step after leaving the map                           | shell.spec.ts         | PASS      | 0.39s  |
+| 45  | shows the four regions without overlap                                     | shell.spec.ts         | PASS      | 0.21s  |
+| 46  | switches theme and keeps the choice after a reload                         | shell.spec.ts         | PASS      | 0.38s  |
+| 47  | undoes and redoes a change                                                 | shell.spec.ts         | PASS      | 2.46s  |
+| 48  | a failed load says what failed and offers one retry                        | states.spec.ts        | PASS      | 0.18s  |
+| 49  | a project without a map shows one create action                            | states.spec.ts        | PASS      | 0.17s  |
+| 50  | an empty workspace adds a project itself                                   | states.spec.ts        | PASS      | 0.39s  |
+| 51  | an unavailable project stays listed and can be repointed                   | states.spec.ts        | PASS      | 0.74s  |
+| 52  | disables the data actions while a map is loading                           | states.spec.ts        | PASS      | 1.98s  |
+| 53  | opens an unreachable project read-only from the last saved copy            | states.spec.ts        | PASS      | 0.40s  |
+| 54  | asks once when both sides changed and keeps the typing                     | sync-conflict.spec.ts | PASS      | 0.48s  |
+| 55  | shows one notice when a change lands while saving                          | sync-conflict.spec.ts | PASS      | 1.15s  |
+| 56  | takes the file version and restarts the history                            | sync-conflict.spec.ts | PASS      | 0.50s  |
+| 57  | writes the person version and raises no further notice                     | sync-conflict.spec.ts | PASS      | 2.03s  |
+| 58  | applies the file again once it is valid and clears the message             | sync-invalid.spec.ts  | PASS      | 0.40s  |
+| 59  | does not write the map back while the person keeps typing                  | sync-invalid.spec.ts  | PASS      | 2.08s  |
+| 60  | never applies content it cannot read                                       | sync-invalid.spec.ts  | PASS      | 1.44s  |
+| 61  | offers to write a deleted map back and never writes nothing                | sync-invalid.spec.ts  | PASS      | 0.30s  |
+| 62  | refuses a file that would lose a waypoint                                  | sync-invalid.spec.ts  | PASS      | 0.25s  |
+| 63  | writes over a file that cannot be read                                     | sync-invalid.spec.ts  | PASS      | 0.28s  |
+| 64  | announces an applied change without moving focus                           | sync-outside.spec.ts  | PASS      | 0.41s  |
+| 65  | does nothing when the file is rewritten with the same content              | sync-outside.spec.ts  | PASS      | 0.81s  |
+| 66  | keeps editing after the file is rewritten with the same content            | sync-outside.spec.ts  | PASS      | 1.68s  |
+| 67  | reconciles once when the page becomes visible again                        | sync-outside.spec.ts  | PASS      | 0.23s  |
+| 68  | settles five changes into the last state                                   | sync-outside.spec.ts  | PASS      | 0.23s  |
+| 69  | shows an outside change within a second and keeps the person in place      | sync-outside.spec.ts  | PASS      | 0.46s  |
+| 70  | keeps the map still when a field is cleared                                | sync-own.spec.ts      | PASS      | 2.60s  |
+| 71  | keeps twenty undos after twenty saves                                      | sync-own.spec.ts      | PASS      | 2.42s  |
+| 72  | shows nothing when the person saves                                        | sync-own.spec.ts      | PASS      | 2.07s  |
+| 73  | follows a map added and removed in the folder                              | sync-rail.spec.ts     | PASS      | 0.58s  |
+| 74  | keeps the open map open when another map appears                           | sync-rail.spec.ts     | PASS      | 0.41s  |
+| 75  | does not follow a map it cannot write and follows it again after relinking | sync-readonly.spec.ts | PASS      | 3.03s  |
+| 76  | opens a change stream for the open map                                     | sync.spec.ts          | PASS      | 0.20s  |
+| 77  | follows the system theme while it is set to system                         | theme.spec.ts         | PASS      | 0.26s  |
+| 78  | keeps a dialog and a tooltip on the dark surface                           | theme.spec.ts         | PASS      | 0.63s  |
+| 79  | resolves every surface of the dark theme from tokens                       | theme.spec.ts         | PASS      | 0.39s  |
+
+### Юнит- и CLI-тесты (`vitest run`)
+
+| #   | Тест                                                                                               | Пакет                      | Результат | Время |
+| --- | -------------------------------------------------------------------------------------------------- | -------------------------- | --------- | ----- |
+| 1   | map fixture builder builds the requested number of waypoints and tours                             | build-map.test.ts          | PASS      | 0.00s |
+| 2   | map fixture builder gives every waypoint a known type and a unique id                              | build-map.test.ts          | PASS      | 0.00s |
+| 3   | map fixture builder points every stop at an existing waypoint                                      | build-map.test.ts          | PASS      | 0.00s |
+| 4   | map cache lists the cached maps of one project only                                                | cache.test.ts              | PASS      | 0.00s |
+| 5   | map cache reads back what was written                                                              | cache.test.ts              | PASS      | 0.01s |
+| 6   | map cache returns nothing for a missing or escaping file                                           | cache.test.ts              | PASS      | 0.00s |
+| 7   | change summary counts a moved stop as a tour change, not a waypoint change                         | diff.test.ts               | PASS      | 0.00s |
+| 8   | change summary counts a moved waypoint as changed                                                  | diff.test.ts               | PASS      | 0.00s |
+| 9   | change summary counts added, removed and changed waypoints                                         | diff.test.ts               | PASS      | 0.00s |
+| 10  | change summary counts links and their labels                                                       | diff.test.ts               | PASS      | 0.00s |
+| 11  | change summary describes what changed for a person                                                 | diff.test.ts               | PASS      | 0.00s |
+| 12  | change summary is empty for the same document                                                      | diff.test.ts               | PASS      | 0.00s |
+| 13  | change summary names at most three per kind in document order                                      | diff.test.ts               | PASS      | 0.00s |
+| 14  | dispatch answers as JSON when asked                                                                | dispatch.test.ts           | PASS      | 0.00s |
+| 15  | dispatch keeps the version in step with the package                                                | dispatch.test.ts           | PASS      | 0.00s |
+| 16  | dispatch lists every command in help                                                               | dispatch.test.ts           | PASS      | 0.00s |
+| 17  | dispatch names a command when none was given                                                       | dispatch.test.ts           | PASS      | 0.00s |
+| 18  | dispatch prints one version line                                                                   | dispatch.test.ts           | PASS      | 0.00s |
+| 19  | dispatch refuses --json outside the reporting commands                                             | dispatch.test.ts           | PASS      | 0.00s |
+| 20  | dispatch refuses a port that is not a number                                                       | dispatch.test.ts           | PASS      | 0.00s |
+| 21  | dispatch refuses an extra argument                                                                 | dispatch.test.ts           | PASS      | 0.00s |
+| 22  | dispatch refuses an unknown command with the list                                                  | dispatch.test.ts           | PASS      | 0.00s |
+| 23  | dispatch refuses an unknown option                                                                 | dispatch.test.ts           | PASS      | 0.00s |
+| 24  | dispatch reports a healthy workspace from doctor                                                   | dispatch.test.ts           | PASS      | 0.00s |
+| 25  | dispatch reports an empty workspace without failing                                                | dispatch.test.ts           | PASS      | 0.00s |
+| 26  | doctor changes nothing on any run                                                                  | doctor.test.ts             | PASS      | 0.00s |
+| 27  | doctor names a folder that moved away                                                              | doctor.test.ts             | PASS      | 0.00s |
+| 28  | doctor names a map that would lose a waypoint                                                      | doctor.test.ts             | PASS      | 0.01s |
+| 29  | doctor passes a healthy workspace                                                                  | doctor.test.ts             | PASS      | 0.01s |
+| 30  | doctor reports a damaged workspace and leaves the file alone                                       | doctor.test.ts             | PASS      | 0.00s |
+| 31  | doctor reports a leftover .tours folder                                                            | doctor.test.ts             | PASS      | 0.00s |
+| 32  | map history caps the history at fifty entries                                                      | history.test.ts            | PASS      | 0.00s |
+| 33  | map history discards the forward branch after a new change                                         | history.test.ts            | PASS      | 0.00s |
+| 34  | map history ignores a move to where the waypoint already is                                        | history.test.ts            | PASS      | 0.00s |
+| 35  | map history moves a stop without losing it                                                         | history.test.ts            | PASS      | 0.00s |
+| 36  | map history moves a waypoint and records one entry                                                 | history.test.ts            | PASS      | 0.00s |
+| 37  | map history never records selection or status changes                                              | history.test.ts            | PASS      | 0.00s |
+| 38  | map history refuses to move a stop beyond the list                                                 | history.test.ts            | PASS      | 0.00s |
+| 39  | map history removes a deleted waypoint from edges and tours                                        | history.test.ts            | PASS      | 0.00s |
+| 40  | map history replays a twenty-change sequence exactly                                               | history.test.ts            | PASS      | 0.00s |
+| 41  | map history starts empty and records nothing on load                                               | history.test.ts            | PASS      | 0.00s |
+| 42  | map history steps back and forward through a change                                                | history.test.ts            | PASS      | 0.00s |
+| 43  | one history entry per committed change does not record a change that leaves the document identical | history.test.ts            | PASS      | 0.00s |
+| 44  | one history entry per committed change records exactly one entry per action type                   | history.test.ts            | PASS      | 0.00s |
+| 45  | init adopts a hand-written map byte for byte                                                       | init.test.ts               | PASS      | 0.00s |
+| 46  | init changes no file on a second run                                                               | init.test.ts               | PASS      | 0.01s |
+| 47  | init creates one map named after the folder                                                        | init.test.ts               | PASS      | 0.01s |
+| 48  | init opens the first map by name order                                                             | init.test.ts               | PASS      | 0.00s |
+| 49  | init puts the map at the repository root when started from a subdirectory                          | init.test.ts               | PASS      | 0.00s |
+| 50  | init refuses a map folder that is a file                                                           | init.test.ts               | PASS      | 0.00s |
+| 51  | init registers the project once                                                                    | init.test.ts               | PASS      | 0.01s |
+| 52  | map file accepts a file that loses nothing                                                         | map-file.test.ts           | PASS      | 0.00s |
+| 53  | map file canonicalises a document the way a re-read will see it                                    | map-file.test.ts           | PASS      | 0.00s |
+| 54  | map file coerces a broken position and drops an absolute file path                                 | map-file.test.ts           | PASS      | 0.00s |
+| 55  | map file creates an empty document with the three collections                                      | map-file.test.ts           | PASS      | 0.00s |
+| 56  | map file drops orphaned edges and stops when reading                                               | map-file.test.ts           | PASS      | 0.00s |
+| 57  | map file maps an unknown type to Open Question and counts it                                       | map-file.test.ts           | PASS      | 0.00s |
+| 58  | map file refuses a file name that escapes the project                                              | map-file.test.ts           | PASS      | 0.00s |
+| 59  | map file refuses a file that would lose a waypoint                                                 | map-file.test.ts           | PASS      | 0.00s |
+| 60  | map file refuses an unsupported version                                                            | map-file.test.ts           | PASS      | 0.00s |
+| 61  | map file refuses to write an invalid document                                                      | map-file.test.ts           | PASS      | 0.00s |
+| 62  | map file replaces the file atomically, leaving no temporary behind                                 | map-file.test.ts           | PASS      | 0.00s |
+| 63  | map file reports a missing map                                                                     | map-file.test.ts           | PASS      | 0.00s |
+| 64  | map file round-trips a document                                                                    | map-file.test.ts           | PASS      | 0.01s |
+| 65  | map file serialises deterministically                                                              | map-file.test.ts           | PASS      | 0.00s |
+| 66  | map file slugs a display name                                                                      | map-file.test.ts           | PASS      | 0.01s |
+| 67  | map file writes sorted collections and keeps stop order                                            | map-file.test.ts           | PASS      | 0.00s |
+| 68  | external document drops a selection that no longer exists and clamps the step                      | map-store-external.test.ts | PASS      | 0.00s |
+| 69  | external document drops a tour that no longer exists                                               | map-store-external.test.ts | PASS      | 0.00s |
+| 70  | external document keeps the selection, the tour and the step that still exist                      | map-store-external.test.ts | PASS      | 0.00s |
+| 71  | external document leaves the history it already had alone                                          | map-store-external.test.ts | PASS      | 0.00s |
+| 72  | agent checks carries the same checks through --json                                                | mcp-doctor.test.ts         | PASS      | 0.00s |
+| 73  | agent checks changes nothing on any run                                                            | mcp-doctor.test.ts         | PASS      | 0.01s |
+| 74  | agent checks fails and names the fix when the command is gone                                      | mcp-doctor.test.ts         | PASS      | 0.00s |
+| 75  | agent checks passes when the agent is connected and the command exists                             | mcp-doctor.test.ts         | PASS      | 0.00s |
+| 76  | agent checks passes with a hint when the agent is not connected                                    | mcp-doctor.test.ts         | PASS      | 0.00s |
+| 77  | agent checks reports a configuration it cannot read                                                | mcp-doctor.test.ts         | PASS      | 0.00s |
+| 78  | agent checks says nothing about agents that are not on the machine                                 | mcp-doctor.test.ts         | PASS      | 0.00s |
+| 79  | detection finds an agent by its configuration file                                                 | mcp-install.test.ts        | PASS      | 0.00s |
+| 80  | detection finds an agent by its configuration folder                                               | mcp-install.test.ts        | PASS      | 0.00s |
+| 81  | detection finds nothing on a machine without agents                                                | mcp-install.test.ts        | PASS      | 0.00s |
+| 82  | JSON configuration adds the entry and keeps every other byte                                       | mcp-install.test.ts        | PASS      | 0.00s |
+| 83  | JSON configuration adds the group when the file has none                                           | mcp-install.test.ts        | PASS      | 0.00s |
+| 84  | JSON configuration creates the file when only the folder exists                                    | mcp-install.test.ts        | PASS      | 0.00s |
+| 85  | JSON configuration reads back what it wrote                                                        | mcp-install.test.ts        | PASS      | 0.00s |
+| 86  | JSON configuration replaces a stale entry in place                                                 | mcp-install.test.ts        | PASS      | 0.00s |
+| 87  | JSON configuration reports a file it cannot read and leaves it alone                               | mcp-install.test.ts        | PASS      | 0.00s |
+| 88  | JSON configuration touches nothing on a second run                                                 | mcp-install.test.ts        | PASS      | 0.00s |
+| 89  | the configured command is an absolute path when the running file is one, otherwise the name        | mcp-install.test.ts        | PASS      | 0.00s |
+| 90  | the install command connects every detected agent and tells the person to restart                  | mcp-install.test.ts        | PASS      | 0.00s |
+| 91  | the install command exits 3 and still names the entry when a file cannot be read                   | mcp-install.test.ts        | PASS      | 0.00s |
+| 92  | the install command prints the entries and writes nothing when no agent is present                 | mcp-install.test.ts        | PASS      | 0.00s |
+| 93  | the install command says already connected on a second run                                         | mcp-install.test.ts        | PASS      | 0.00s |
+| 94  | TOML configuration appends the block at the end                                                    | mcp-install.test.ts        | PASS      | 0.00s |
+| 95  | TOML configuration does not append twice                                                           | mcp-install.test.ts        | PASS      | 0.00s |
+| 96  | TOML configuration reads the block back                                                            | mcp-install.test.ts        | PASS      | 0.00s |
+| 97  | TOML configuration refuses a file that writes mcp_servers inline                                   | mcp-install.test.ts        | PASS      | 0.00s |
+| 98  | nothing leaves the machine imports no network client                                               | mcp-isolation.test.ts      | PASS      | 0.00s |
+| 99  | nothing leaves the machine mentions no remote address                                              | mcp-isolation.test.ts      | PASS      | 0.00s |
+| 100 | standard output belongs to the protocol does not log to the console                                | mcp-isolation.test.ts      | PASS      | 0.00s |
+| 101 | standard output belongs to the protocol keeps the command layer out of the protocol output         | mcp-isolation.test.ts      | PASS      | 0.00s |
+| 102 | standard output belongs to the protocol writes frames from one place only                          | mcp-isolation.test.ts      | PASS      | 0.00s |
+| 103 | freePosition fills downwards before moving right                                                   | mcp-placement.test.ts      | PASS      | 0.00s |
+| 104 | freePosition finds a slot between the waypoints of a 250-waypoint map                              | mcp-placement.test.ts      | PASS      | 0.00s |
+| 105 | freePosition gives the same answer twice for the same map                                          | mcp-placement.test.ts      | PASS      | 0.00s |
+| 106 | freePosition is not fooled by a waypoint drawn off the grid                                        | mcp-placement.test.ts      | PASS      | 0.00s |
+| 107 | freePosition moves to the next column when the first is full                                       | mcp-placement.test.ts      | PASS      | 0.00s |
+| 108 | freePosition never covers an existing waypoint                                                     | mcp-placement.test.ts      | PASS      | 0.00s |
+| 109 | freePosition starts at the grid origin                                                             | mcp-placement.test.ts      | PASS      | 0.00s |
+| 110 | handshake answers a notification with nothing                                                      | mcp-protocol.test.ts       | PASS      | 0.00s |
+| 111 | handshake answers an unknown protocol version with the newest it knows                             | mcp-protocol.test.ts       | PASS      | 0.00s |
+| 112 | handshake answers ping before initializing                                                         | mcp-protocol.test.ts       | PASS      | 0.00s |
+| 113 | handshake declares tools without list changes                                                      | mcp-protocol.test.ts       | PASS      | 0.00s |
+| 114 | handshake describes when to use each tool                                                          | mcp-protocol.test.ts       | PASS      | 0.00s |
+| 115 | handshake echoes a protocol version it knows                                                       | mcp-protocol.test.ts       | PASS      | 0.00s |
+| 116 | handshake lists nine tools in the contract order                                                   | mcp-protocol.test.ts       | PASS      | 0.00s |
+| 117 | handshake names the loop, the types and the refusals in the instructions                           | mcp-protocol.test.ts       | PASS      | 0.00s |
+| 118 | handshake refuses a line that is not JSON                                                          | mcp-protocol.test.ts       | PASS      | 0.00s |
+| 119 | handshake refuses a request before initializing                                                    | mcp-protocol.test.ts       | PASS      | 0.00s |
+| 120 | handshake refuses an unknown method by name                                                        | mcp-protocol.test.ts       | PASS      | 0.00s |
+| 121 | handshake refuses an unknown tool by name                                                          | mcp-protocol.test.ts       | PASS      | 0.00s |
+| 122 | handshake takes the instruction text from the module, not from inline prose                        | mcp-protocol.test.ts       | PASS      | 0.00s |
+| 123 | handshake writes frames and nothing else to the output                                             | mcp-protocol.test.ts       | PASS      | 0.00s |
+| 124 | list_projects answers with no projects on a fresh machine                                          | mcp-read.test.ts           | PASS      | 0.00s |
+| 125 | list_projects lists a project whose folder is gone instead of hiding it                            | mcp-read.test.ts           | PASS      | 0.00s |
+| 126 | list_projects names every project with its folder and maps                                         | mcp-read.test.ts           | PASS      | 0.02s |
+| 127 | list_projects refuses a workspace file it cannot read instead of repairing it                      | mcp-read.test.ts           | PASS      | 0.00s |
+| 128 | read_map opens the only map when none is named                                                     | mcp-read.test.ts           | PASS      | 0.00s |
+| 129 | read_map reads a 250-waypoint map in under a second                                                | mcp-read.test.ts           | PASS      | 0.01s |
+| 130 | read_map refuses a file that is not JSON instead of returning an empty map                         | mcp-read.test.ts           | PASS      | 0.00s |
+| 131 | read_map refuses a folder that is gone                                                             | mcp-read.test.ts           | PASS      | 0.00s |
+| 132 | read_map refuses a map that is not there                                                           | mcp-read.test.ts           | PASS      | 0.00s |
+| 133 | read_map refuses an ambiguous project name                                                         | mcp-read.test.ts           | PASS      | 0.00s |
+| 134 | read_map refuses to choose between several maps                                                    | mcp-read.test.ts           | PASS      | 0.00s |
+| 135 | read_map returns the whole document and a state token                                              | mcp-read.test.ts           | PASS      | 0.00s |
+| 136 | read_map says how many entries it could not represent                                              | mcp-read.test.ts           | PASS      | 0.00s |
+| 137 | read_map works with no interface involved                                                          | mcp-read.test.ts           | PASS      | 0.02s |
+| 138 | create_waypoint adds a waypoint with the given position                                            | mcp-write.test.ts          | PASS      | 0.02s |
+| 139 | create_waypoint chooses a free slot when no position is given                                      | mcp-write.test.ts          | PASS      | 0.01s |
+| 140 | create_waypoint keeps every other waypoint untouched                                               | mcp-write.test.ts          | PASS      | 0.01s |
+| 141 | delete_waypoint takes links and tour stops with it and counts them                                 | mcp-write.test.ts          | PASS      | 0.02s |
+| 142 | links connects two waypoints with a label                                                          | mcp-write.test.ts          | PASS      | 0.01s |
+| 143 | links removes a link                                                                               | mcp-write.test.ts          | PASS      | 0.01s |
+| 144 | refusals answers unchanged rather than refusing when the same content was written outside          | mcp-write.test.ts          | PASS      | 0.01s |
+| 145 | refusals refuses a link from a waypoint to itself                                                  | mcp-write.test.ts          | PASS      | 0.00s |
+| 146 | refusals refuses a link that is not there                                                          | mcp-write.test.ts          | PASS      | 0.01s |
+| 147 | refusals refuses a path outside the project                                                        | mcp-write.test.ts          | PASS      | 0.00s |
+| 148 | refusals refuses a stop on a waypoint that is not on the map                                       | mcp-write.test.ts          | PASS      | 0.00s |
+| 149 | refusals refuses a write based on a stale reading and carries the current map                      | mcp-write.test.ts          | PASS      | 0.00s |
+| 150 | refusals refuses an ambiguous label                                                                | mcp-write.test.ts          | PASS      | 0.00s |
+| 151 | refusals refuses an empty label                                                                    | mcp-write.test.ts          | PASS      | 0.00s |
+| 152 | refusals refuses an empty tour name                                                                | mcp-write.test.ts          | PASS      | 0.00s |
+| 153 | refusals refuses an unknown tour                                                                   | mcp-write.test.ts          | PASS      | 0.01s |
+| 154 | refusals refuses an unknown type and lists the ten                                                 | mcp-write.test.ts          | PASS      | 0.00s |
+| 155 | refusals refuses an unknown waypoint                                                               | mcp-write.test.ts          | PASS      | 0.00s |
+| 156 | refusals refuses an update with no fields                                                          | mcp-write.test.ts          | PASS      | 0.00s |
+| 157 | refusals refuses the same waypoint twice in one tour                                               | mcp-write.test.ts          | PASS      | 0.01s |
+| 158 | tours clears the stops when the list is empty                                                      | mcp-write.test.ts          | PASS      | 0.00s |
+| 159 | tours creates a tour and sets its stops in order                                                   | mcp-write.test.ts          | PASS      | 0.01s |
+| 160 | update_waypoint changes only the fields named                                                      | mcp-write.test.ts          | PASS      | 0.00s |
+| 161 | update_waypoint clears a field sent as null                                                        | mcp-write.test.ts          | PASS      | 0.01s |
+| 162 | update_waypoint does not rewrite the file when nothing changes                                     | mcp-write.test.ts          | PASS      | 0.02s |
+| 163 | update_waypoint finds a waypoint by its exact label                                                | mcp-write.test.ts          | PASS      | 0.00s |
+| 164 | writes stay inside the project changes nothing outside the map folder                              | mcp-write.test.ts          | PASS      | 0.01s |
+| 165 | writes stay inside the project writes twenty times in a row                                        | mcp-write.test.ts          | PASS      | 0.14s |
+| 166 | nothing leaves the machine imports no network client                                               | no-network.test.ts         | PASS      | 0.00s |
+| 167 | nothing leaves the machine mentions no remote address                                              | no-network.test.ts         | PASS      | 0.00s |
+| 168 | nothing leaves the machine only ever talks to loopback                                             | no-network.test.ts         | PASS      | 0.00s |
+| 169 | address selection fails when the whole range is taken                                              | port.test.ts               | PASS      | 0.00s |
+| 170 | address selection skips an address that is taken                                                   | port.test.ts               | PASS      | 0.00s |
+| 171 | address selection skips several taken addresses                                                    | port.test.ts               | PASS      | 0.00s |
+| 172 | address selection takes the first free address                                                     | port.test.ts               | PASS      | 0.01s |
+| 173 | workspace registry clamps an out-of-range step to zero on read                                     | registry.test.ts           | PASS      | 0.00s |
+| 174 | workspace registry makes ids unique without clobbering an existing one                             | registry.test.ts           | PASS      | 0.00s |
+| 175 | workspace registry recovers from unparseable content without overwriting it                        | registry.test.ts           | PASS      | 0.00s |
+| 176 | workspace registry registers a project with a slugged unique id                                    | registry.test.ts           | PASS      | 0.00s |
+| 177 | workspace registry returns the existing entry when the same path is registered twice               | registry.test.ts           | PASS      | 0.00s |
+| 178 | workspace registry starts empty when there is no file                                              | registry.test.ts           | PASS      | 0.00s |
+| 179 | workspace registry stores the last view and drops it with its project                              | registry.test.ts           | PASS      | 0.00s |
+| 180 | workspace registry writes atomically and leaves no temporary behind                                | registry.test.ts           | PASS      | 0.00s |
+| 181 | isWithinHome accepts an ancestor of home so browsing can reach the root                            | safe-path.test.ts          | PASS      | 0.00s |
+| 182 | isWithinHome accepts the home directory and its children                                           | safe-path.test.ts          | PASS      | 0.00s |
+| 183 | isWithinHome rejects an unrelated branch                                                           | safe-path.test.ts          | PASS      | 0.00s |
+| 184 | resolveInside accepts a plain child                                                                | safe-path.test.ts          | PASS      | 0.00s |
+| 185 | resolveInside accepts an absolute path inside the root                                             | safe-path.test.ts          | PASS      | 0.00s |
+| 186 | resolveInside accepts the root itself                                                              | safe-path.test.ts          | PASS      | 0.00s |
+| 187 | resolveInside does not confuse a sibling with a shared prefix                                      | safe-path.test.ts          | PASS      | 0.00s |
+| 188 | resolveInside follows a symlink that leaves the root                                               | safe-path.test.ts          | PASS      | 0.00s |
+| 189 | resolveInside rejects an absolute path outside the root                                            | safe-path.test.ts          | PASS      | 0.00s |
+| 190 | resolveInside rejects parent traversal                                                             | safe-path.test.ts          | PASS      | 0.00s |
+| 191 | resolveInside rejects traversal hidden in the middle                                               | safe-path.test.ts          | PASS      | 0.00s |
+| 192 | serve target finds the project by id                                                               | serve.test.ts              | PASS      | 0.00s |
+| 193 | serve target finds the project by path                                                             | serve.test.ts              | PASS      | 0.00s |
+| 194 | serve target finds the project of the current folder                                               | serve.test.ts              | PASS      | 0.01s |
+| 195 | serve target opens the workspace screen when the folder is not a project                           | serve.test.ts              | PASS      | 0.00s |
+| 196 | serve target refuses an unknown project                                                            | serve.test.ts              | PASS      | 0.00s |
+| 197 | serve target writes nothing                                                                        | serve.test.ts              | PASS      | 0.00s |
+| 198 | serving builds the map address for a project                                                       | serve.test.ts              | PASS      | 0.00s |
+| 199 | serving prints the address once the server answers and stops the child                             | serve.test.ts              | PASS      | 0.00s |
+| 200 | server lifecycle becomes ready only after a successful answer                                      | server.test.ts             | PASS      | 0.01s |
+| 201 | server lifecycle kills a child that ignores the signal                                             | server.test.ts             | PASS      | 0.03s |
+| 202 | server lifecycle points at the standalone entry                                                    | server.test.ts             | PASS      | 0.00s |
+| 203 | server lifecycle reports a server that never answers                                               | server.test.ts             | PASS      | 0.06s |
+| 204 | server lifecycle resolves at once for a child that already exited                                  | server.test.ts             | PASS      | 0.00s |
+| 205 | server lifecycle starts the standalone server on loopback with the chosen port                     | server.test.ts             | PASS      | 0.00s |
+| 206 | server lifecycle stops the child on a signal and waits for it                                      | server.test.ts             | PASS      | 0.00s |
+| 207 | status rows marks a folder that moved away                                                         | status.test.ts             | PASS      | 0.00s |
+| 208 | status rows reports a workspace file that cannot be parsed                                         | status.test.ts             | PASS      | 0.00s |
+| 209 | status rows reports an empty workspace                                                             | status.test.ts             | PASS      | 0.00s |
+| 210 | status rows reports an unreadable map without partial counts                                       | status.test.ts             | PASS      | 0.00s |
+| 211 | status rows reports every project with its counts                                                  | status.test.ts             | PASS      | 0.02s |
+| 212 | status rows reports six projects in under two seconds                                              | status.test.ts             | PASS      | 0.01s |
+| 213 | status rows serialises rows for scripts                                                            | status.test.ts             | PASS      | 0.00s |
+| 214 | sync events names every kind once                                                                  | sync-events.test.ts        | PASS      | 0.00s |
+| 215 | sync events reads a changed map                                                                    | sync-events.test.ts        | PASS      | 0.00s |
+| 216 | sync events reads a changed map list                                                               | sync-events.test.ts        | PASS      | 0.00s |
+| 217 | sync events reads an unreadable file and a missing file                                            | sync-events.test.ts        | PASS      | 0.00s |
+| 218 | sync events refuses what it cannot understand                                                      | sync-events.test.ts        | PASS      | 0.00s |
+| 219 | unreadable and missing files applies the file again once it can be read                            | sync-invalid.test.ts       | PASS      | 0.08s |
+| 220 | unreadable and missing files reports a file that is not there when the stream opens                | sync-invalid.test.ts       | PASS      | 0.30s |
+| 221 | unreadable and missing files reports a missing file once when it had content before                | sync-invalid.test.ts       | PASS      | 0.38s |
+| 222 | unreadable and missing files reports one unreadable state per attempt and never the content        | sync-invalid.test.ts       | PASS      | 0.95s |
+| 223 | sync stays on this machine describes events with no field beyond the contract                      | sync-local.test.ts         | PASS      | 0.00s |
+| 224 | sync stays on this machine imports nothing that can reach another host                             | sync-local.test.ts         | PASS      | 0.00s |
+| 225 | own writes delivers a write that no record covers                                                  | sync-own-write.test.ts     | PASS      | 0.04s |
+| 226 | own writes delivers an external change that follows an own write at once                           | sync-own-write.test.ts     | PASS      | 0.30s |
+| 227 | own writes records the newest text per file                                                        | sync-own-write.test.ts     | PASS      | 0.01s |
+| 228 | comparison fallback delivers a change when the watcher never reports                               | sync-poll.test.ts          | PASS      | 0.17s |
+| 229 | comparison fallback delivers one update however many ticks pass                                    | sync-poll.test.ts          | PASS      | 0.46s |
+| 230 | comparison fallback does not go back to watching after falling back                                | sync-poll.test.ts          | PASS      | 0.15s |
+| 231 | comparison fallback reports a change when the filesystem reports nothing                           | sync-poll.test.ts          | PASS      | 0.16s |
+| 232 | comparison fallback settles several changes into the last state                                    | sync-poll.test.ts          | PASS      | 0.36s |
+| 233 | comparison fallback stops comparing when the last subscription closes                              | sync-poll.test.ts          | PASS      | 0.25s |
+| 234 | sync watcher collapses five changes into one settled update                                        | sync-watch.test.ts         | PASS      | 0.47s |
+| 235 | sync watcher delivers a change made to the open map                                                | sync-watch.test.ts         | PASS      | 0.06s |
+| 236 | sync watcher does not deliver a write this process made                                            | sync-watch.test.ts         | PASS      | 0.34s |
+| 237 | sync watcher does not deliver an own write that normalises differently                             | sync-watch.test.ts         | PASS      | 0.40s |
+| 238 | sync watcher keeps one watcher until the last subscription closes                                  | sync-watch.test.ts         | PASS      | 0.35s |
+| 239 | sync watcher refuses an unreadable file and reports it once per attempt                            | sync-watch.test.ts         | PASS      | 0.46s |
+| 240 | sync watcher reports a delivered file that disappears once                                         | sync-watch.test.ts         | PASS      | 0.39s |
+| 241 | sync watcher says nothing when the content is identical                                            | sync-watch.test.ts         | PASS      | 0.60s |
+| 242 | target resolution recognises a worktree, where .git is a file                                      | target.test.ts             | PASS      | 0.00s |
+| 243 | target resolution refuses a folder outside home                                                    | target.test.ts             | PASS      | 0.00s |
+| 244 | target resolution refuses a map folder that is a file                                              | target.test.ts             | PASS      | 0.00s |
+| 245 | target resolution refuses a map folder without write permission                                    | target.test.ts             | PASS      | 0.00s |
+| 246 | target resolution refuses a path that does not exist                                               | target.test.ts             | PASS      | 0.00s |
+| 247 | target resolution refuses a path that is a file                                                    | target.test.ts             | PASS      | 0.00s |
+| 248 | target resolution refuses the home folder                                                          | target.test.ts             | PASS      | 0.00s |
+| 249 | target resolution takes the folder itself when there is no repository                              | target.test.ts             | PASS      | 0.00s |
+| 250 | target resolution walks up to the repository root                                                  | target.test.ts             | PASS      | 0.01s |
+| 251 | design tokens defines the same colour tokens in both themes                                        | theme-contrast.test.ts     | PASS      | 0.00s |
+| 252 | design tokens meets 3:1 for interactive borders in dark                                            | theme-contrast.test.ts     | PASS      | 0.00s |
+| 253 | design tokens meets 3:1 for interactive borders in light                                           | theme-contrast.test.ts     | PASS      | 0.00s |
+| 254 | design tokens meets AA for text pairs in dark                                                      | theme-contrast.test.ts     | PASS      | 0.00s |
+| 255 | design tokens meets AA for text pairs in light                                                     | theme-contrast.test.ts     | PASS      | 0.00s |
+| 256 | tour validation accepts a name                                                                     | validation.test.ts         | PASS      | 0.00s |
+| 257 | tour validation refuses an empty name                                                              | validation.test.ts         | PASS      | 0.00s |
+| 258 | waypoint validation accepts a plain label and a relative path                                      | validation.test.ts         | PASS      | 0.00s |
+| 259 | waypoint validation checks nothing it was not given                                                | validation.test.ts         | PASS      | 0.00s |
+| 260 | waypoint validation refuses an absolute path                                                       | validation.test.ts         | PASS      | 0.00s |
+| 261 | waypoint validation refuses an empty label                                                         | validation.test.ts         | PASS      | 0.00s |
+
+### Сводка
+
+| Показатель           | Значение |
+| -------------------- | -------- |
+| Всего                | 340      |
+| PASS                 | 340      |
+| FAIL                 | 0        |
+| SKIP                 | 0        |
+| Время (сумма тестов) | 141.21s  |
+| Приёмочные           | 79       |
+| Юнит + CLI           | 261      |
+
+### Падения
+
+нет
+
+---
+
 ## Прогон: 2026-11-16 13:42 MSK (+0300)
 
 **Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run --reporter=json` (проекты unit + cli), `npx playwright test` (workers=1, production build через `next build && next start`), `npx tsc --noEmit`, `npx eslint .`

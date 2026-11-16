@@ -29,7 +29,8 @@ async function capture(
     return true;
   });
   try {
-    const code = await main(argv, { home: home(), ...overrides });
+    const scratch = home();
+    const code = await main(argv, { home: scratch, userHome: scratch, ...overrides });
     return { code, out, err };
   } finally {
     stdout.mockRestore();

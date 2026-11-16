@@ -1,3 +1,4 @@
+import { homedir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { workspaceHome } from '@/app/lib/workspace/registry';
@@ -6,6 +7,7 @@ import { prepareProject } from '../commands/init';
 import { resolveServeTarget, startServing } from '../commands/serve';
 import { buildStatus } from '../commands/status';
 import { runDoctor } from '../commands/doctor';
+import { installAgent, serveProtocol } from '../commands/mcp';
 import { fail, line } from './output';
 import { doctorLines, statusTable, toDoctorJson, toStatusJson } from './report';
 import { findPackageRoot } from './server';
@@ -15,7 +17,7 @@ import { VERSION } from './version';
 
 export class UsageError extends Error {}
 
-const COMMANDS = ['init', 'serve', 'status', 'doctor'] as const;
+const COMMANDS = ['init', 'serve', 'status', 'doctor', 'mcp'] as const;
 type CommandName = (typeof COMMANDS)[number];
 
 export const HELP = `ctour ${VERSION}
@@ -24,6 +26,8 @@ export const HELP = `ctour ${VERSION}
   serve [project]   open the interface without creating anything
   status            list the registered projects and their maps
   doctor            check folders, maps and the workspace; fix nothing
+  mcp               speak the map protocol on standard input and output
+  mcp install       connect the agent found on this machine
 
 options
   --port <n>        the first address to try (init, serve)
@@ -103,7 +107,7 @@ function exitCodeFor(error: unknown): number {
   return 3;
 }
 
-export type Overrides = { cwd?: string; home?: string; packageRoot?: string };
+export type Overrides = { cwd?: string; home?: string; userHome?: string; packageRoot?: string };
 
 async function packageRoot(overrides: Overrides): Promise<string> {
   if (overrides.packageRoot) {
@@ -114,6 +118,7 @@ async function packageRoot(overrides: Overrides): Promise<string> {
 
 export async function main(argv: string[], overrides: Overrides = {}): Promise<number> {
   const home = overrides.home ?? workspaceHome();
+  const userHome = overrides.userHome ?? homedir();
   const cwd = overrides.cwd ?? process.cwd();
 
   let parsed: Parsed;
@@ -183,6 +188,16 @@ export async function main(argv: string[], overrides: Overrides = {}): Promise<n
       });
     }
 
+    if (parsed.command === 'mcp') {
+      if (parsed.argument === 'install') {
+        return await installAgent({ home, userHome });
+      }
+      if (parsed.argument !== undefined) {
+        throw new UsageError(`unknown mcp subcommand ${parsed.argument}`);
+      }
+      return await serveProtocol({ home });
+    }
+
     if (parsed.command === 'status') {
       const result = await buildStatus(home);
       if (result.workspaceProblem) {
@@ -200,7 +215,7 @@ export async function main(argv: string[], overrides: Overrides = {}): Promise<n
       return 0;
     }
 
-    const report = await runDoctor(home);
+    const report = await runDoctor(home, userHome);
     if (parsed.json) {
       line(toDoctorJson(report));
     } else {

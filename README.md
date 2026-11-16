@@ -32,6 +32,9 @@ produced it.
 - Edits save themselves into `.ctour/*.tour.json`; undo and redo work like a
   browser's, per session and per map.
 - Light, dark and follow-the-system themes, at any window width down to a phone.
+- The map is reachable by a coding agent through a local protocol: it reads the
+  projects this machine knows, reads one map in full, and adds or changes
+  waypoints, links and tours in the same file the person has open.
 
 ## What it does not do yet
 
@@ -131,6 +134,37 @@ files. They validate that every path resolves inside the project root before any
 filesystem call. Nothing is fetched over the network; the application is a local
 server the browser talks to.
 
+### How the agent reaches the map
+
+`ctour mcp` speaks a newline-delimited protocol on standard input and output and
+offers nine capabilities: list the projects, read one map, and change the map —
+add, change and remove a waypoint, link and unlink two waypoints, create a tour
+and set its stops. The layer is written in `cli/mcp/` and calls the same
+map-file modules the interface uses, so the agent and the person cannot disagree
+about the format.
+
+A read returns a state token, the first sixteen hex characters of the sha256 of
+the file bytes. Every change sends that token back. A mismatch whose content is
+identical after normalisation is reported as "nothing changed"; any other
+mismatch is refused and carries the current map, so the agent re-reads instead of
+overwriting a newer edit.
+
+There is no channel between the protocol server and the running interface: the
+agent writes the file, and the interface notices it as an outside change, exactly
+as it notices an editor (see 011). With the interface closed, everything still
+works; the interface is a view of the folder, not a requirement.
+
+The instructions an agent needs — read, change, read back, the ten waypoint
+types, what a refusal means — travel in the protocol's own handshake, from
+`cli/mcp/instructions.ts`, so no per-agent skill file can drift away from the
+product.
+
+`ctour mcp install` finds the agents on the machine (Claude Code, Cursor, Gemini
+CLI, Codex), adds the entry to the agent's own configuration, and leaves every
+other byte of that file alone; running it twice writes nothing. `ctour doctor`
+reports whether each detected agent is connected and whether the command it
+points at still exists.
+
 ### Editing
 
 One zustand store per open map, wrapped in temporal history limited to fifty
@@ -162,7 +196,9 @@ Once installed on the machine:
 ctour init        # in a project folder: creates .ctour/, registers it, opens the map
 ctour serve       # later: opens the interface again, writes nothing
 ctour status      # every registered project, with map counts
-ctour doctor      # what is wrong and which command fixes it
+ctour doctor      # what is wrong and which command fixes it, agent included
+ctour mcp         # the map protocol on standard input and output, for an agent
+ctour mcp install # connect the agent found on this machine
 ```
 
 `init` prints one address that opens that project's map, and picks a free port
@@ -185,7 +221,8 @@ node dist/cli.mjs init .   # the command as it will ship
 `next build` produces `.next/standalone`, which the published package carries, so
 the command starts the interface with no installed dependencies. Exit codes:
 `0` fine, `1` problems found, `2` usage, `3` environment refusal (not a folder,
-outside `$HOME`, home itself, not writable), `4` no free address in the range.
+outside `$HOME`, home itself, not writable), `4` no free address in the range,
+`5` nothing to connect when `mcp install` finds no agent.
 
 ### Environment
 
@@ -214,7 +251,9 @@ npm run test:e2e   # playwright: the user stories, on a temporary workspace
 - `tests/cli` — the command without a browser: target resolution and refusals,
   port probing, readiness, server stop, status and doctor against damaged
   fixtures, dispatch and exit codes, and a source scan proving nothing in the
-  command talks to a remote address.
+  command talks to a remote address. `mcp-*` covers the protocol: frames,
+  handshake, reads, writes, every refusal, placement, agent configuration edits
+  and the isolation scan.
 - `tests/acceptance` — the shell's user stories in a real browser against a real
   `.ctour/` directory created per run, plus `cli.spec.ts`, which spawns the built
   command, opens the address it prints, and interrupts it.
@@ -231,6 +270,8 @@ fixture under `.tmp/`, so a test run never touches a real workspace.
 | The dock says "Not saved"                          | the file was changed on disk; reload or keep yours              |
 | A colour change is rejected by lint                | use a token from `app/globals.css`                              |
 | `ctour doctor` reports `leftover-tours`            | maps moved from `.tours/` to `.ctour/`; move them and delete it |
+| The agent does not see the map                     | run `ctour mcp install`, then restart the agent                 |
+| `ctour doctor` says an agent command is gone       | the configured path moved; `ctour mcp install` rewrites it      |
 | `ctour init` refuses the folder                    | it is `$HOME`, outside `$HOME`, not a folder, or not writable   |
 | The command says the built interface is missing    | run `npm run build:all` before `node dist/cli.mjs`              |
 
