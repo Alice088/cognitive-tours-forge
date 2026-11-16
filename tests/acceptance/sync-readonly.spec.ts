@@ -40,7 +40,7 @@ test('does not follow a map it cannot write and follows it again after relinking
     await page.waitForTimeout(300);
     await page.waitForTimeout(700);
 
-    const target = path.join(moved, '.tours', 'main.tour.json');
+    const target = path.join(moved, '.ctour', 'main.tour.json');
     const document = JSON.parse(readFileSync(target, 'utf8')) as {
       waypoints: Array<{ id: string; label: string }>;
     };

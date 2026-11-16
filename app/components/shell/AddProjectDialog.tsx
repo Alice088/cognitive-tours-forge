@@ -47,7 +47,7 @@ export function AddProjectDialog({
         <DialogHeader>
           <DialogTitle>Add a project</DialogTitle>
           <DialogDescription>
-            Choose the folder that holds your code. The maps for it live in its .tours directory.
+            Choose the folder that holds your code. The maps for it live in its .ctour directory.
           </DialogDescription>
         </DialogHeader>
 

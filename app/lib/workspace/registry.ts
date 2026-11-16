@@ -16,21 +16,29 @@ export function emptyRegistry(): WorkspaceRegistry {
   return { version: 1, projects: [] };
 }
 
-export async function readRegistry(home: string = workspaceHome()): Promise<WorkspaceRegistry> {
+export type RegistryRead = { registry: WorkspaceRegistry; recoveredFrom: string | null };
+
+export async function readRegistryWithNotice(home: string = workspaceHome()): Promise<RegistryRead> {
   const file = registryPath(home);
   let text: string;
   try {
     text = await fs.readFile(file, 'utf8');
   } catch {
-    return emptyRegistry();
+    return { registry: emptyRegistry(), recoveredFrom: null };
   }
   try {
-    return parseRegistry(text);
+    return { registry: parseRegistry(text), recoveredFrom: null };
   } catch {
     const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-    await fs.rename(file, `${file}.corrupt-${stamp}`).catch(() => undefined);
-    return emptyRegistry();
+    const recoveredFrom = `${file}.corrupt-${stamp}`;
+    await fs.rename(file, recoveredFrom).catch(() => undefined);
+    return { registry: emptyRegistry(), recoveredFrom };
   }
+}
+
+export async function readRegistry(home: string = workspaceHome()): Promise<WorkspaceRegistry> {
+  const { registry } = await readRegistryWithNotice(home);
+  return registry;
 }
 
 export function parseRegistry(text: string): WorkspaceRegistry {

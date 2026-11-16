@@ -1,9 +1,11 @@
 <!--
 Sync Impact Report
 ==================
-Version change: (unfilled template scaffold) → 1.0.0
-Bump rationale: initial ratification. The file held only template placeholders
-and no project values, so there is no prior version to preserve or amend.
+Version change: 1.0.0 → 1.0.1
+Bump rationale: PATCH. The map folder was renamed from `.tours/` to `.ctour/` in
+feature `012-ctour-cli`, so one name covers both the repository artefact and the
+machine-local workspace. No principle or rule changed; only the path in
+Principle II moved.
 
 Modified principles: none (no principles were previously defined)
 Added principles:
@@ -46,7 +48,7 @@ already available and already versioned.
 
 A map is a JSON file in the repository it describes.
 
-- Location: `.tours/<name>.tour.json`. One repository MAY hold more than one
+- Location: `.ctour/<name>.tour.json`. One repository MAY hold more than one
   map; the file name is the map name.
 - The file MUST be human-readable and diff-friendly: stable key order, sorted
   collections, two-space indentation, no timestamps that change on every read.
@@ -173,4 +175,4 @@ these principles, and does it do what the originating intent asked. A change
 that fails either is returned, not merged. Complexity that needs a principle
 exception is rejected rather than excepted.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-16 | **Last Amended**: 2026-11-16
+**Version**: 1.0.1 | **Ratified**: 2026-11-16 | **Last Amended**: 2026-11-16

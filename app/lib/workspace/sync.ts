@@ -1,6 +1,13 @@
 import { promises as fsPromises, watch as fsWatch, type FSWatcher } from 'node:fs';
 import path from 'node:path';
-import { MapFileError, mapDisplayName, mapMtime, readMapStrict, serializeDocument } from '@/app/lib/workspace/map-file';
+import {
+  MapFileError,
+  mapDir,
+  mapDisplayName,
+  mapMtime,
+  readMapStrict,
+  serializeDocument,
+} from '@/app/lib/workspace/map-file';
 import type { SyncEvent } from '@/app/lib/workspace/sync-events';
 import type { MapRef } from '@/app/lib/workspace/types';
 
@@ -143,7 +150,7 @@ function projectsOf(projectId: string): ProjectSync[] {
 }
 
 async function listMaps(root: string): Promise<MapRef[]> {
-  const entries = await fsPromises.readdir(path.join(root, '.tours')).catch(() => null);
+  const entries = await fsPromises.readdir(mapDir(root)).catch(() => null);
   if (entries === null) {
     return [];
   }
@@ -164,7 +171,7 @@ function projectFor(input: SyncOptions & { projectId: string; root: string }): P
     key,
     projectId: input.projectId,
     root,
-    tours: path.join(root, '.tours'),
+    tours: mapDir(root),
     mode: 'watch',
     watcher: null,
     debounceTimer: null,

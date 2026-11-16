@@ -7,7 +7,7 @@ depend on each other. A **tour** is an ordered walk through the map with a
 spoken narrative at each stop, so a newcomer can be shown the shape of the system
 in ten minutes instead of six months.
 
-The map is a file in the repository: `.tours/<name>.tour.json`. It is versioned
+The map is a file in the repository: `.ctour/<name>.tour.json`. It is versioned
 with the code, reviewed in the same pull request, and diffed like anything else.
 When the code changes, the map is wrong in the same commit, and someone can fix
 it there.
@@ -29,7 +29,7 @@ produced it.
   filterable by type.
 - The tour dock walks a tour stop by stop, with a whole-tour overview.
 - The inspector edits a waypoint or a tour without hiding the map.
-- Edits save themselves into `.tours/*.tour.json`; undo and redo work like a
+- Edits save themselves into `.ctour/*.tour.json`; undo and redo work like a
   browser's, per session and per map.
 - Light, dark and follow-the-system themes, at any window width down to a phone.
 
@@ -47,7 +47,7 @@ Three regions of state, each with exactly one owner.
 | State                    | Lives in                            | Survives              |
 | ------------------------ | ----------------------------------- | --------------------- |
 | Workspace registry       | `~/.ctour/workspace.json`           | restarts, per machine |
-| Map document             | `<project>/.tours/<name>.tour.json` | restarts, git, clones |
+| Map document             | `<project>/.ctour/<name>.tour.json` | restarts, git, clones |
 | Selection, history, drag | the running application             | the session           |
 
 The registry is machine-local on purpose: which projects you have open is a fact
@@ -87,7 +87,7 @@ map, and adding one waypoint produces a one-line diff.
 
 ### Following the file while it is open
 
-The server watches the project's `.tours/` folder, never the map file itself:
+The server watches the project's `.ctour/` folder, never the map file itself:
 every save renames a temporary file over the target, which replaces the inode
 and silently kills a watcher attached to the file. A change is read, parsed and
 normalised, and compared with the canonical text last delivered; equal text
@@ -156,14 +156,36 @@ Node.js 20 or newer (22 tested).
 
 ### Run it
 
+Once installed on the machine:
+
 ```bash
-npm install
-npm run dev
+ctour init        # in a project folder: creates .ctour/, registers it, opens the map
+ctour serve       # later: opens the interface again, writes nothing
+ctour status      # every registered project, with map counts
+ctour doctor      # what is wrong and which command fixes it
 ```
 
-Open `http://localhost:3000`. The first launch shows an empty workspace with one
-action: add a project. Pick a folder that holds your code; a map is created on
-demand and stored in `.tours/` inside it.
+`init` prints one address that opens that project's map, and picks a free port
+from 4317 upwards when the first one is taken. Nothing is sent anywhere: the
+server listens on `127.0.0.1` only.
+
+Working on this repository itself:
+
+```bash
+npm install
+npm run dev        # the interface on :3000, with hot reload
+npm run build:all  # standalone build + packed assets + the bundled command in dist/
+node dist/cli.mjs init .   # the command as it will ship
+```
+
+### The command
+
+`cli/` holds the command, bundled by esbuild into `dist/cli.mjs`: `init`,
+`serve`, `status`, `doctor`, with `--port`, `--json`, `--help`, `--version`.
+`next build` produces `.next/standalone`, which the published package carries, so
+the command starts the interface with no installed dependencies. Exit codes:
+`0` fine, `1` problems found, `2` usage, `3` environment refusal (not a folder,
+outside `$HOME`, home itself, not writable), `4` no free address in the range.
 
 ### Environment
 
@@ -180,7 +202,7 @@ npm run dev        # local application on :3000
 npm run build      # production build
 npm run typecheck  # tsc --noEmit
 npm run lint       # eslint, including the design-token rule
-npm run test:unit  # vitest: history, map file, registry, paths, token contrast
+npm run test:unit  # vitest: two projects — unit (jsdom) and cli (node)
 npm run test:e2e   # playwright: the user stories, on a temporary workspace
 ```
 
@@ -189,8 +211,13 @@ npm run test:e2e   # playwright: the user stories, on a temporary workspace
 - `tests/unit` — logic that must be right without a browser: undo semantics, map
   file round-trips and ordering, registry recovery, path containment, WCAG
   contrast of every token pair.
+- `tests/cli` — the command without a browser: target resolution and refusals,
+  port probing, readiness, server stop, status and doctor against damaged
+  fixtures, dispatch and exit codes, and a source scan proving nothing in the
+  command talks to a remote address.
 - `tests/acceptance` — the shell's user stories in a real browser against a real
-  `.tours/` directory created per run.
+  `.ctour/` directory created per run, plus `cli.spec.ts`, which spawns the built
+  command, opens the address it prints, and interrupts it.
 
 Playwright starts the application with `CTOUR_HOME=./.tmp/e2e-home` and builds its
 fixture under `.tmp/`, so a test run never touches a real workspace.
@@ -203,6 +230,9 @@ fixture under `.tmp/`, so a test run never touches a real workspace.
 | "That folder does not exist" when adding a project | the path is outside `$HOME`, or it is a file                    |
 | The dock says "Not saved"                          | the file was changed on disk; reload or keep yours              |
 | A colour change is rejected by lint                | use a token from `app/globals.css`                              |
+| `ctour doctor` reports `leftover-tours`            | maps moved from `.tours/` to `.ctour/`; move them and delete it |
+| `ctour init` refuses the folder                    | it is `$HOME`, outside `$HOME`, not a folder, or not writable   |
+| The command says the built interface is missing    | run `npm run build:all` before `node dist/cli.mjs`              |
 
 ## Contributing
 

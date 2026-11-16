@@ -9,26 +9,36 @@ behind it.
 
 ## 1. Start it
 
-Cognitive Tours runs on your machine and nothing leaves it. You need Node 22 or
-newer and a git checkout:
+Cognitive Tours runs on your machine and nothing leaves it. You need Node 20 or
+newer and the command, installed once:
 
 ```bash
-git clone https://github.com/margaretstorey/cognitive-tours.git
-cd cognitive-tours
-npm install
-npm run dev
+npm install -g ctour
 ```
 
-Open `http://localhost:3000`. The first screen is empty on purpose: it asks for a
-project.
+Then, in the folder that holds your code:
+
+```bash
+ctour init
+```
+
+That one command creates `.ctour/` with a map, registers the project and starts
+the interface. The terminal prints one address; open it and the map is there.
+Later, `ctour serve` brings the interface back without touching any file.
+
+`ctour status` lists the projects this machine knows about. `ctour doctor` checks
+them and prints one line per problem with the command that fixes it.
+
+Working on Cognitive Tours itself instead? Use `npm install`, `npm run dev` and
+`http://localhost:3000`, as the [README](../README.md) describes.
 
 ## 2. Add your project
 
 Press **Add project** and pick the folder that holds your code. A project needs
 no preparation — the map is created inside it on the first **Create map**, in
-`.tours/`.
+`.ctour/`.
 
-Each map is a file: `.tours/<name>.tour.json`. It travels with the repository,
+Each map is a file: `.ctour/<name>.tour.json`. It travels with the repository,
 so it is committed, reviewed and cloned like the code it describes. A repository
 can hold several maps; the rail lists them.
 
@@ -48,7 +58,7 @@ With a map open:
   yours: the map is worth nothing if it repeats what the code already says.
 - **Add a waypoint** again, link it, and you have a small piece of a map.
 
-Every change is saved 800 ms after you stop, straight into the `.tours/` file,
+Every change is saved 800 ms after you stop, straight into the `.ctour/` file,
 and every change can be undone — `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z`.
 
 ## 4. Walk a tour

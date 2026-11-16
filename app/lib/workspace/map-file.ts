@@ -45,8 +45,8 @@ export function mapDisplayName(file: string): string {
   return file.replace(/\.tour\.json$/, '');
 }
 
-export function toursDir(projectRoot: string): string {
-  return path.join(projectRoot, '.tours');
+export function mapDir(projectRoot: string): string {
+  return path.join(projectRoot, '.ctour');
 }
 
 export function emptyDocument(projectName: string): MapDocument {
@@ -63,7 +63,7 @@ export function mapPath(projectRoot: string, file: string): string {
   if (!MAP_FILE.test(file)) {
     throw new MapFileError('path-escape', `Not a map file name: ${file}`);
   }
-  const target = resolveInside(toursDir(projectRoot), file);
+  const target = resolveInside(mapDir(projectRoot), file);
   if (!target) {
     throw new MapFileError('path-escape', `Map file escapes the project: ${file}`);
   }

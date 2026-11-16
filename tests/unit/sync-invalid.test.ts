@@ -45,8 +45,8 @@ function settle(ms = 300): Promise<void> {
 
 beforeEach(() => {
   root = mkdtempSync(path.join(tmpdir(), 'ctour-invalid-'));
-  mkdirSync(path.join(root, '.tours'));
-  target = path.join(root, '.tours', 'main.tour.json');
+  mkdirSync(path.join(root, '.ctour'));
+  target = path.join(root, '.ctour', 'main.tour.json');
   write(serializeDocument(documentWith('first')));
   events.length = 0;
 });

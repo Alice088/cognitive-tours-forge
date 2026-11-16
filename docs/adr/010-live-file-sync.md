@@ -12,7 +12,7 @@ whatever arrived — the exact failure that makes a local-first tool untrustwort
 
 ## Decision
 
-The server watches the project's `.tours/` directory and pushes change
+The server watches the project's `.ctour/` directory and pushes change
 notifications to the open page over one local event stream. The browser decides
 what to do with a change; the server never merges, never retries a write and
 never makes a choice on the person's behalf.

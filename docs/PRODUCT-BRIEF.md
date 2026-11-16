@@ -33,7 +33,7 @@ I like the concept. I am rebuilding the product around it.
    agent (MCP server plus skills) and registers the project.
 3. **One workspace.** Every project and every map in one window, switched from
    a sidebar. No second deployment for a second map.
-4. **The map lives in the repository.** `.tours/*.json`, committed, reviewed,
+4. **The map lives in the repository.** `.ctour/*.json`, committed, reviewed,
    cloned. One repository can hold more than one map.
 5. **The file and the browser stay in sync.** Edit in the browser and the file
    changes. Edit the file and the browser changes. No reload.
@@ -68,7 +68,7 @@ I like the concept. I am rebuilding the product around it.
 - `npx ctour init` then `npx ctour serve` gives a browser with the project in
   the sidebar and the map loaded from the repository.
 - Editing a waypoint in the browser shows up in `git diff`.
-- Editing `.tours/tour.json` in an editor updates the browser on its own.
+- Editing `.ctour/tour.json` in an editor updates the browser on its own.
 - Two maps in one repository, side by side in the sidebar.
 - Dark mode looks correct at every width, down to a phone.
 - An agent creates a waypoint through MCP, and the map shows it.

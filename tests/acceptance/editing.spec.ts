@@ -3,7 +3,7 @@ import path from 'node:path';
 import { expect, test } from '@playwright/test';
 import { MAP_PATH, PROJECT_DIR, ensureProject, openSample, waitForSaved } from './fixtures';
 
-const TOURS_DIR = path.join(PROJECT_DIR, '.tours');
+const MAP_DIR = path.join(PROJECT_DIR, '.ctour');
 
 test.beforeAll(async ({ request }) => {
   await ensureProject(request);
@@ -88,7 +88,7 @@ test('creates a tour and deletes it again', async ({ page }) => {
 
 test('says why a save failed and offers one retry', async ({ page }) => {
   await openSample(page);
-  chmodSync(TOURS_DIR, 0o555);
+  chmodSync(MAP_DIR, 0o555);
   try {
     await page.getByText('Understanding is the deliverable').click();
     await page.getByLabel('Description').fill('A change that cannot be written.');
@@ -99,7 +99,7 @@ test('says why a save failed and offers one retry', async ({ page }) => {
     await expect(page.getByRole('button', { name: 'Retry' })).toHaveCount(1);
     await expect(page.getByLabel('Description')).toHaveValue('A change that cannot be written.');
   } finally {
-    chmodSync(TOURS_DIR, 0o755);
+    chmodSync(MAP_DIR, 0o755);
   }
 
   await page.getByRole('button', { name: 'Retry' }).click();

@@ -51,3 +51,6 @@ docs/diary.md
 resources/
 .claude/bram-conventions.md
 .claude/skills/loose-ends/
+
+# Bundled command
+/dist/

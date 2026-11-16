@@ -4,7 +4,7 @@ import { expect, type APIRequestContext, type Page } from '@playwright/test';
 import type { MapDocument } from '@/app/lib/workspace/types';
 
 export const PROJECT_DIR = path.join(process.cwd(), '.tmp', 'e2e-fixture');
-export const MAP_PATH = path.join(PROJECT_DIR, '.tours', 'main.tour.json');
+export const MAP_PATH = path.join(PROJECT_DIR, '.ctour', 'main.tour.json');
 export const PROJECT_ID = 'e2e-fixture';
 
 export const sampleDocument = {
@@ -42,18 +42,18 @@ export const sampleDocument = {
 };
 
 export function writeSampleMap(): void {
-  const toursDir = path.join(PROJECT_DIR, '.tours');
-  mkdirSync(toursDir, { recursive: true });
-  for (const entry of readdirSync(toursDir)) {
+  const mapDir = path.join(PROJECT_DIR, '.ctour');
+  mkdirSync(mapDir, { recursive: true });
+  for (const entry of readdirSync(mapDir)) {
     if (entry.endsWith('.tour.json') && entry !== 'main.tour.json') {
-      rmSync(path.join(toursDir, entry), { force: true });
+      rmSync(path.join(mapDir, entry), { force: true });
     }
   }
   writeFileSync(MAP_PATH, `${JSON.stringify(sampleDocument, null, 2)}\n`, 'utf8');
 }
 
 export function mapPathFor(file: string): string {
-  return path.join(PROJECT_DIR, '.tours', file);
+  return path.join(PROJECT_DIR, '.ctour', file);
 }
 
 export function writeRawMap(text: string, file = 'main.tour.json'): void {

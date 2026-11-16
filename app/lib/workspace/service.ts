@@ -9,7 +9,7 @@ import {
   mapFileName,
   mapMtime,
   readMap,
-  toursDir,
+  mapDir,
   writeMap,
 } from '@/app/lib/workspace/map-file';
 import {
@@ -96,7 +96,7 @@ async function summarise(
     if (!stat.isDirectory()) {
       throw new Error('not a directory');
     }
-    const entries = await fs.readdir(toursDir(target)).catch(() => null);
+    const entries = await fs.readdir(mapDir(target)).catch(() => null);
     if (entries === null) {
       availability = 'uninitialised';
     } else {
@@ -140,12 +140,16 @@ export async function rememberMap(
   await writeCachedMap(home, projectId, file, document);
 }
 
-export async function addProject(target: string, home: string = workspaceHome()): Promise<ProjectSummary> {
+export async function addProject(
+  target: string,
+  home: string = workspaceHome(),
+  selfRoot: string | null = process.cwd()
+): Promise<ProjectSummary> {
   const resolved = path.resolve(target);
   if (!isWithinHome(resolved)) {
     throw new WorkspaceError('outside-home', 'Choose a folder inside your home directory.', 403);
   }
-  if (resolved === path.resolve(process.cwd())) {
+  if (selfRoot !== null && resolved === path.resolve(selfRoot)) {
     throw new WorkspaceError('refused-self', 'That is the application itself.', 400);
   }
   let stat;
@@ -198,7 +202,7 @@ export async function createMap(projectId: string, name: string, home: string = 
   if (!file) {
     throw new WorkspaceError('invalid-name', 'Give the map a name with letters or digits.', 400);
   }
-  const existing = await fs.readdir(toursDir(project.path)).catch(() => [] as string[]);
+  const existing = await fs.readdir(mapDir(project.path)).catch(() => [] as string[]);
   if (existing.includes(file)) {
     throw new WorkspaceError('name-taken', 'A map with that name already exists.', 409);
   }
@@ -233,7 +237,7 @@ export async function browse(target: string): Promise<BrowseResult> {
     }
     const child = path.join(resolved, entry.name);
     const isProject = await fs
-      .stat(path.join(child, '.tours'))
+      .stat(mapDir(child))
       .then(stat => stat.isDirectory())
       .catch(() => false);
     directories.push({ name: entry.name, isProject });

@@ -24,7 +24,7 @@ export function EmptyProject({ projectName, onCreateMap }: { projectName: string
       <div className="max-w-md space-y-3 text-center">
         <h1 className="text-lg font-semibold">{projectName} has no maps yet</h1>
         <p className="text-sm text-muted-foreground">
-          A map holds the waypoints and tours that explain this project. It is stored inside the project, in its .tours
+          A map holds the waypoints and tours that explain this project. It is stored inside the project, in its .ctour
           directory.
         </p>
         <Button onClick={onCreateMap}>Create map</Button>

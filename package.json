@@ -1,8 +1,20 @@
 {
-  "name": "cognitive-tours",
+  "name": "ctour",
   "version": "0.1.0",
-  "private": true,
+  "description": "A local-first cognitive map of a repository, opened with one command",
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "ctour": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist/",
+    ".next/standalone/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,7 +24,12 @@
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "build:web": "next build",
+    "build:cli": "esbuild cli/index.ts --bundle --platform=node --format=esm --outfile=dist/cli.mjs --banner:js='#!/usr/bin/env node'",
+    "build:pack": "node scripts/pack-standalone.mjs",
+    "build:all": "npm run build:web && npm run build:pack && npm run build:cli",
+    "prepublishOnly": "npm run typecheck && npm run test:unit && npm run build:all"
   },
   "dependencies": {
     "@xyflow/react": "^12.10.2",
@@ -38,6 +55,7 @@
     "@types/node": "^22.20.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "husky": "^9.1.7",

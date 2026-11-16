@@ -49,7 +49,7 @@ export function CreateMapDialog({
           <DialogTitle>Create a map</DialogTitle>
           <DialogDescription>
             A map holds the waypoints and tours for {projectName}. It is stored in the project as{' '}
-            .tours/&lt;name&gt;.tour.json.
+            .ctour/&lt;name&gt;.tour.json.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">

@@ -69,7 +69,7 @@ describe('map file', () => {
 
   it('writes sorted collections and keeps stop order', async () => {
     await writeMap(project, 'sorted.tour.json', sample());
-    const text = readFileSync(path.join(project, '.tours', 'sorted.tour.json'), 'utf8');
+    const text = readFileSync(path.join(project, '.ctour', 'sorted.tour.json'), 'utf8');
     expect(text.indexOf('"w-a"')).toBeLessThan(text.indexOf('"w-b"'));
     expect(text.indexOf('"e-1"')).toBeLessThan(text.indexOf('"e-2"'));
     expect(text.endsWith('\n')).toBe(true);
@@ -169,7 +169,7 @@ describe('map file', () => {
     await writeMap(project, 'main.tour.json', updated);
     const { document } = await readMap(project, 'main.tour.json');
     expect(document.waypoints.map(waypoint => waypoint.id)).toEqual(['w-a', 'w-b', 'w-c']);
-    const entries = readFileSync(path.join(project, '.tours', 'main.tour.json'), 'utf8');
+    const entries = readFileSync(path.join(project, '.ctour', 'main.tour.json'), 'utf8');
     expect(entries).toContain('"w-c"');
   });
 
@@ -187,7 +187,7 @@ describe('map file', () => {
 
   it('refuses a file that would lose a waypoint', async () => {
     await writeMap(project, 'strict.tour.json', sample());
-    const path_ = path.join(project, '.tours', 'strict.tour.json');
+    const path_ = path.join(project, '.ctour', 'strict.tour.json');
     const parsed = JSON.parse(readFileSync(path_, 'utf8')) as MapDocument;
     parsed.waypoints = [...parsed.waypoints, { id: 'w-c', label: '', type: 'Goal', position: { x: 0, y: 0 } }];
     writeFileSync(path_, `${JSON.stringify(parsed, null, 2)}\n`, 'utf8');

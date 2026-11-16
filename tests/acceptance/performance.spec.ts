@@ -8,9 +8,9 @@ const MAP_FILE = 'big.tour.json';
 const HUGE_FILE = 'huge.tour.json';
 
 test.beforeAll(async ({ request }) => {
-  mkdirSync(path.join(PROJECT_DIR, '.tours'), { recursive: true });
-  writeFileSync(path.join(PROJECT_DIR, '.tours', MAP_FILE), `${JSON.stringify(buildMap(250, 40), null, 2)}\n`, 'utf8');
-  writeFileSync(path.join(PROJECT_DIR, '.tours', HUGE_FILE), `${JSON.stringify(buildMap(260, 45), null, 2)}\n`, 'utf8');
+  mkdirSync(path.join(PROJECT_DIR, '.ctour'), { recursive: true });
+  writeFileSync(path.join(PROJECT_DIR, '.ctour', MAP_FILE), `${JSON.stringify(buildMap(250, 40), null, 2)}\n`, 'utf8');
+  writeFileSync(path.join(PROJECT_DIR, '.ctour', HUGE_FILE), `${JSON.stringify(buildMap(260, 45), null, 2)}\n`, 'utf8');
   const response = await request.post('/api/workspace', { data: { path: PROJECT_DIR } });
   if (![201, 409].includes(response.status())) {
     throw new Error(`could not register the performance fixture: ${response.status()}`);

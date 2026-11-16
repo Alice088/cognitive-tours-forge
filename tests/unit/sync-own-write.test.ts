@@ -25,7 +25,7 @@ function text(label: string): string {
 }
 
 function write(label: string): void {
-  writeFileSync(path.join(root, '.tours', 'main.tour.json'), text(label), 'utf8');
+  writeFileSync(path.join(root, '.ctour', 'main.tour.json'), text(label), 'utf8');
 }
 
 async function until<T>(check: () => T | null | undefined, timeoutMs = 4000): Promise<T> {
@@ -44,7 +44,7 @@ async function until<T>(check: () => T | null | undefined, timeoutMs = 4000): Pr
 
 beforeEach(() => {
   root = mkdtempSync(path.join(tmpdir(), 'ctour-own-'));
-  mkdirSync(path.join(root, '.tours'));
+  mkdirSync(path.join(root, '.ctour'));
   write('first');
   events.length = 0;
 });

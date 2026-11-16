@@ -23,7 +23,7 @@ function documentWith(label: string): MapDocument {
 }
 
 function write(label: string): void {
-  writeFileSync(path.join(root, '.tours', 'main.tour.json'), serializeDocument(documentWith(label)), 'utf8');
+  writeFileSync(path.join(root, '.ctour', 'main.tour.json'), serializeDocument(documentWith(label)), 'utf8');
 }
 
 function noNotifications(): never {
@@ -56,7 +56,7 @@ function settle(ms = 250): Promise<void> {
 
 beforeEach(() => {
   root = mkdtempSync(path.join(tmpdir(), 'ctour-poll-'));
-  mkdirSync(path.join(root, '.tours'));
+  mkdirSync(path.join(root, '.ctour'));
   write('first');
   events.length = 0;
 });

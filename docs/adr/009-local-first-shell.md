@@ -24,7 +24,7 @@ place.
 
 The application is local first (constitution, principle I).
 
-- The map is a file in the repository: `.tours/<name>.tour.json`. Several maps
+- The map is a file in the repository: `.ctour/<name>.tour.json`. Several maps
   may live in one repository.
 - Writes are atomic (temporary file, then rename), keys are sorted, and every
   path inside a map is relative to the repository root, so a map is reviewable

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 
 const fixture = path.join(process.cwd(), '.tmp', 'e2e-fixture');
-const mapPath = path.join(fixture, '.tours', 'main.tour.json');
+const mapPath = path.join(fixture, '.ctour', 'main.tour.json');
 
 const fixtureDocument = {
   version: 1,
@@ -51,7 +51,7 @@ async function waitForSaved(page: Page) {
 
 test.beforeAll(async ({ request }) => {
   rmSync(fixture, { recursive: true, force: true });
-  mkdirSync(path.join(fixture, '.tours'), { recursive: true });
+  mkdirSync(path.join(fixture, '.ctour'), { recursive: true });
   writeFileSync(mapPath, `${JSON.stringify(fixtureDocument, null, 2)}\n`, 'utf8');
   await request.post('/api/workspace', { data: { path: fixture } });
 });

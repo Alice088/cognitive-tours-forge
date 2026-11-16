@@ -11,7 +11,7 @@ const roots: string[] = [];
 
 function fixture(): string {
   const root = mkdtempSync(path.join(tmpdir(), 'ctour-sync-'));
-  mkdirSync(path.join(root, '.tours'));
+  mkdirSync(path.join(root, '.ctour'));
   roots.push(root);
   return root;
 }
@@ -31,7 +31,7 @@ function canonical(label: string): string {
 }
 
 function write(root: string, label: string, file = 'main.tour.json'): void {
-  writeFileSync(path.join(root, '.tours', file), canonical(label), 'utf8');
+  writeFileSync(path.join(root, '.ctour', file), canonical(label), 'utf8');
 }
 
 async function until<T>(check: () => T | null | undefined, timeoutMs = 4000): Promise<T> {
@@ -183,7 +183,7 @@ describe('sync watcher', () => {
 
     write(root, 'second');
     await until(() => events.some(event => event.type === 'map-changed'));
-    rmSync(path.join(root, '.tours', 'main.tour.json'));
+    rmSync(path.join(root, '.ctour', 'main.tour.json'));
 
     await until(() => events.some(event => event.type === 'map-gone'));
     await settle();
@@ -206,7 +206,7 @@ describe('sync watcher', () => {
     await subscription.ready;
     events.length = 0;
 
-    writeFileSync(path.join(root, '.tours', 'main.tour.json'), '<<<<<<< HEAD\n', 'utf8');
+    writeFileSync(path.join(root, '.ctour', 'main.tour.json'), '<<<<<<< HEAD\n', 'utf8');
     const unreadable = await until(() => events.find(event => event.type === 'map-unreadable'));
     if (unreadable.type !== 'map-unreadable') {
       throw new Error('expected a map-unreadable event');
@@ -219,7 +219,7 @@ describe('sync watcher', () => {
     write(root, 'second');
     await until(() => events.some(event => event.type === 'map-changed'));
 
-    writeFileSync(path.join(root, '.tours', 'main.tour.json'), '{"version":1', 'utf8');
+    writeFileSync(path.join(root, '.ctour', 'main.tour.json'), '{"version":1', 'utf8');
     await until(() => events.filter(event => event.type === 'map-unreadable').length === 2);
 
     expect(events.filter(event => event.type === 'map-changed')).toHaveLength(1);
@@ -268,7 +268,7 @@ describe('sync watcher', () => {
       ...document('first'),
       waypoints: [{ id: 'w-1', label: 'first', type: 'Goal', description: 'old note', position: { x: 0, y: 0 } }],
     };
-    writeFileSync(path.join(root, '.tours', 'main.tour.json'), serializeDocument(initial), 'utf8');
+    writeFileSync(path.join(root, '.ctour', 'main.tour.json'), serializeDocument(initial), 'utf8');
     const events: SyncEvent[] = [];
     const subscription = watchMap({
       projectId: 'p-echo',
@@ -285,7 +285,7 @@ describe('sync watcher', () => {
       waypoints: [{ id: 'w-1', label: 'first', type: 'Goal', description: '', position: { x: 0, y: 0 } }],
     };
     recordOwnWrite('p-echo', 'main.tour.json', canonicalText(saved));
-    writeFileSync(path.join(root, '.tours', 'main.tour.json'), serializeDocument(saved), 'utf8');
+    writeFileSync(path.join(root, '.ctour', 'main.tour.json'), serializeDocument(saved), 'utf8');
     await settle(400);
 
     expect(events).toHaveLength(0);
