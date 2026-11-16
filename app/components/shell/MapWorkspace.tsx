@@ -10,7 +10,7 @@ import { TourDock } from '@/app/components/shell/TourDock';
 import { WorkspaceRail } from '@/app/components/shell/WorkspaceRail';
 import { FailedSurface, LoadingSurface } from '@/app/components/shell/states';
 import { Button } from '@/app/components/ui/button';
-import { canRedo, canUndo, clearHistory, redo, undo } from '@/app/lib/store/history';
+import { clearHistory, redo, undo } from '@/app/lib/store/history';
 import type { MapStore } from '@/app/lib/store/map-store';
 import { useMapStore } from '@/app/components/shell/MapStoreProvider';
 import { generateTourMarkdown, tourSlug } from '@/app/lib/tour-markdown';
@@ -205,8 +205,8 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
       overview={overview}
       onOverviewChange={setOverview}
       onExport={exportTour}
-      canUndo={canUndo(store) && past >= 0}
-      canRedo={canRedo(store) && future >= 0}
+      canUndo={past > 0}
+      canRedo={future > 0}
       onUndo={() => undo(store)}
       onRedo={() => redo(store)}
       saveStatus={saveStatus as SaveStatus}
