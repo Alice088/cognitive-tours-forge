@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { ExchangeError } from '@/app/lib/workspace/exchange';
+import { HomePathError } from '@/app/lib/fs/safe-path';
 import { MapFileError } from '@/app/lib/workspace/map-file';
 import { WorkspaceError } from '@/app/lib/workspace/service';
 
@@ -11,8 +13,14 @@ export function fail(code: string, message: string, status = 400, detail?: strin
 }
 
 export function handleError(error: unknown) {
+  if (error instanceof ExchangeError) {
+    return fail(error.code, error.message, error.status, error.detail);
+  }
   if (error instanceof WorkspaceError) {
     return fail(error.code, error.message, error.status);
+  }
+  if (error instanceof HomePathError) {
+    return fail(error.code, error.message, 403);
   }
   if (error instanceof MapFileError) {
     const status = error.code === 'map-missing' ? 404 : error.code === 'map-unreadable' ? 422 : 400;

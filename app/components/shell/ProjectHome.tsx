@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AppShell } from '@/app/components/shell/AppShell';
 import { CreateMapDialog } from '@/app/components/shell/CreateMapDialog';
+import { ImportDialog } from '@/app/components/shell/ImportDialog';
 import { WorkspaceRail } from '@/app/components/shell/WorkspaceRail';
 import { EmptyProject, FailedSurface, LoadingSurface } from '@/app/components/shell/states';
 import { createMap, useWorkspace } from '@/app/lib/workspace/use-workspace';
@@ -12,6 +13,7 @@ export function ProjectHome({ projectId }: { projectId: string }) {
   const router = useRouter();
   const { snapshot, status, failure, refresh } = useWorkspace();
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const project = snapshot?.projects.find(item => item.id === projectId) ?? null;
   const firstMap = project?.maps[0] ?? null;
@@ -28,7 +30,11 @@ export function ProjectHome({ projectId }: { projectId: string }) {
     ) : status === 'failed' ? (
       <FailedSurface message={failure ?? 'This project could not be read.'} onRetry={refresh} />
     ) : project ? (
-      <EmptyProject projectName={project.name} onCreateMap={() => setCreating(true)} />
+      <EmptyProject
+        projectName={project.name}
+        onCreateMap={() => setCreating(true)}
+        onImportMaps={() => setImporting(true)}
+      />
     ) : (
       <FailedSurface message="That project is no longer in your workspace." onRetry={refresh} />
     );
@@ -64,6 +70,20 @@ export function ProjectHome({ projectId }: { projectId: string }) {
           }
           const result = await createMap(project.id, name);
           router.push(`/p/${project.id}/${result.map.file}`);
+        }}
+      />
+
+      <ImportDialog
+        open={importing}
+        onOpenChange={setImporting}
+        project={project}
+        onImported={refresh}
+        onOpenMap={file => {
+          if (project) {
+            const target = project;
+            setImporting(false);
+            router.push(`/p/${target.id}/${file}`);
+          }
         }}
       />
     </div>

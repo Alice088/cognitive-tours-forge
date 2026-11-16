@@ -1,15 +1,19 @@
 'use client';
 
-import { ArrowUpIcon, FolderIcon, Loader2Icon } from 'lucide-react';
+import { ArrowUpIcon, FileIcon, FolderIcon, Loader2Icon } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { ScrollArea } from '@/app/components/ui/scroll-area';
 import { browse } from '@/app/lib/workspace/use-workspace';
 
+export type BrowserMode = 'folders' | 'files';
+
 interface Entry {
   name: string;
   isProject: boolean;
+  kind: 'folder' | 'file';
+  size?: number;
 }
 
 interface Location {
@@ -21,9 +25,15 @@ interface Location {
 export function FolderBrowser({
   initialPath,
   onPathChange,
+  mode = 'folders',
+  onChooseFile,
+  chosenFile,
 }: {
   initialPath?: string;
   onPathChange: (path: string) => void;
+  mode?: BrowserMode;
+  onChooseFile?: (path: string) => void;
+  chosenFile?: string | null;
 }) {
   const [location, setLocation] = useState<Location | null>(null);
   const [manualPath, setManualPath] = useState(initialPath ?? '');
@@ -39,7 +49,7 @@ export function FolderBrowser({
       setLoading(true);
       setError(null);
       try {
-        const result = await browse(target);
+        const result = await browse(target, mode);
         if (id !== request.current) {
           return;
         }
@@ -57,7 +67,7 @@ export function FolderBrowser({
         }
       }
     },
-    [onPathChange]
+    [mode, onPathChange]
   );
 
   useEffect(() => {
@@ -65,7 +75,7 @@ export function FolderBrowser({
     request.current = id;
     void (async () => {
       try {
-        const result = await browse(initialPath);
+        const result = await browse(initialPath, mode);
         if (id !== request.current) {
           return;
         }
@@ -87,7 +97,7 @@ export function FolderBrowser({
         }
       }
     })();
-  }, [initialPath, onPathChange]);
+  }, [initialPath, mode, onPathChange]);
 
   return (
     <div className="space-y-2">
@@ -124,22 +134,41 @@ export function FolderBrowser({
             Reading folders
           </div>
         ) : !location || location.entries.length === 0 ? (
-          <p className="p-3 text-sm text-muted-foreground">No folders here.</p>
+          <p className="p-3 text-sm text-muted-foreground">Nothing here.</p>
         ) : (
           <ul className="p-1">
-            {location.entries.map(entry => (
-              <li key={entry.name}>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
-                  onClick={() => go(`${location.path}/${entry.name}`)}
-                >
-                  <FolderIcon className="size-4 text-muted-foreground" aria-hidden="true" />
-                  <span className="truncate">{entry.name}</span>
-                  {entry.isProject ? <span className="ml-auto text-xs text-muted-foreground">has maps</span> : null}
-                </button>
-              </li>
-            ))}
+            {location.entries.map(entry => {
+              const full = `${location.path}/${entry.name}`;
+              const selected = entry.kind === 'file' && chosenFile === full;
+              return (
+                <li key={entry.name}>
+                  <button
+                    type="button"
+                    aria-current={selected ? 'true' : undefined}
+                    className={
+                      selected
+                        ? 'flex w-full items-center gap-2 rounded-sm bg-primary px-2 py-1.5 text-left text-sm text-primary-foreground'
+                        : 'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground'
+                    }
+                    onClick={() => {
+                      if (entry.kind === 'file') {
+                        onChooseFile?.(full);
+                        return;
+                      }
+                      void go(full);
+                    }}
+                  >
+                    {entry.kind === 'file' ? (
+                      <FileIcon className="size-4 text-muted-foreground" aria-hidden="true" />
+                    ) : (
+                      <FolderIcon className="size-4 text-muted-foreground" aria-hidden="true" />
+                    )}
+                    <span className="truncate">{entry.name}</span>
+                    {entry.isProject ? <span className="ml-auto text-xs text-muted-foreground">has maps</span> : null}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </ScrollArea>

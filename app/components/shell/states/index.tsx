@@ -18,7 +18,15 @@ export function EmptyWorkspace({ onAddProject }: { onAddProject: () => void }) {
   );
 }
 
-export function EmptyProject({ projectName, onCreateMap }: { projectName: string; onCreateMap: () => void }) {
+export function EmptyProject({
+  projectName,
+  onCreateMap,
+  onImportMaps,
+}: {
+  projectName: string;
+  onCreateMap: () => void;
+  onImportMaps?: () => void;
+}) {
   return (
     <div className="flex h-full items-center justify-center p-6">
       <div className="max-w-md space-y-3 text-center">
@@ -27,7 +35,14 @@ export function EmptyProject({ projectName, onCreateMap }: { projectName: string
           A map holds the waypoints and tours that explain this project. It is stored inside the project, in its .ctour
           directory.
         </p>
-        <Button onClick={onCreateMap}>Create map</Button>
+        <div className="flex justify-center gap-2">
+          <Button onClick={onCreateMap}>Create map</Button>
+          {onImportMaps ? (
+            <Button variant="outline" onClick={onImportMaps}>
+              Bring in maps
+            </Button>
+          ) : null}
+        </div>
       </div>
     </div>
   );

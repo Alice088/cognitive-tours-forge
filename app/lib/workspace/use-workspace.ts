@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ExportResult, FolderPreview, ImportOutcome, ImportPreview } from '@/app/lib/workspace/exchange';
 import type { LoadReport, MapDocument, ProjectSummary, ViewState } from '@/app/lib/workspace/types';
 
 export interface WorkspaceSnapshot {
@@ -118,6 +119,39 @@ export async function saveViewState(view: ViewState): Promise<void> {
   await requestJson('/api/workspace/view-state', { method: 'PUT', body: JSON.stringify(view) });
 }
 
+export async function previewExchange(options: {
+  projectId: string;
+  path?: string;
+  folder?: string;
+}): Promise<ImportPreview | FolderPreview> {
+  const query = new URLSearchParams({ projectId: options.projectId });
+  if (options.path) {
+    query.set('path', options.path);
+  }
+  if (options.folder) {
+    query.set('folder', options.folder);
+  }
+  return requestJson(`/api/exchange/preview?${query.toString()}`);
+}
+
+export async function exportMaps(options: {
+  projectId: string;
+  folder: string;
+  mapFile?: string;
+  all?: boolean;
+}): Promise<ExportResult> {
+  return requestJson('/api/exchange/export', { method: 'POST', body: JSON.stringify(options) });
+}
+
+export async function importMaps(options: {
+  projectId: string;
+  path?: string;
+  folder?: string;
+  acceptLosses?: boolean;
+}): Promise<ImportOutcome> {
+  return requestJson('/api/exchange/import', { method: 'POST', body: JSON.stringify(options) });
+}
+
 export async function relinkProject(projectId: string, path: string): Promise<{ project: ProjectSummary }> {
   return requestJson(`/api/workspace/${encodeURIComponent(projectId)}/relink`, {
     method: 'POST',
@@ -137,8 +171,20 @@ export async function createMap(projectId: string, name: string): Promise<{ map:
 }
 
 export async function browse(
-  path?: string
-): Promise<{ path: string; parent: string | null; entries: Array<{ name: string; isProject: boolean }> }> {
-  const query = path ? `?path=${encodeURIComponent(path)}` : '';
-  return requestJson(`/api/workspace/browse${query}`);
+  path?: string,
+  mode: 'folders' | 'files' = 'folders'
+): Promise<{
+  path: string;
+  parent: string | null;
+  entries: Array<{ name: string; isProject: boolean; kind: 'folder' | 'file'; size?: number }>;
+}> {
+  const query = new URLSearchParams();
+  if (path) {
+    query.set('path', path);
+  }
+  if (mode === 'files') {
+    query.set('mode', 'files');
+  }
+  const suffix = query.toString();
+  return requestJson(`/api/workspace/browse${suffix ? `?${suffix}` : ''}`);
 }

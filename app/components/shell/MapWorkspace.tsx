@@ -4,7 +4,9 @@ import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
 import { AppShell } from '@/app/components/shell/AppShell';
+import { ExportDialog } from '@/app/components/shell/ExportDialog';
 import { Inspector } from '@/app/components/shell/Inspector';
+import { MapActions } from '@/app/components/shell/MapActions';
 import { MapCanvas } from '@/app/components/shell/MapCanvas';
 import { MapNotice, type MapNoticeState } from '@/app/components/shell/MapNotice';
 import { RelinkDialog } from '@/app/components/shell/RelinkDialog';
@@ -20,7 +22,14 @@ import { isEmptyChange, summariseChange, type ChangeSummary } from '@/app/lib/wo
 import { serializeDocument } from '@/app/lib/workspace/serialize';
 import { useListSync, useMapSync } from '@/app/lib/workspace/use-map-sync';
 import type { MapChangedEvent } from '@/app/lib/workspace/sync-events';
-import { ApiError, useWorkspace, fetchMap, saveMap, saveViewState } from '@/app/lib/workspace/use-workspace';
+import {
+  ApiError,
+  useWorkspace,
+  fetchMap,
+  saveMap,
+  saveViewState,
+  exportMaps,
+} from '@/app/lib/workspace/use-workspace';
 import { SUPPORTED_TOURS, SUPPORTED_WAYPOINTS, type SaveStatus } from '@/app/lib/workspace/types';
 
 const SAVE_DELAY = 800;
@@ -33,6 +42,7 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
   const [overview, setOverview] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [relinking, setRelinking] = useState(false);
+  const [exportMode, setExportMode] = useState<'one' | 'all' | null>(null);
   const [liveMessage, setLiveMessage] = useState<string | null>(null);
   const [oversizedDismissed, setOversizedDismissed] = useState(false);
   const pendingSave = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -253,6 +263,38 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
     }
   }, []);
 
+  const flushForExport = useCallback(async (): Promise<string | null> => {
+    cancelScheduledSave();
+    const current = store.getState().document;
+    if (!current || store.getState().readOnly || !dirtyNow()) {
+      return null;
+    }
+    try {
+      const result = await saveMap(projectId, mapFile, current, store.getState().mtimeMs);
+      store.getState().markSaved(result.mtimeMs ?? 0);
+      diskText.current = serializeDocument(current);
+      return null;
+    } catch (cause) {
+      return cause instanceof Error ? cause.message : 'This map could not be written to the project.';
+    }
+  }, [cancelScheduledSave, dirtyNow, mapFile, projectId, store]);
+
+  const runExport = useCallback(
+    async (folder: string) => {
+      const refusal = await flushForExport();
+      if (refusal) {
+        throw new Error(refusal);
+      }
+      return exportMaps({
+        projectId,
+        folder,
+        mapFile: exportMode === 'all' ? undefined : mapFile,
+        all: exportMode === 'all',
+      });
+    },
+    [exportMode, flushForExport, mapFile, projectId]
+  );
+
   const applyFromDisk = useCallback(
     (event: MapChangedEvent, restart = false) => {
       const text = serializeDocument(event.document);
@@ -429,18 +471,25 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
     ) : status === 'failed' ? (
       <FailedSurface message={failure?.message ?? 'This map could not be loaded.'} onRetry={() => void load()} />
     ) : (
-      <MapCanvas
-        waypoints={waypoints}
-        edges={edges}
-        selectedId={selectedId}
-        readOnly={readOnly}
-        onSelect={id => {
-          store.getState().selectWaypoint(id);
-          setInspectorOpen(id !== null);
-        }}
-        onMove={(id, position) => store.getState().moveWaypoint(id, position)}
-        dimmedIds={dimmed}
-      />
+      <div className="relative h-full">
+        <MapCanvas
+          waypoints={waypoints}
+          edges={edges}
+          selectedId={selectedId}
+          readOnly={readOnly}
+          onSelect={id => {
+            store.getState().selectWaypoint(id);
+            setInspectorOpen(id !== null);
+          }}
+          onMove={(id, position) => store.getState().moveWaypoint(id, position)}
+          dimmedIds={dimmed}
+        />
+        <MapActions
+          onSaveCopy={() => setExportMode('one')}
+          onExportAll={() => setExportMode('all')}
+          allDisabled={frozen}
+        />
+      </div>
     );
 
   const dock = (
@@ -558,6 +607,19 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
           refresh();
           void load();
         }}
+      />
+
+      <ExportDialog
+        open={exportMode !== null}
+        onOpenChange={open => {
+          if (!open) {
+            setExportMode(null);
+          }
+        }}
+        mode={exportMode ?? 'one'}
+        projectName={project?.name ?? projectId}
+        mapCount={project?.maps.length ?? 0}
+        onExport={runExport}
       />
     </div>
   );

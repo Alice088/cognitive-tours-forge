@@ -37,3 +37,20 @@ export function isWithinHome(candidate: string): boolean {
   const above = path.relative(target, home);
   return above !== '' && !above.startsWith('..') && !path.isAbsolute(above);
 }
+
+export class HomePathError extends Error {
+  readonly code = 'outside-home';
+
+  constructor(target: string) {
+    super(`${path.basename(target)} is outside your home folder.`);
+    this.name = 'HomePathError';
+  }
+}
+
+export function assertInsideHome(candidate: string): string {
+  const resolved = path.resolve(candidate);
+  if (!isWithinHome(resolved)) {
+    throw new HomePathError(resolved);
+  }
+  return canonical(resolved);
+}

@@ -56,7 +56,7 @@ export class WorkspaceError extends Error {
 export interface BrowseResult {
   path: string;
   parent: string | null;
-  entries: Array<{ name: string; isProject: boolean }>;
+  entries: Array<{ name: string; isProject: boolean; kind: 'folder' | 'file'; size?: number }>;
 }
 
 export async function readWorkspace(home: string = workspaceHome()): Promise<WorkspaceRegistry> {
@@ -221,7 +221,7 @@ export async function saveViewState(view: ViewState, home: string = workspaceHom
   await writeLastView(view, home);
 }
 
-export async function browse(target: string): Promise<BrowseResult> {
+export async function browse(target: string, mode: 'folders' | 'files' = 'folders'): Promise<BrowseResult> {
   const resolved = path.resolve(target);
   if (!isWithinHome(resolved)) {
     throw new WorkspaceError('outside-home', 'Browsing is limited to your home directory.', 403);
@@ -230,23 +230,31 @@ export async function browse(target: string): Promise<BrowseResult> {
   if (entries === null) {
     throw new WorkspaceError('not-readable', 'That folder cannot be read.', 403);
   }
-  const directories: BrowseResult['entries'] = [];
+  const listed: BrowseResult['entries'] = [];
   for (const entry of entries) {
-    if (!entry.isDirectory() || entry.name.startsWith('.')) {
+    if (entry.name.startsWith('.')) {
       continue;
     }
-    const child = path.join(resolved, entry.name);
-    const isProject = await fs
-      .stat(mapDir(child))
-      .then(stat => stat.isDirectory())
-      .catch(() => false);
-    directories.push({ name: entry.name, isProject });
+    if (entry.isDirectory()) {
+      const child = path.join(resolved, entry.name);
+      const isProject = await fs
+        .stat(mapDir(child))
+        .then(stat => stat.isDirectory())
+        .catch(() => false);
+      listed.push({ name: entry.name, isProject, kind: 'folder' });
+      continue;
+    }
+    if (mode !== 'files' || !entry.isFile() || !entry.name.toLowerCase().endsWith('.json')) {
+      continue;
+    }
+    const stat = await fs.stat(path.join(resolved, entry.name)).catch(() => null);
+    listed.push({ name: entry.name, isProject: false, kind: 'file', size: stat?.size ?? 0 });
   }
-  directories.sort((a, b) => a.name.localeCompare(b.name));
+  listed.sort((a, b) => a.name.localeCompare(b.name));
   const parent = path.dirname(resolved);
   return {
     path: resolved,
     parent: parent === resolved ? null : parent,
-    entries: directories,
+    entries: listed,
   };
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { AddProjectDialog } from '@/app/components/shell/AddProjectDialog';
 import { CreateMapDialog } from '@/app/components/shell/CreateMapDialog';
+import { ImportDialog } from '@/app/components/shell/ImportDialog';
 import { ProjectGroup } from '@/app/components/shell/ProjectGroup';
 import { ThemeToggle } from '@/app/components/shell/ThemeToggle';
 import { Button } from '@/app/components/ui/button';
@@ -25,6 +26,7 @@ export function WorkspaceRail({
   const router = useRouter();
   const [adding, setAdding] = useState(false);
   const [mapProject, setMapProject] = useState<ProjectSummary | null>(null);
+  const [importProject, setImportProject] = useState<ProjectSummary | null>(null);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -48,6 +50,7 @@ export function WorkspaceRail({
                 project={project}
                 activeMapFile={project.id === activeProjectId ? activeMapFile : null}
                 onCreateMap={setMapProject}
+                onImportMaps={setImportProject}
               />
             ))}
           </ul>
@@ -93,6 +96,24 @@ export function WorkspaceRail({
           const result = await createMap(mapProject.id, name);
           onChanged();
           router.push(`/p/${mapProject.id}/${result.map.file}`);
+        }}
+      />
+
+      <ImportDialog
+        open={importProject !== null}
+        onOpenChange={open => {
+          if (!open) {
+            setImportProject(null);
+          }
+        }}
+        project={importProject}
+        onImported={onChanged}
+        onOpenMap={file => {
+          if (importProject) {
+            const project = importProject;
+            setImportProject(null);
+            router.push(`/p/${project.id}/${file}`);
+          }
         }}
       />
     </div>

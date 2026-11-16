@@ -8,8 +8,18 @@ import { resolveServeTarget, startServing } from '../commands/serve';
 import { buildStatus } from '../commands/status';
 import { runDoctor } from '../commands/doctor';
 import { installAgent, serveProtocol } from '../commands/mcp';
+import { exportWorkspace, importWorkspace } from '../commands/workspace';
 import { fail, line } from './output';
-import { doctorLines, statusTable, toDoctorJson, toStatusJson } from './report';
+import {
+  doctorLines,
+  statusTable,
+  toDoctorJson,
+  toStatusJson,
+  toWorkspaceExportJson,
+  toWorkspaceImportJson,
+  workspaceExportLines,
+  workspaceImportLines,
+} from './report';
 import { findPackageRoot } from './server';
 import { NoPortError } from './port';
 import { TargetError } from './target';
@@ -17,7 +27,7 @@ import { VERSION } from './version';
 
 export class UsageError extends Error {}
 
-const COMMANDS = ['init', 'serve', 'status', 'doctor', 'mcp'] as const;
+const COMMANDS = ['init', 'serve', 'status', 'doctor', 'mcp', 'workspace'] as const;
 type CommandName = (typeof COMMANDS)[number];
 
 export const HELP = `ctour ${VERSION}
@@ -28,17 +38,24 @@ export const HELP = `ctour ${VERSION}
   doctor            check folders, maps and the workspace; fix nothing
   mcp               speak the map protocol on standard input and output
   mcp install       connect the agent found on this machine
+  workspace export  write this machine's workspace to one file
+  workspace import  bring such a file into this machine
 
 options
   --port <n>        the first address to try (init, serve)
-  --json            machine-readable output (status, doctor)
+  --project <n>=<f> point a project at a folder (workspace import)
+  --skip <name>     leave a project out (workspace import)
+  --json            machine-readable output (status, doctor, workspace)
   --help            this list
   --version         the version`;
 
 type Parsed = {
   command: CommandName | null;
   argument: string | undefined;
+  rest: string[];
   port: number | undefined;
+  projects: string[];
+  skips: string[];
   json: boolean;
   help: boolean;
   version: boolean;
@@ -48,7 +65,10 @@ export function parseArgs(argv: string[]): Parsed {
   const parsed: Parsed = {
     command: null,
     argument: undefined,
+    rest: [],
     port: undefined,
+    projects: [],
+    skips: [],
     json: false,
     help: false,
     version: false,
@@ -70,6 +90,21 @@ export function parseArgs(argv: string[]): Parsed {
       }
       parsed.port = port;
       index += 1;
+    } else if (token === '--project') {
+      const value = argv[index + 1];
+      const separator = value ? value.indexOf('=') : -1;
+      if (!value || separator <= 0 || separator === value.length - 1) {
+        throw new UsageError('--project needs name=folder');
+      }
+      parsed.projects.push(value);
+      index += 1;
+    } else if (token === '--skip') {
+      const value = argv[index + 1];
+      if (!value) {
+        throw new UsageError('--skip needs a project name');
+      }
+      parsed.skips.push(value);
+      index += 1;
     } else if (token.startsWith('-')) {
       throw new UsageError(`unknown option ${token}`);
     } else if (parsed.command === null) {
@@ -79,13 +114,15 @@ export function parseArgs(argv: string[]): Parsed {
       parsed.command = token as CommandName;
     } else if (parsed.argument === undefined) {
       parsed.argument = token;
+    } else if (parsed.command === 'workspace') {
+      parsed.rest.push(token);
     } else {
       throw new UsageError(`unexpected argument ${token}`);
     }
   }
 
-  if (parsed.json && parsed.command !== 'status' && parsed.command !== 'doctor') {
-    throw new UsageError('--json works with status and doctor');
+  if (parsed.json && !['status', 'doctor', 'workspace'].includes(parsed.command ?? '')) {
+    throw new UsageError('--json works with status, doctor and workspace');
   }
 
   return parsed;
@@ -108,6 +145,58 @@ function exitCodeFor(error: unknown): number {
 }
 
 export type Overrides = { cwd?: string; home?: string; userHome?: string; packageRoot?: string };
+
+async function runWorkspace(parsed: Parsed, context: { home: string; cwd: string }): Promise<number> {
+  const subcommand = parsed.argument;
+  if (parsed.rest.length > 1) {
+    throw new UsageError('workspace takes one file');
+  }
+
+  if (subcommand === 'export') {
+    if (parsed.projects.length > 0 || parsed.skips.length > 0) {
+      throw new UsageError('--project and --skip work with workspace import');
+    }
+    const report = await exportWorkspace({
+      file: parsed.rest[0],
+      cwd: context.cwd,
+      home: context.home,
+    });
+    if (parsed.json) {
+      line(toWorkspaceExportJson(report));
+      return 0;
+    }
+    line(`ctour ${VERSION}`);
+    for (const text of workspaceExportLines(report)) {
+      line(text);
+    }
+    return 0;
+  }
+
+  if (subcommand === 'import') {
+    if (parsed.rest.length !== 1) {
+      throw new UsageError('workspace import needs one file');
+    }
+    const report = await importWorkspace({
+      file: parsed.rest[0],
+      projects: parsed.projects,
+      skip: parsed.skips,
+      cwd: context.cwd,
+      home: context.home,
+    });
+    const leftOut = report.missing + report.skipped;
+    if (parsed.json) {
+      line(toWorkspaceImportJson(report));
+      return leftOut > 0 ? 1 : 0;
+    }
+    line(`ctour ${VERSION}`);
+    for (const text of workspaceImportLines(report)) {
+      line(text);
+    }
+    return leftOut > 0 ? 1 : 0;
+  }
+
+  throw new UsageError('workspace needs export or import');
+}
 
 async function packageRoot(overrides: Overrides): Promise<string> {
   if (overrides.packageRoot) {
@@ -196,6 +285,10 @@ export async function main(argv: string[], overrides: Overrides = {}): Promise<n
         throw new UsageError(`unknown mcp subcommand ${parsed.argument}`);
       }
       return await serveProtocol({ home });
+    }
+
+    if (parsed.command === 'workspace') {
+      return await runWorkspace(parsed, { home, cwd });
     }
 
     if (parsed.command === 'status') {

@@ -35,6 +35,11 @@ produced it.
 - The map is reachable by a coding agent through a local protocol: it reads the
   projects this machine knows, reads one map in full, and adds or changes
   waypoints, links and tours in the same file the person has open.
+- A map can leave the project as one file and come back: save a copy wherever you
+  like, bring a file in after seeing exactly what will be added, take a whole
+  project's maps at once. `ctour workspace export` and `ctour workspace import`
+  carry what the machine remembers — its projects, the last place opened, and the
+  last known copy of every map it has seen — to another machine.
 
 ## What it does not do yet
 
@@ -134,6 +139,29 @@ files. They validate that every path resolves inside the project root before any
 filesystem call. Nothing is fetched over the network; the application is a local
 server the browser talks to.
 
+### What travels and what stays
+
+A map is a file, but it is only a file while it stays in `.ctour/`. Export writes
+a copy into a folder the person picks; it copies the bytes and never parses them,
+so what leaves is what the project holds, including a hand-edited layout the
+reader would otherwise reformat. An existing file is never replaced — the copy
+takes the next free name and says which one it used.
+
+An import is previewed before anything is written: the name the map will get, the
+counts it holds, and the entries this product cannot represent. Those entries are
+written away only when the person confirms a screen that states how many there
+are, and a refusal leaves the folder identical. The write itself creates the file
+exclusively, so a name taken in the meantime gets a suffix instead of an
+overwrite.
+
+What stays behind is the machine: the registry at `~/.ctour/workspace.json`, the
+project ids, and the last known copies under `~/.ctour/cache/`. `ctour workspace
+export` packs the names, the recorded folders, the last view and those cached
+maps into one JSON file; `ctour workspace import` matches each project to a
+folder — the recorded one, the one you name with `--project`, or none at all —
+and never decides silently. A project folder always beats a travelled copy, and
+nothing is added twice.
+
 ### How the agent reaches the map
 
 `ctour mcp` speaks a newline-delimited protocol on standard input and output and
@@ -217,7 +245,8 @@ node dist/cli.mjs init .   # the command as it will ship
 ### The command
 
 `cli/` holds the command, bundled by esbuild into `dist/cli.mjs`: `init`,
-`serve`, `status`, `doctor`, with `--port`, `--json`, `--help`, `--version`.
+`serve`, `status`, `doctor`, `mcp` and `workspace`, with `--port`, `--json`,
+`--project`, `--skip`, `--help`, `--version`.
 `next build` produces `.next/standalone`, which the published package carries, so
 the command starts the interface with no installed dependencies. Exit codes:
 `0` fine, `1` problems found, `2` usage, `3` environment refusal (not a folder,
@@ -256,24 +285,29 @@ npm run test:e2e   # playwright: the user stories, on a temporary workspace
   and the isolation scan.
 - `tests/acceptance` — the shell's user stories in a real browser against a real
   `.ctour/` directory created per run, plus `cli.spec.ts`, which spawns the built
-  command, opens the address it prints, and interrupts it.
+  command, opens the address it prints, and interrupts it. `exchange.spec.ts`
+  drives saving a copy and bringing a map in through the dialogs;
+  `workspace-bundle.spec.ts` exports on one machine, imports on another and opens
+  the result.
 
 Playwright starts the application with `CTOUR_HOME=./.tmp/e2e-home` and builds its
 fixture under `.tmp/`, so a test run never touches a real workspace.
 
 ### Troubleshooting
 
-| Symptom                                            | Cause                                                           |
-| -------------------------------------------------- | --------------------------------------------------------------- |
-| Empty workspace after a restart                    | `CTOUR_HOME` was set during that run; the registry is elsewhere |
-| "That folder does not exist" when adding a project | the path is outside `$HOME`, or it is a file                    |
-| The dock says "Not saved"                          | the file was changed on disk; reload or keep yours              |
-| A colour change is rejected by lint                | use a token from `app/globals.css`                              |
-| `ctour doctor` reports `leftover-tours`            | maps moved from `.tours/` to `.ctour/`; move them and delete it |
-| The agent does not see the map                     | run `ctour mcp install`, then restart the agent                 |
-| `ctour doctor` says an agent command is gone       | the configured path moved; `ctour mcp install` rewrites it      |
-| `ctour init` refuses the folder                    | it is `$HOME`, outside `$HOME`, not a folder, or not writable   |
-| The command says the built interface is missing    | run `npm run build:all` before `node dist/cli.mjs`              |
+| Symptom                                            | Cause                                                            |
+| -------------------------------------------------- | ---------------------------------------------------------------- |
+| Empty workspace after a restart                    | `CTOUR_HOME` was set during that run; the registry is elsewhere  |
+| "That folder does not exist" when adding a project | the path is outside `$HOME`, or it is a file                     |
+| The dock says "Not saved"                          | the file was changed on disk; reload or keep yours               |
+| A colour change is rejected by lint                | use a token from `app/globals.css`                               |
+| `ctour doctor` reports `leftover-tours`            | maps moved from `.tours/` to `.ctour/`; move them and delete it  |
+| The agent does not see the map                     | run `ctour mcp install`, then restart the agent                  |
+| `ctour doctor` says an agent command is gone       | the configured path moved; `ctour mcp install` rewrites it       |
+| `ctour init` refuses the folder                    | it is `$HOME`, outside `$HOME`, not a folder, or not writable    |
+| The command says the built interface is missing    | run `npm run build:all` before `node dist/cli.mjs`               |
+| An import is refused with one sentence             | the file is not a map, or its version is newer than this product |
+| `ctour workspace import` says a folder is missing  | the recorded path does not exist here; rerun with `--project`    |
 
 ## Contributing
 

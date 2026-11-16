@@ -105,6 +105,20 @@ Both are one JSON document and nothing else on stdout. Human diagnostics for a f
 | 4    | No free address in the probed range                                                                                 |
 | 5    | Nothing to connect: `mcp install` found no agent                                                                    |
 
+## `workspace`
+
+`ctour workspace export|import` carries the machine's workspace as one file and
+follows the same rules as every other command: no prompts, one line per fact,
+exit codes from the table above. The full contract is
+`specs/014-map-import-export/contracts/workspace-command.md`.
+
+| Exit | `workspace export`                       | `workspace import`                                       |
+| ---- | ---------------------------------------- | -------------------------------------------------------- |
+| 0    | written                                  | every project added or already present                   |
+| 1    | —                                        | at least one project left out                            |
+| 2    | usage                                    | usage                                                    |
+| 3    | destination outside home or not a folder | bundle missing, unreadable, not JSON, wrong shape, newer |
+
 ## Guarantees
 
 1. **No prompts.** No command reads from stdin, waits for confirmation, or animates. Every run finishes or serves (FR-019).

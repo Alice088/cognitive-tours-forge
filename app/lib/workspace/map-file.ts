@@ -125,7 +125,10 @@ export function canonicalText(document: MapDocument): string {
   }
 }
 
-export function normalizeDocument(raw: unknown): { document: MapDocument; report: LoadReport } {
+export function normalizeDocument(
+  raw: unknown,
+  options: { dropUnknownTypes?: boolean } = {}
+): { document: MapDocument; report: LoadReport } {
   const source = (raw ?? {}) as Record<string, unknown>;
   if (source.version !== MAP_VERSION) {
     throw new MapFileError('map-unreadable', `Unsupported map version: ${String(source.version)}`);
@@ -157,8 +160,16 @@ export function normalizeDocument(raw: unknown): { document: MapDocument; report
       report.droppedWaypoints += 1;
       continue;
     }
+    const knownType = isWaypointType(candidate.type);
+    if (!knownType) {
+      report.unknownTypes += 1;
+      if (options.dropUnknownTypes) {
+        report.droppedWaypoints += 1;
+        continue;
+      }
+    }
     known.add(candidate.id);
-    const type = toWaypointType(candidate.type, report);
+    const type: WaypointType = knownType ? (candidate.type as WaypointType) : 'Open Question';
     const rawPosition = (candidate.position ?? {}) as Record<string, unknown>;
     const position = { x: finite(rawPosition.x), y: finite(rawPosition.y) };
     let file: string | undefined;
@@ -306,6 +317,29 @@ export async function writeMap(
   };
 }
 
+export async function writeMapIfAbsent(
+  projectRoot: string,
+  file: string,
+  document: MapDocument
+): Promise<string | null> {
+  validateDocument(document);
+  const target = mapPath(projectRoot, file);
+  await fs.mkdir(path.dirname(target), { recursive: true });
+  const temporary = `${target}.tmp-${process.pid}-${Date.now()}`;
+  await fs.writeFile(temporary, serializeDocument(document), 'utf8');
+  try {
+    await fs.link(temporary, target);
+    return target;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+      return null;
+    }
+    throw error;
+  } finally {
+    await fs.unlink(temporary).catch(() => undefined);
+  }
+}
+
 export async function mapMtime(projectRoot: string, file: string): Promise<number | null> {
   try {
     const stat = await fs.stat(mapPath(projectRoot, file));
@@ -327,10 +361,6 @@ function finite(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0;
 }
 
-function toWaypointType(value: unknown, report: LoadReport): WaypointType {
-  if (typeof value === 'string' && (WAYPOINT_TYPES as readonly string[]).includes(value)) {
-    return value as WaypointType;
-  }
-  report.unknownTypes += 1;
-  return 'Open Question';
+function isWaypointType(value: unknown): value is WaypointType {
+  return typeof value === 'string' && (WAYPOINT_TYPES as readonly string[]).includes(value);
 }

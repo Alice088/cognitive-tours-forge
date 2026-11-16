@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangleIcon, MapIcon, PlusIcon } from 'lucide-react';
+import { AlertTriangleIcon, ImportIcon, MapIcon, PlusIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/app/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/app/components/ui/tooltip';
@@ -11,10 +11,12 @@ export function ProjectGroup({
   project,
   activeMapFile,
   onCreateMap,
+  onImportMaps,
 }: {
   project: ProjectSummary;
   activeMapFile: string | null;
   onCreateMap: (project: ProjectSummary) => void;
+  onImportMaps: (project: ProjectSummary) => void;
 }) {
   return (
     <li className="px-1 py-1" data-project={project.id}>
@@ -35,6 +37,16 @@ export function ProjectGroup({
             <TooltipContent>{project.error ?? 'The folder cannot be reached'}</TooltipContent>
           </Tooltip>
         ) : null}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          aria-label={`Bring in maps to ${project.name}`}
+          disabled={project.availability === 'unavailable'}
+          onClick={() => onImportMaps(project)}
+        >
+          <ImportIcon aria-hidden="true" />
+        </Button>
         <Button
           variant="ghost"
           size="icon"

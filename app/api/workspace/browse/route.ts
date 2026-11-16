@@ -8,7 +8,8 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const target = url.searchParams.get('path') ?? homedir();
-    const result = await browse(target);
+    const mode = url.searchParams.get('mode') === 'files' ? 'files' : 'folders';
+    const result = await browse(target, mode);
     return ok(result);
   } catch (error) {
     return handleError(error);

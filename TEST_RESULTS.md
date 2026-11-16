@@ -4,6 +4,61 @@
 
 ---
 
+## Прогон: 2026-11-16 15:38 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run` (unit + cli), `npx playwright test tests/acceptance/exchange.spec.ts`, `npx playwright test tests/acceptance/workspace-bundle.spec.ts`, `npx tsc --noEmit`, `npx eslint .`, `npx prettier --check`
+
+Полный приёмочный прогон (`npx playwright test` целиком) прерван пользователем; остальные спеки приёмки в этом прогоне не выполнялись.
+
+### Новое в фиче 014 — `exchange.spec.ts`
+
+| #   | Тест                                                                         | Пакет            | Результат | Время |
+| --- | ---------------------------------------------------------------------------- | ---------------- | --------- | ----- |
+| 1   | saves a copy of the open map that holds exactly what the map holds           | exchange.spec.ts | PASS      | 0.64s |
+| 2   | carries a note that has not reached the project yet                          | exchange.spec.ts | PASS      | 0.48s |
+| 3   | delivers a copy from the last known version and says so                      | exchange.spec.ts | PASS      | 0.38s |
+| 4   | delivers no copy when the map cannot be written back                         | exchange.spec.ts | PASS      | 0.49s |
+| 5   | brings a file in, previews it and opens it without reloading                 | exchange.spec.ts | PASS      | 0.63s |
+| 6   | steps aside when the name is taken and leaves the first map byte for byte    | exchange.spec.ts | PASS      | 0.50s |
+| 7   | asks for the entries that cannot be represented and writes nothing on cancel | exchange.spec.ts | PASS      | 0.81s |
+| 8   | refuses a file that is not a map and writes nothing                          | exchange.spec.ts | PASS      | 0.45s |
+| 9   | refuses a project folder that cannot be reached                              | exchange.spec.ts | PASS      | 0.02s |
+| 10  | exports every map of a project into one folder                               | exchange.spec.ts | PASS      | 0.44s |
+| 11  | brings a folder of maps in, skipping a name that is already there            | exchange.spec.ts | PASS      | 0.05s |
+| 12  | reports a folder entry that is not a map and still brings the rest           | exchange.spec.ts | PASS      | 0.05s |
+
+### Новое в фиче 014 — `workspace-bundle.spec.ts`
+
+| #   | Тест                                                         | Пакет                    | Результат | Время |
+| --- | ------------------------------------------------------------ | ------------------------ | --------- | ----- |
+| 13  | carries a workspace to a machine whose folders are elsewhere | workspace-bundle.spec.ts | PASS      | 0.08s |
+| 14  | reports a project left out and changes nothing else          | workspace-bundle.spec.ts | PASS      | 0.07s |
+| 15  | adds nothing the second time and says so                     | workspace-bundle.spec.ts | PASS      | 0.11s |
+| 16  | refuses a file that is not a workspace file                  | workspace-bundle.spec.ts | PASS      | 0.03s |
+| 17  | shows the imported projects in the interface                 | workspace-bundle.spec.ts | PASS      | 1.00s |
+
+### Модульные и командные тесты (`npx vitest run`)
+
+| #   | Тест                                          | Пакет             | Результат | Время |
+| --- | --------------------------------------------- | ----------------- | --------- | ----- |
+| 18  | весь набор unit + cli (35 файлов, 320 тестов) | vitest unit + cli | PASS      | 4.51s |
+| 19  | `tests/unit/exchange.test.ts` (24 теста)      | vitest unit       | PASS      | 0.53s |
+| 20  | `tests/unit/bundle.test.ts` (14 тестов)       | vitest unit       | PASS      | 0.52s |
+| 21  | `tests/cli/workspace.test.ts` (21 тест)       | vitest cli        | PASS      | 0.22s |
+
+### Сводка
+
+Всего записей: 21 · PASS: 21 · FAIL: 0 · SKIP: 0 · PANIC: 0
+Фактические счётчики команд: unit + cli — 35 файлов / 320 тестов, 4.51s; `exchange.spec.ts` — 12 тестов, 17.8s; `workspace-bundle.spec.ts` — 5 тестов, 11.2s.
+
+### Падения
+
+| Тест | Причина |
+| ---- | ------- |
+| нет  | —       |
+
+**Не выполнено в этом прогоне:** полный `npx playwright test` (прерван), проверка `npm pack --dry-run`, ручной проход `quickstart.md`.
+
 ## Прогон: 2026-11-16 14:42 MSK (+0300)
 
 **Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run --reporter=json` (проекты unit + cli), `npx playwright test` (workers=1, production build), `npx tsc --noEmit`, `npx eslint .`, `npm pack --dry-run`

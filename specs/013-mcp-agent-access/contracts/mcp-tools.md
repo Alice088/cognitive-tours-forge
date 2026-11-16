@@ -140,3 +140,8 @@ expected type.
 9. Nothing opens a socket, contacts a network, or needs the interface to be running.
 10. Two servers may run at once; each write is complete on its own, and the second
     writer of the same state is refused.
+
+11. An imported map is read with the same `normalizeDocument` that `read_map`
+    uses, so the counts a person confirms in the import preview are the counts an
+    agent would report for the resulting file. No capability in this contract
+    changed for map import and export.

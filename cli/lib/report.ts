@@ -23,6 +23,36 @@ export type DoctorCheck = {
 
 export type DiagnosticReport = { ok: boolean; checks: DoctorCheck[] };
 
+export type WorkspaceExportReport = {
+  path: string;
+  projects: number;
+  maps: number;
+  lastView: string | null;
+  recoveredFrom: string | null;
+};
+
+export type WorkspaceProjectLine = {
+  name: string;
+  action: string;
+  folder: string | null;
+  recorded: string | null;
+  text: string;
+  maps: number;
+};
+
+export type WorkspaceImportReport = {
+  file: string;
+  added: number;
+  alreadyAdded: number;
+  missing: number;
+  skipped: number;
+  mapsWritten: number;
+  lastViewApplied: boolean;
+  lastView: string | null;
+  lastViewNote: string | null;
+  projects: WorkspaceProjectLine[];
+};
+
 const STATUS_VERSION = 1;
 
 function amount(value: number | null): string {
@@ -67,4 +97,98 @@ export function toDoctorJson(report: DiagnosticReport): string {
 
 export function isReportOk(checks: DoctorCheck[]): boolean {
   return checks.every(check => check.ok);
+}
+
+export function workspaceExportLines(report: WorkspaceExportReport): string[] {
+  const lines: string[] = [];
+  if (report.recoveredFrom) {
+    lines.push(`from     the workspace was damaged; moved to ${report.recoveredFrom}`);
+  }
+  lines.push(`wrote    ${report.path}`);
+  const parts = [`${report.projects} projects`, `${report.maps} maps`];
+  if (report.lastView) {
+    parts.push(`last view ${report.lastView}`);
+  }
+  lines.push(parts.join(', '));
+  return lines;
+}
+
+export function toWorkspaceExportJson(report: WorkspaceExportReport): string {
+  return JSON.stringify(
+    {
+      path: report.path,
+      projects: report.projects,
+      maps: report.maps,
+      lastView: report.lastView,
+    },
+    null,
+    2
+  );
+}
+
+function mapsFor(project: WorkspaceProjectLine): string {
+  return `${project.maps} ${project.maps === 1 ? 'map' : 'maps'}`;
+}
+
+export function workspaceImportLines(report: WorkspaceImportReport): string[] {
+  const entries = report.projects.filter(project => project.action !== 'ignored-flag');
+  const flagLines = report.projects.filter(project => project.action === 'ignored-flag');
+  const actionWidth = entries.reduce((width, project) => Math.max(width, project.action.length), 0) + 2;
+  const nameWidth = entries.reduce((width, project) => Math.max(width, project.name.length), 0) + 2;
+  const lines: string[] = [];
+
+  for (const project of entries) {
+    const head = `${project.action.padEnd(actionWidth)}${project.name.padEnd(nameWidth)}`;
+    if (project.action === 'add' || project.action === 'relink') {
+      lines.push(`${head}${project.folder ?? ''}  ${mapsFor(project)}`);
+      continue;
+    }
+    if (project.action === 'already-added') {
+      lines.push(`${head}${project.folder ?? ''}  already in your workspace`);
+      continue;
+    }
+    if (project.action === 'missing-folder') {
+      lines.push(`${head}${project.text}`);
+      lines.push(`${' '.repeat(actionWidth + nameWidth)}rerun with --project ${project.name}=<folder>`);
+      continue;
+    }
+    lines.push(`${head}${project.text}`);
+  }
+
+  for (const project of flagLines) {
+    lines.push(`note       ${project.name}: ${project.text}`);
+  }
+
+  if (report.lastViewApplied && report.lastView) {
+    lines.push(`last view  ${report.lastView}`);
+  } else if (report.lastViewNote) {
+    lines.push(`last view  ${report.lastViewNote}`);
+  }
+
+  const left = report.missing + report.skipped;
+  const projectWord = report.added === 1 ? 'project' : 'projects';
+  const mapWord = report.mapsWritten === 1 ? 'map' : 'maps';
+  lines.push(`${report.added} ${projectWord} added, ${report.mapsWritten} ${mapWord} copied, ${left} left out`);
+  return lines;
+}
+
+export function toWorkspaceImportJson(report: WorkspaceImportReport): string {
+  return JSON.stringify(
+    {
+      added: report.added,
+      alreadyAdded: report.alreadyAdded,
+      missing: report.missing,
+      skipped: report.skipped,
+      mapsWritten: report.mapsWritten,
+      lastViewApplied: report.lastViewApplied,
+      projects: report.projects.map(project => ({
+        name: project.name,
+        action: project.action,
+        folder: project.folder,
+        text: project.text,
+      })),
+    },
+    null,
+    2
+  );
 }
