@@ -10,7 +10,10 @@ export default function snapshotPositions() {
   // node:sqlite (Node 22.5+) has no types in this project's @types/node yet.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { DatabaseSync } = require('node:sqlite') as {
-    DatabaseSync: new (path: string, opts: { readOnly: boolean }) => {
+    DatabaseSync: new (
+      path: string,
+      opts: { readOnly: boolean }
+    ) => {
       prepare: (sql: string) => { all: () => unknown[] };
       close: () => void;
     };

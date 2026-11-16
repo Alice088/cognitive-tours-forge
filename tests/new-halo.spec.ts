@@ -47,7 +47,10 @@ test.describe('red halo on new waypoints and stops', () => {
     await expect(page.locator('[data-new="true"]')).toHaveCount(0);
   });
 
-  test('a waypoint added later keeps its halo through a click, until its Description field is clicked', async ({ page, request }) => {
+  test('a waypoint added later keeps its halo through a click, until its Description field is clicked', async ({
+    page,
+    request,
+  }) => {
     await firstLoad(page);
     const label = `Halo New ${rand()}`;
     await addWaypoint(request, label);
@@ -90,19 +93,33 @@ test.describe('red halo on new waypoints and stops', () => {
     const pane = (await page.locator('.react-flow__pane').boundingBox())!;
     const inView = async (label: string) => {
       const box = await page.locator('.react-flow__node', { hasText: label }).boundingBox();
-      return !!box && box.x >= pane.x && box.x + box.width <= pane.x + pane.width && box.y >= pane.y && box.y + box.height <= pane.y + pane.height;
+      return (
+        !!box &&
+        box.x >= pane.x &&
+        box.x + box.width <= pane.x + pane.width &&
+        box.y >= pane.y &&
+        box.y + box.height <= pane.y + pane.height
+      );
     };
     // Fitted to the two: both in view, and far apart on screen (zoomed in
     // further than the whole map would be).
     await expect.poll(async () => (await inView(a)) && (await inView(b)), { timeout: 5000 }).toBe(true);
-    await expect.poll(async () => {
-      const box = (await page.locator('.react-flow__node', { hasText: a }).boundingBox())!;
-      const other = (await page.locator('.react-flow__node', { hasText: b }).boundingBox())!;
-      return Math.abs(other.x - box.x);
-    }, { timeout: 5000 }).toBeGreaterThan(pane.width * 0.5);
+    await expect
+      .poll(
+        async () => {
+          const box = (await page.locator('.react-flow__node', { hasText: a }).boundingBox())!;
+          const other = (await page.locator('.react-flow__node', { hasText: b }).boundingBox())!;
+          return Math.abs(other.x - box.x);
+        },
+        { timeout: 5000 }
+      )
+      .toBeGreaterThan(pane.width * 0.5);
   });
 
-  test('"New to you only" in the filter panel shows just the haloed waypoints, and unticks itself', async ({ page, request }) => {
+  test('"New to you only" in the filter panel shows just the haloed waypoints, and unticks itself', async ({
+    page,
+    request,
+  }) => {
     const baseline = `Halo Filter Old ${rand()}`;
     await addWaypoint(request, baseline, 'Already here.');
     await firstLoad(page);
@@ -155,7 +172,10 @@ test.describe('red halo on new waypoints and stops', () => {
     }
   });
 
-  test('coming back to the tab shows what a skill added, with its halo, without a reload', async ({ page, request }) => {
+  test('coming back to the tab shows what a skill added, with its halo, without a reload', async ({
+    page,
+    request,
+  }) => {
     await firstLoad(page);
     const label = `Halo Refresh ${rand()}`;
     await addWaypoint(request, label);
@@ -168,7 +188,7 @@ test.describe('red halo on new waypoints and stops', () => {
     await expect(node.locator('[data-new]')).toHaveAttribute('data-new', 'true');
   });
 
-  test('coming back to the tab doesn\'t refresh while a form is open', async ({ page, request }) => {
+  test("coming back to the tab doesn't refresh while a form is open", async ({ page, request }) => {
     await firstLoad(page);
     await page.getByTestId('canvas-add-waypoint').click();
     const form = page.locator('.fixed.inset-0.z-50');
@@ -197,22 +217,43 @@ test.describe('red halo on new waypoints and stops', () => {
     await expect(page.locator('.react-flow__node', { hasText: label }).locator('[data-new]')).toHaveCount(0);
   });
 
-  test('a stop added to a tour has a halo in Edit tour until its narrative box is clicked', async ({ page, request }) => {
+  test('a stop added to a tour has a halo in Edit tour until its narrative box is clicked', async ({
+    page,
+    request,
+  }) => {
     const first = await addWaypoint(request, `Halo Stop One ${rand()}`, 'One.');
     const secondLabel = `Halo Stop Two ${rand()}`;
     const second = await addWaypoint(request, secondLabel, 'Two.');
     const tourId = `t-${Date.now()}-${rand()}`;
     const tourName = `Halo Tour ${rand()}`;
-    expect((await request.post('/api/tours', {
-      data: { id: tourId, name: tourName, description: '', stops: [{ waypointId: first, narrative: 'On to two.' }] },
-    })).ok()).toBeTruthy();
+    expect(
+      (
+        await request.post('/api/tours', {
+          data: {
+            id: tourId,
+            name: tourName,
+            description: '',
+            stops: [{ waypointId: first, narrative: 'On to two.' }],
+          },
+        })
+      ).ok()
+    ).toBeTruthy();
     made.tours.push(tourId);
 
     await firstLoad(page);
     // Added after this browser's first look, as a skill would.
-    expect((await request.put(`/api/tours/${tourId}`, {
-      data: { stops: [{ waypointId: first, narrative: 'On to two.' }, { waypointId: second, narrative: null }] },
-    })).ok()).toBeTruthy();
+    expect(
+      (
+        await request.put(`/api/tours/${tourId}`, {
+          data: {
+            stops: [
+              { waypointId: first, narrative: 'On to two.' },
+              { waypointId: second, narrative: null },
+            ],
+          },
+        })
+      ).ok()
+    ).toBeTruthy();
     await page.reload();
 
     await page.getByLabel('Tour:').selectOption({ label: tourName });

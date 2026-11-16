@@ -27,7 +27,7 @@ function overlaps(a: Box, b: Box, gap: number): boolean {
 export function makeRoom(
   boxes: Box[],
   fixedIds: string[],
-  gap: number = MAKE_ROOM_GAP,
+  gap: number = MAKE_ROOM_GAP
 ): Map<string, { x: number; y: number }> {
   const fixed = new Set(fixedIds);
   // Sorted so the result doesn't depend on the order waypoints arrive in.
@@ -41,8 +41,10 @@ export function makeRoom(
       const p = byId.get(pusherId)!;
       for (const q of all) {
         if (q.id === p.id || fixed.has(q.id) || !overlaps(p, q, gap)) continue;
-        const pcx = p.x + p.w / 2, pcy = p.y + p.h / 2;
-        const qcx = q.x + q.w / 2, qcy = q.y + q.h / 2;
+        const pcx = p.x + p.w / 2,
+          pcy = p.y + p.h / 2;
+        const qcx = q.x + q.w / 2,
+          qcy = q.y + q.h / 2;
         // Away from the pusher, on the side q is already on (ties: right, down).
         const dx = qcx >= pcx ? p.x + p.w + gap - q.x : p.x - gap - (q.x + q.w);
         const dy = qcy >= pcy ? p.y + p.h + gap - q.y : p.y - gap - (q.y + q.h);

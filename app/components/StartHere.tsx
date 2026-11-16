@@ -26,14 +26,12 @@ function stepsFor(mapIsEmpty: boolean, hasTours: boolean): Step[] {
       {
         target: MAP,
         title: 'This map is empty',
-        body:
-          'A map holds waypoints, the places worth knowing in a project: goals, needs, decisions, code, tests and open questions. Tours are guided walks through them, written by people. Start with Add first waypoint.',
+        body: 'A map holds waypoints, the places worth knowing in a project: goals, needs, decisions, code, tests and open questions. Tours are guided walks through them, written by people. Start with Add first waypoint.',
       },
       {
         target: SKILLS,
         title: 'Or start from a draft',
-        body:
-          'Claude Code skills shows how to draft a starting map from your repo with Claude Code, for you to check and rewrite in your own words.',
+        body: 'Claude Code skills shows how to draft a starting map from your repo with Claude Code, for you to check and rewrite in your own words.',
       },
     ];
   }
@@ -41,8 +39,7 @@ function stepsFor(mapIsEmpty: boolean, hasTours: boolean): Step[] {
     {
       target: MAP,
       title: 'The map',
-      body:
-        'Each box is a waypoint: a goal, a need, a decision, some code, a test or an open question. Lines show how they relate. Drag to move around, scroll to zoom, click a box to read it.',
+      body: 'Each box is a waypoint: a goal, a need, a decision, some code, a test or an open question. Lines show how they relate. Drag to move around, scroll to zoom, click a box to read it.',
     },
   ];
   if (hasTours) {
@@ -50,23 +47,20 @@ function stepsFor(mapIsEmpty: boolean, hasTours: boolean): Step[] {
       {
         target: '#tour-select',
         title: 'Tours',
-        body:
-          'A tour is a guided walk through the map, written by a person to explain how the pieces connect, from why to code. Pick one here.',
+        body: 'A tour is a guided walk through the map, written by a person to explain how the pieces connect, from why to code. Pick one here.',
       },
       {
         target: '[data-start-here="tour-controls"]',
         title: 'Step through a tour',
-        body:
-          'Use Next and Prev. Each stop says what it is and how it leads to the next, and links to its code in VS Code or on GitHub. Exit tour (or Esc) takes you back to the whole map.',
+        body: 'Use Next and Prev. Each stop says what it is and how it leads to the next, and links to its code in VS Code or on GitHub. Exit tour (or Esc) takes you back to the whole map.',
         showTour: true,
-      },
+      }
     );
   }
   steps.push({
     target: SKILLS,
     title: 'Make your own',
-    body:
-      'Add Waypoint and + New Tour let you write your own. Claude Code skills drafts a starting map from your repo, for you to check and rewrite in your own words.',
+    body: 'Add Waypoint and + New Tour let you write your own. Claude Code skills drafts a starting map from your repo, for you to check and rewrite in your own words.',
   });
   return steps;
 }

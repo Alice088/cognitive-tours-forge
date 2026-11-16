@@ -4,16 +4,13 @@ import { Prisma } from '@/app/generated/prisma/client';
 import { toTour } from '@/app/lib/db-mappers';
 import type { Tour } from '@/app/lib/types';
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const denied = requireEditPasscode(request);
   if (denied) return denied;
   const { id } = await params;
   try {
     const body = (await request.json()) as Partial<Tour>;
-    const row = await prisma.$transaction(async (tx) => {
+    const row = await prisma.$transaction(async tx => {
       if (body.stops !== undefined) {
         await tx.tourWaypoint.deleteMany({ where: { tourId: id } });
         await tx.tourWaypoint.createMany({
@@ -46,10 +43,7 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const denied = requireEditPasscode(request);
   if (denied) return denied;
   const { id } = await params;

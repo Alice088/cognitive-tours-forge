@@ -44,9 +44,7 @@ const UNDO_LIMIT = 20;
 const UNDO_TOAST_MS = 10_000;
 
 function undoMessage(entry: UndoEntry): string {
-  return entry.kind === 'waypoint'
-    ? `Deleted ${entry.waypoint.label}.`
-    : `Deleted link ${entry.from} → ${entry.to}.`;
+  return entry.kind === 'waypoint' ? `Deleted ${entry.waypoint.label}.` : `Deleted link ${entry.from} → ${entry.to}.`;
 }
 
 // Ctrl/⌘-Z belongs to text undo while you're typing.
@@ -72,9 +70,7 @@ function newId(prefix: 'w' | 'e' | 't'): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-const DEFAULT_FILTER_STATE: FilterState = Object.fromEntries(
-  WAYPOINT_TYPES.map(t => [t, true])
-) as FilterState;
+const DEFAULT_FILTER_STATE: FilterState = Object.fromEntries(WAYPOINT_TYPES.map(t => [t, true])) as FilterState;
 
 // Edit passcode (app/lib/edit-passcode.ts): on a site that has one, writes
 // carry it; this browser asks once and remembers it. Sites without one never ask.
@@ -96,7 +92,7 @@ function askForPasscode(again: boolean): Promise<string | null> {
     const entered = window.prompt(
       again
         ? "That passcode didn't work. Enter this map's edit passcode:"
-        : 'This map needs a passcode to edit. Enter it once; this browser will remember it.',
+        : 'This map needs a passcode to edit. Enter it once; this browser will remember it.'
     );
     passcodePrompt = null;
     const passcode = entered?.trim() || null;
@@ -170,8 +166,11 @@ export default function CognitiveToursApp() {
   const placementRef = useRef<(() => { x: number; y: number } | null) | null>(null);
 
   // Red "new" halo on what this browser hasn't seen yet (app/lib/seen.ts).
-  const { newAtLoad, arrivedAfterLoad, isNewWaypoint, isNewStop, markWaypointsSeen, markStopsSeen } =
-    useSeen(waypoints, tours, loadState === 'ready');
+  const { newAtLoad, arrivedAfterLoad, isNewWaypoint, isNewStop, markWaypointsSeen, markStopsSeen } = useSeen(
+    waypoints,
+    tours,
+    loadState === 'ready'
+  );
   // Waypoints the graph should make room for (app/lib/make-room.ts): ones you
   // create, once per page load the new ones a skill or teammate added, and
   // those that turn up when the map refreshes on your return to the tab.
@@ -179,12 +178,8 @@ export default function CognitiveToursApp() {
   const [roomMadeOnLoad, setRoomMadeOnLoad] = useState(false);
   const [arrivedRoomed, setArrivedRoomed] = useState(0);
   const makeRoomFor = useMemo(
-    () => [
-      ...(roomMadeOnLoad ? [] : newAtLoad),
-      ...arrivedAfterLoad.slice(arrivedRoomed),
-      ...createdNeedingRoom,
-    ],
-    [roomMadeOnLoad, newAtLoad, arrivedAfterLoad, arrivedRoomed, createdNeedingRoom],
+    () => [...(roomMadeOnLoad ? [] : newAtLoad), ...arrivedAfterLoad.slice(arrivedRoomed), ...createdNeedingRoom],
+    [roomMadeOnLoad, newAtLoad, arrivedAfterLoad, arrivedRoomed, createdNeedingRoom]
   );
   // What you just created glows, like a skill's new waypoint, until you click
   // into its Description field or it has a description (this page view only),
@@ -194,7 +189,7 @@ export default function CognitiveToursApp() {
   const [createdFocus, setCreatedFocus] = useState<{ ids: string[]; key: number } | null>(null);
   const focusRequest = useMemo(
     () => createdFocus ?? (newAtLoad.length > 0 ? { ids: newAtLoad, key: 0 } : null),
-    [createdFocus, newAtLoad],
+    [createdFocus, newAtLoad]
   );
   const clearJustCreated = useCallback((id: string | null) => {
     if (id) setJustCreated(prev => (prev.includes(id) ? prev.filter(x => x !== id) : prev));
@@ -209,7 +204,7 @@ export default function CognitiveToursApp() {
   // same goes for the glow on one you just created.
   const glowingCreated = useMemo(
     () => justCreated.filter(id => !waypoints.find(w => w.id === id)?.description?.trim()),
-    [justCreated, waypoints],
+    [justCreated, waypoints]
   );
 
   // Filter panel's "New to you only": show just the waypoints with a red halo
@@ -217,7 +212,7 @@ export default function CognitiveToursApp() {
   // left, so you're never left looking at an empty map.
   const newWaypointIds = useMemo(
     () => new Set(waypoints.filter(w => isNewWaypoint(w) || glowingCreated.includes(w.id)).map(w => w.id)),
-    [waypoints, isNewWaypoint, glowingCreated],
+    [waypoints, isNewWaypoint, glowingCreated]
   );
   const [newOnly, setNewOnly] = useState(false);
   if (newOnly && newWaypointIds.size === 0) setNewOnly(false);
@@ -309,7 +304,7 @@ export default function CognitiveToursApp() {
         setActiveTourId(prev => (prev && !data.tours.some(t => t.id === prev) ? null : prev));
         // A delete someone undid or redid elsewhere: don't let undo duplicate it.
         undoStackRef.current = undoStackRef.current.filter(e =>
-          e.kind === 'waypoint' ? !waypointIds.has(e.waypoint.id) : !edgeIds.has(e.edge.id),
+          e.kind === 'waypoint' ? !waypointIds.has(e.waypoint.id) : !edgeIds.has(e.edge.id)
         );
       } catch {
         // Offline or a hiccup: keep what's shown; the next return tries again.
@@ -375,7 +370,7 @@ export default function CognitiveToursApp() {
         setPanelCollapsed(false);
       }
     },
-    [activeTour, currentStopWaypointId],
+    [activeTour, currentStopWaypointId]
   );
 
   const resumeTour = useCallback(() => {
@@ -416,7 +411,7 @@ export default function CognitiveToursApp() {
         }
       })();
     },
-    [waypoints, clearErrorAfterDelay, markWaypointsSeen],
+    [waypoints, clearErrorAfterDelay, markWaypointsSeen]
   );
 
   // T019
@@ -439,7 +434,7 @@ export default function CognitiveToursApp() {
         }
       })();
     },
-    [waypoints, clearErrorAfterDelay],
+    [waypoints, clearErrorAfterDelay]
   );
 
   // T021 — cascade: waypoint + its edges + tour membership
@@ -459,10 +454,8 @@ export default function CognitiveToursApp() {
       setEdges(prev => prev.filter(e => e.source !== id && e.target !== id));
       setTours(prev =>
         prev.map(t =>
-          t.stops.some(s => s.waypointId === id)
-            ? { ...t, stops: t.stops.filter(s => s.waypointId !== id) }
-            : t,
-        ),
+          t.stops.some(s => s.waypointId === id) ? { ...t, stops: t.stops.filter(s => s.waypointId !== id) } : t
+        )
       );
       setSelectedWaypointId(prev => (prev === id ? null : prev));
 
@@ -476,8 +469,8 @@ export default function CognitiveToursApp() {
                 method: 'PUT',
                 headers: JSON_HEADERS,
                 body: JSON.stringify({ stops: t.stops }),
-              }),
-            ),
+              })
+            )
           );
           return true;
         } catch {
@@ -505,7 +498,7 @@ export default function CognitiveToursApp() {
         });
       }
     },
-    [waypoints, edges, tours, clearErrorAfterDelay, pushUndo, dropUndo],
+    [waypoints, edges, tours, clearErrorAfterDelay, pushUndo, dropUndo]
   );
 
   // T022
@@ -529,7 +522,7 @@ export default function CognitiveToursApp() {
         }
       })();
     },
-    [clearErrorAfterDelay],
+    [clearErrorAfterDelay]
   );
 
   // T023
@@ -562,7 +555,7 @@ export default function CognitiveToursApp() {
         });
       }
     },
-    [edges, waypoints, clearErrorAfterDelay, pushUndo, dropUndo],
+    [edges, waypoints, clearErrorAfterDelay, pushUndo, dropUndo]
   );
 
   // Put back what a waypoint delete removed: the waypoint (same id), its
@@ -597,8 +590,8 @@ export default function CognitiveToursApp() {
       const removeStopFrom = (tourIds: string[]) =>
         setTours(prev =>
           prev.map(t =>
-            tourIds.includes(t.id) ? { ...t, stops: t.stops.filter(s => s.waypointId !== waypoint.id) } : t,
-          ),
+            tourIds.includes(t.id) ? { ...t, stops: t.stops.filter(s => s.waypointId !== waypoint.id) } : t
+          )
         );
 
       markWaypointsSeen([waypoint.id]); // not new to you: you made it, or saw it before
@@ -609,7 +602,7 @@ export default function CognitiveToursApp() {
         prev.map(t => {
           const back = tourStops.find(ts => ts.tourId === t.id);
           return back ? { ...t, stops: back.stops } : t;
-        }),
+        })
       );
 
       void (async () => {
@@ -631,9 +624,7 @@ export default function CognitiveToursApp() {
         }
 
         const linkResults = await Promise.allSettled(
-          linksBack.map(e =>
-            apiFetch('/api/edges', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(e) }),
-          ),
+          linksBack.map(e => apiFetch('/api/edges', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(e) }))
         );
         const linksFailed = linksBack.filter((_, i) => linkResults[i].status === 'rejected');
         if (linksFailed.length > 0) {
@@ -647,8 +638,8 @@ export default function CognitiveToursApp() {
               method: 'PUT',
               headers: JSON_HEADERS,
               body: JSON.stringify({ stops: ts.stops }),
-            }),
-          ),
+            })
+          )
         );
         const stopsFailed = tourStops.filter((_, i) => stopResults[i].status === 'rejected');
         if (stopsFailed.length > 0) {
@@ -662,7 +653,7 @@ export default function CognitiveToursApp() {
         }
       })();
     },
-    [waypoints, tours, markWaypointsSeen, markStopsSeen, clearErrorAfterDelay],
+    [waypoints, tours, markWaypointsSeen, markStopsSeen, clearErrorAfterDelay]
   );
 
   const restoreEdge = useCallback(
@@ -686,7 +677,7 @@ export default function CognitiveToursApp() {
         }
       })();
     },
-    [edges, waypoints, clearErrorAfterDelay],
+    [edges, waypoints, clearErrorAfterDelay]
   );
 
   // Undo the most recent delete still on the stack (toast button or Ctrl/⌘-Z).
@@ -720,7 +711,7 @@ export default function CognitiveToursApp() {
         }
       })();
     },
-    [clearErrorAfterDelay, markStopsSeen],
+    [clearErrorAfterDelay, markStopsSeen]
   );
 
   const deleteTour = useCallback(
@@ -741,7 +732,7 @@ export default function CognitiveToursApp() {
         }
       })();
     },
-    [tours, activeTourId, clearErrorAfterDelay],
+    [tours, activeTourId, clearErrorAfterDelay]
   );
 
   // T025
@@ -770,7 +761,7 @@ export default function CognitiveToursApp() {
         }
       })();
     },
-    [tours, clearErrorAfterDelay, markStopsSeen],
+    [tours, clearErrorAfterDelay, markStopsSeen]
   );
 
   const onToggleMarkdownView = useCallback(() => setMarkdownViewOpen(v => !v), []);
@@ -798,7 +789,7 @@ export default function CognitiveToursApp() {
         setNewOnly(false);
       }
     },
-    [tours, markdownViewOpen],
+    [tours, markdownViewOpen]
   );
 
   // Escape exits the active tour, unless a modal is open (which takes
@@ -895,28 +886,25 @@ export default function CognitiveToursApp() {
             setErrorMessage('Failed to save position.');
             clearErrorAfterDelay();
           });
-        }, 500),
+        }, 500)
       );
     },
-    [clearErrorAfterDelay],
+    [clearErrorAfterDelay]
   );
 
   // The position is taken when the form opens, so moving the mouse while
   // filling it in doesn't change where the waypoint lands.
   const openCreateForm = useCallback(
     () => setForm({ open: true, mode: 'create', position: placementRef.current?.() ?? null }),
-    [],
+    []
   );
-  const openEditForm = useCallback(
-    (waypoint: Waypoint) => setForm({ open: true, mode: 'edit', waypoint }),
-    [],
-  );
+  const openEditForm = useCallback((waypoint: Waypoint) => setForm({ open: true, mode: 'edit', waypoint }), []);
   const editWaypointById = useCallback(
     (id: string) => {
       const waypoint = waypoints.find(w => w.id === id);
       if (waypoint) openEditForm(waypoint);
     },
-    [waypoints, openEditForm],
+    [waypoints, openEditForm]
   );
   const closeForm = useCallback(() => setForm({ open: false }), []);
 
@@ -929,23 +917,17 @@ export default function CognitiveToursApp() {
       }
       closeForm();
     },
-    [form, createWaypoint, updateWaypoint, closeForm],
+    [form, createWaypoint, updateWaypoint, closeForm]
   );
 
   // T016: Loading and error states
   if (loadState === 'loading') {
-    return (
-      <div className="flex items-center justify-center h-screen text-gray-500">
-        Loading…
-      </div>
-    );
+    return <div className="flex items-center justify-center h-screen text-gray-500">Loading…</div>;
   }
 
   if (loadState === 'error') {
     return (
-      <div className="flex items-center justify-center h-screen text-red-600">
-        Could not load data. Please refresh.
-      </div>
+      <div className="flex items-center justify-center h-screen text-red-600">Could not load data. Please refresh.</div>
     );
   }
 
@@ -965,7 +947,7 @@ export default function CognitiveToursApp() {
             {SITE_NOTICE}
           </p>
         )}
-        {PROJECT_NAME && (
+        {PROJECT_NAME &&
           // Pinned in the header's empty left side so it adds no height.
           (() => {
             const pillClass =
@@ -987,8 +969,7 @@ export default function CognitiveToursApp() {
                 Project: {PROJECT_NAME}
               </p>
             );
-          })()
-        )}
+          })()}
         {/* Pinned right, mirroring the Project pill: the Start here walkthrough, and the
             plugin's commands with this site filled in. */}
         {/* No transform here: it would make the fixed-position walkthrough and skills panel inside it position relative to this box. */}
@@ -1005,9 +986,7 @@ export default function CognitiveToursApp() {
       </div>
       {/* T017: Error banner for mutation failures */}
       {errorMessage !== null && (
-        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 px-4 py-2 text-sm">
-          {errorMessage}
-        </div>
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 px-4 py-2 text-sm">{errorMessage}</div>
       )}
       <TourBar
         tours={tours}
@@ -1066,8 +1045,8 @@ export default function CognitiveToursApp() {
             />
           )}
         </div>
-        {!showingMarkdown && (
-          panelCollapsed ? (
+        {!showingMarkdown &&
+          (panelCollapsed ? (
             <div className="w-8 border-l border-gray-200 bg-white shrink-0 flex flex-col items-center pt-3">
               <button
                 onClick={() => setPanelCollapsed(false)}
@@ -1090,10 +1069,10 @@ export default function CognitiveToursApp() {
                 onResumeTour={resumeTour}
               />
             </div>
-          )
-        )}
-        {activeTour && !showingMarkdown && (
-          controlPanelCollapsed ? (
+          ))}
+        {activeTour &&
+          !showingMarkdown &&
+          (controlPanelCollapsed ? (
             <div className="w-8 border-l border-gray-200 bg-white shrink-0 flex flex-col items-center pt-3">
               <button
                 onClick={() => setControlPanelCollapsed(false)}
@@ -1104,7 +1083,10 @@ export default function CognitiveToursApp() {
               </button>
             </div>
           ) : (
-            <div data-start-here="tour-controls" className="w-96 border-l border-gray-200 bg-white overflow-hidden shrink-0">
+            <div
+              data-start-here="tour-controls"
+              className="w-96 border-l border-gray-200 bg-white overflow-hidden shrink-0"
+            >
               <div className="flex flex-col h-full">
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between shrink-0">
                   <h2 className="text-lg font-bold text-gray-900">Tour Controls</h2>
@@ -1177,10 +1159,7 @@ export default function CognitiveToursApp() {
                       {currentStopWaypoint.notes && (stopTextExpanded || !stopDescriptionOverflowing) && (
                         <div className="text-base text-gray-500">
                           <div className="font-medium text-gray-600 mb-0.5">Notes</div>
-                          <p
-                            ref={stopNotesRef}
-                            className={`leading-relaxed ${stopTextExpanded ? '' : 'line-clamp-3'}`}
-                          >
+                          <p ref={stopNotesRef} className={`leading-relaxed ${stopTextExpanded ? '' : 'line-clamp-3'}`}>
                             {currentStopWaypoint.notes}
                           </p>
                         </div>
@@ -1197,9 +1176,7 @@ export default function CognitiveToursApp() {
                       )}
                       {currentStopWaypoint.filePath && (
                         <div className="text-sm text-gray-500 border-t pt-3">
-                          <div className="font-medium text-gray-600 mb-1">
-                            Linked artifact for the current waypoint
-                          </div>
+                          <div className="font-medium text-gray-600 mb-1">Linked artifact for the current waypoint</div>
                           <p className="font-mono text-sm text-gray-700 break-all mb-2">
                             {currentStopWaypoint.filePath}
                           </p>
@@ -1264,8 +1241,7 @@ export default function CognitiveToursApp() {
                 </div>
               </div>
             </div>
-          )
-        )}
+          ))}
       </div>
       {form.open && (
         <WaypointForm
@@ -1290,10 +1266,7 @@ export default function CognitiveToursApp() {
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-4 rounded-lg bg-gray-900 px-4 py-2.5 text-base text-white shadow-lg"
         >
           <span>{undoMessage(undoToast)}</span>
-          <button
-            onClick={undoLast}
-            className="font-semibold text-amber-300 hover:text-amber-200 hover:underline"
-          >
+          <button onClick={undoLast} className="font-semibold text-amber-300 hover:text-amber-200 hover:underline">
             Undo
           </button>
         </div>

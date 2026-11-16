@@ -92,7 +92,9 @@ test.describe('create a waypoint', () => {
     expect(Math.abs(got.y - expected.y)).toBeLessThan(60);
   });
 
-  test('a waypoint you create glows and is centred, through a click, until its Description field is clicked', async ({ page }) => {
+  test('a waypoint you create glows and is centred, through a click, until its Description field is clicked', async ({
+    page,
+  }) => {
     waypointLabel = `Playwright Glow Waypoint ${Date.now()}`;
     await page.goto('/');
     await page.getByTestId('canvas-add-waypoint').click();
@@ -105,10 +107,18 @@ test.describe('create a waypoint', () => {
     await expect(node.locator('[data-new]')).toHaveAttribute('data-new', 'true');
     // Centred: the map zooms to it (animated, so poll).
     const pane = (await page.locator('.react-flow__pane').boundingBox())!;
-    await expect.poll(async () => {
-      const b = (await node.boundingBox())!;
-      return Math.abs(b.x + b.width / 2 - (pane.x + pane.width / 2)) + Math.abs(b.y + b.height / 2 - (pane.y + pane.height / 2));
-    }, { timeout: 5000 }).toBeLessThan(40);
+    await expect
+      .poll(
+        async () => {
+          const b = (await node.boundingBox())!;
+          return (
+            Math.abs(b.x + b.width / 2 - (pane.x + pane.width / 2)) +
+            Math.abs(b.y + b.height / 2 - (pane.y + pane.height / 2))
+          );
+        },
+        { timeout: 5000 }
+      )
+      .toBeLessThan(40);
 
     // A click (selecting it) and opening the form don't clear the glow;
     // clicking into Description does, as for a skill's new waypoint.
@@ -144,15 +154,19 @@ test.describe('create a waypoint', () => {
     await page.goto('/');
     const pane = (await page.locator('.react-flow__pane').boundingBox())!;
     // An empty spot on the map, away from the top-right controls.
-    const click = await page.evaluate(({ x, y, w, h }) => {
-      for (let fy = 0.3; fy < 0.9; fy += 0.05) {
-        for (let fx = 0.1; fx < 0.6; fx += 0.05) {
-          const px = x + w * fx, py = y + h * fy;
-          if (document.elementFromPoint(px, py)?.classList.contains('react-flow__pane')) return { x: px, y: py };
+    const click = await page.evaluate(
+      ({ x, y, w, h }) => {
+        for (let fy = 0.3; fy < 0.9; fy += 0.05) {
+          for (let fx = 0.1; fx < 0.6; fx += 0.05) {
+            const px = x + w * fx,
+              py = y + h * fy;
+            if (document.elementFromPoint(px, py)?.classList.contains('react-flow__pane')) return { x: px, y: py };
+          }
         }
-      }
-      return null;
-    }, { x: pane.x, y: pane.y, w: pane.width, h: pane.height });
+        return null;
+      },
+      { x: pane.x, y: pane.y, w: pane.width, h: pane.height }
+    );
     if (!click) throw new Error('no empty canvas point found');
     await page.mouse.click(click.x, click.y);
     const expected = await toMap(page, click);
@@ -193,7 +207,8 @@ test.describe('double-click a waypoint', () => {
 
     // A double-click zoom doubles the scale; the map's own re-fit after a
     // save changes it far less.
-    const scale = async () => Number((await page.locator('.react-flow__viewport').getAttribute('style'))!.match(/scale\(([\d.]+)\)/)![1]);
+    const scale = async () =>
+      Number((await page.locator('.react-flow__viewport').getAttribute('style'))!.match(/scale\(([\d.]+)\)/)![1]);
     const node = page.locator('.react-flow__node', { hasText: label });
     await expect(node).toBeVisible();
     await mapSettled(page);
@@ -209,7 +224,7 @@ test.describe('double-click a waypoint', () => {
     await page.mouse.click(x, y, { clickCount: 2 });
     await expect(form).toBeVisible();
     await expect(form.getByPlaceholder('Short descriptive title')).toHaveValue(label);
-    expect(Math.abs(await scale() / before - 1)).toBeLessThan(0.5);
+    expect(Math.abs((await scale()) / before - 1)).toBeLessThan(0.5);
   });
 });
 
@@ -236,8 +251,7 @@ test.describe('delete a waypoint', () => {
 
 test('tour navigation increments step counter', async ({ page }) => {
   await page.goto('/');
-  await page.getByLabel('Tour:')
-    .selectOption({ label: 'New Developer Orientation' });
+  await page.getByLabel('Tour:').selectOption({ label: 'New Developer Orientation' });
   await expect(page.getByText(/Step 1 of/)).toBeVisible();
   await page.getByRole('button', { name: 'Next →' }).click();
   await expect(page.getByText(/Step 2 of/)).toBeVisible();
@@ -301,7 +315,7 @@ test.describe('tour editor bridges', () => {
     const stops = modal.getByTestId('tour-editor-stop');
     await expect(stops).toHaveCount(2);
     const label = async (i: number) =>
-      ((await stops.nth(i).locator('span.truncate').innerText()).replace(/^Stop \d+: /, '')).trim();
+      (await stops.nth(i).locator('span.truncate').innerText()).replace(/^Stop \d+: /, '').trim();
     const first = await label(0);
     const second = await label(1);
     const headings = modal.getByTestId('tour-editor-bridge-heading');
@@ -399,15 +413,19 @@ test('filter panel closes when clicking the graph canvas', async ({ page }) => {
   const box = await pane.boundingBox();
   if (!box) throw new Error('graph pane not found');
   // Find a point on the empty pane itself (not a node, edge or control).
-  const point = await page.evaluate(({ x, y, w, h }) => {
-    for (let fy = 0.1; fy < 0.9; fy += 0.1) {
-      for (let fx = 0.1; fx < 0.9; fx += 0.1) {
-        const px = x + w * fx, py = y + h * fy;
-        if (document.elementFromPoint(px, py)?.classList.contains('react-flow__pane')) return { px, py };
+  const point = await page.evaluate(
+    ({ x, y, w, h }) => {
+      for (let fy = 0.1; fy < 0.9; fy += 0.1) {
+        for (let fx = 0.1; fx < 0.9; fx += 0.1) {
+          const px = x + w * fx,
+            py = y + h * fy;
+          if (document.elementFromPoint(px, py)?.classList.contains('react-flow__pane')) return { px, py };
+        }
       }
-    }
-    return null;
-  }, { x: box.x, y: box.y, w: box.width, h: box.height });
+      return null;
+    },
+    { x: box.x, y: box.y, w: box.width, h: box.height }
+  );
   if (!point) throw new Error('no empty canvas point found');
   await page.mouse.click(point.px, point.py);
 
@@ -455,14 +473,17 @@ test.describe('tour stop focus', () => {
     await page.getByRole('button', { name: 'Show whole tour' }).click();
     // Tour stops are the nodes not dimmed to 0.2 (current stop and other stops).
     const stops = page.locator('.react-flow__node:not([style*="opacity: 0.2"])');
-    await expect.poll(async () => {
-      const p = (await pane.boundingBox())!;
-      for (const box of await Promise.all((await stops.all()).map(s => s.boundingBox()))) {
-        if (!box) return false;
-        if (box.x < p.x || box.y < p.y || box.x + box.width > p.x + p.width || box.y + box.height > p.y + p.height) return false;
-      }
-      return true;
-    }).toBe(true);
+    await expect
+      .poll(async () => {
+        const p = (await pane.boundingBox())!;
+        for (const box of await Promise.all((await stops.all()).map(s => s.boundingBox()))) {
+          if (!box) return false;
+          if (box.x < p.x || box.y < p.y || box.x + box.width > p.x + p.width || box.y + box.height > p.y + p.height)
+            return false;
+        }
+        return true;
+      })
+      .toBe(true);
 
     await page.getByRole('button', { name: 'Back to stop' }).click();
     await expect.poll(centred).toBe(true);
@@ -579,7 +600,10 @@ test.describe('code folder setting', () => {
 
     await page.reload();
     await page.getByText(label).click();
-    await expect(page.getByRole('link', { name: 'Open in VS Code' })).toHaveAttribute('href', 'vscode://file/tmp/repo/app/page.tsx');
+    await expect(page.getByRole('link', { name: 'Open in VS Code' })).toHaveAttribute(
+      'href',
+      'vscode://file/tmp/repo/app/page.tsx'
+    );
   });
 });
 
@@ -595,7 +619,11 @@ test.describe('GitHub repo links', () => {
 
   test('normalizes the repo addresses people paste', () => {
     for (const input of [
-      acme, `${acme}/`, `${acme}.git`, `${acme}/tree/main/app`, 'github.com/acme-startup/acme',
+      acme,
+      `${acme}/`,
+      `${acme}.git`,
+      `${acme}/tree/main/app`,
+      'github.com/acme-startup/acme',
       'git@github.com:acme-startup/acme.git',
     ]) {
       expect(normalizeGitHubRepo(input), input).toBe(acme);
@@ -606,8 +634,16 @@ test.describe('GitHub repo links', () => {
   });
 
   test('exports link file paths to GitHub only when a repo is known', () => {
-    const wp: Waypoint = { id: 'w1', label: 'A', type: 'Code Component', filePath: 'app/page.tsx', position: { x: 0, y: 0 } };
-    expect(generateFullMapMarkdown([wp], { repoUrl: acme })).toContain(`[\`app/page.tsx\`](${acme}/blob/HEAD/app/page.tsx)`);
+    const wp: Waypoint = {
+      id: 'w1',
+      label: 'A',
+      type: 'Code Component',
+      filePath: 'app/page.tsx',
+      position: { x: 0, y: 0 },
+    };
+    expect(generateFullMapMarkdown([wp], { repoUrl: acme })).toContain(
+      `[\`app/page.tsx\`](${acme}/blob/HEAD/app/page.tsx)`
+    );
     expect(generateFullMapMarkdown([wp])).toContain('`app/page.tsx`');
     expect(generateFullMapMarkdown([wp])).not.toContain('github.com');
   });
@@ -637,7 +673,10 @@ test.describe('GitHub repo links', () => {
 
     await page.reload();
     await page.getByText(label).click();
-    await expect(page.getByRole('link', { name: 'View on GitHub' })).toHaveAttribute('href', `${acme}/blob/HEAD/app/page.tsx`);
+    await expect(page.getByRole('link', { name: 'View on GitHub' })).toHaveAttribute(
+      'href',
+      `${acme}/blob/HEAD/app/page.tsx`
+    );
 
     // Removing the personal setting falls back to the site's (none in tests).
     await page.getByRole('button', { name: 'change repo' }).click();
@@ -673,7 +712,10 @@ test.describe('full links as file paths', () => {
 
   test('a waypoint linked to another repo or a doc needs no setup', async ({ page }) => {
     await page.goto('/');
-    for (const [label, link] of [[labels[0], notes], [labels[1], doc]]) {
+    for (const [label, link] of [
+      [labels[0], notes],
+      [labels[1], doc],
+    ]) {
       await page.getByTestId('canvas-add-waypoint').click();
       const form = page.locator('.fixed.inset-0.z-50');
       await form.getByPlaceholder('Short descriptive title').fill(label);
@@ -693,7 +735,7 @@ test.describe('full links as file paths', () => {
 });
 
 test.describe('download backup', () => {
-  test('downloads this site\'s map as restorable JSON', async ({ page }) => {
+  test("downloads this site's map as restorable JSON", async ({ page }) => {
     await page.goto('/');
     const [download] = await Promise.all([
       page.waitForEvent('download'),
@@ -826,14 +868,20 @@ test.describe('nightly demo reset', () => {
     const demo = 'Cognitive Tours (demo)';
     expect(resetPlan({})).toEqual({ skip: 'RESET_NIGHTLY_FROM is not set' });
     expect(resetPlan({ RESET_NIGHTLY_FROM: 'demo-canonical' })).toHaveProperty('skip');
-    expect(resetPlan({ RESET_NIGHTLY_FROM: 'demo-canonical', NEXT_PUBLIC_PROJECT_NAME: 'Acme' })).toHaveProperty('skip');
-    expect(resetPlan({ RESET_NIGHTLY_FROM: 'demo-canonical', NEXT_PUBLIC_PROJECT_NAME: 'Demolition crew' })).toHaveProperty('skip');
+    expect(resetPlan({ RESET_NIGHTLY_FROM: 'demo-canonical', NEXT_PUBLIC_PROJECT_NAME: 'Acme' })).toHaveProperty(
+      'skip'
+    );
+    expect(
+      resetPlan({ RESET_NIGHTLY_FROM: 'demo-canonical', NEXT_PUBLIC_PROJECT_NAME: 'Demolition crew' })
+    ).toHaveProperty('skip');
     expect(resetPlan({ RESET_NIGHTLY_FROM: 'backups/x.json', NEXT_PUBLIC_PROJECT_NAME: demo })).toHaveProperty('skip');
 
     const canonical = resetPlan({ RESET_NIGHTLY_FROM: 'demo-canonical', NEXT_PUBLIC_PROJECT_NAME: demo });
     expect(canonical).toMatchObject({ source: 'demo-canonical' });
     expect('data' in canonical && canonical.data.waypoints.length).toBeGreaterThan(0);
-    expect(resetPlan({ RESET_NIGHTLY_FROM: 'demo-flask', NEXT_PUBLIC_PROJECT_NAME: 'Flask (demo)' })).toMatchObject({ source: 'demo-flask' });
+    expect(resetPlan({ RESET_NIGHTLY_FROM: 'demo-flask', NEXT_PUBLIC_PROJECT_NAME: 'Flask (demo)' })).toMatchObject({
+      source: 'demo-flask',
+    });
     const empty = resetPlan({ RESET_NIGHTLY_FROM: 'empty', NEXT_PUBLIC_PROJECT_NAME: 'Demo 3' });
     expect('data' in empty && empty.data).toEqual({ waypoints: [], edges: [], tours: [] });
   });
@@ -872,7 +920,7 @@ test.describe('edit passcode', () => {
     expect(refused?.status).toBe(401);
     expect(await refused?.json()).toEqual({ error: 'This map needs a passcode to edit' });
     const allowed = requireEditPasscode(
-      new Request('http://x/api/waypoints', { method: 'POST', headers: { [EDIT_PASSCODE_HEADER]: 'owl-river' } }),
+      new Request('http://x/api/waypoints', { method: 'POST', headers: { [EDIT_PASSCODE_HEADER]: 'owl-river' } })
     );
     expect(allowed).toBeNull();
   });
@@ -894,9 +942,7 @@ test.describe('Start here tour setting', () => {
 test.describe('empty map points to /first-tours', () => {
   test('shows the card with this site in the command, and copies it', async ({ page, context, baseURL }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await page.route('**/api/data', route =>
-      route.fulfill({ json: { waypoints: [], edges: [], tours: [] } }),
-    );
+    await page.route('**/api/data', route => route.fulfill({ json: { waypoints: [], edges: [], tours: [] } }));
     await page.goto('/');
     const card = page.getByRole('region', { name: "Don't start from a blank page" });
     await expect(card).toBeVisible();
@@ -907,10 +953,12 @@ test.describe('empty map points to /first-tours', () => {
     await expect(card.getByTestId('first-tours-command')).toHaveText(`/cognitive-tours:first-tours site ${origin}`);
     await card.getByRole('button', { name: 'Copy command' }).click();
     await expect(card.getByRole('button', { name: 'Copied' })).toBeVisible();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(`/cognitive-tours:first-tours site ${origin}`);
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+      `/cognitive-tours:first-tours site ${origin}`
+    );
     await expect(card.getByRole('link', { name: 'Cognitive Tours plugin' })).toHaveAttribute(
       'href',
-      /github\.com\/margaretstorey\/cognitive-tours#skills-for-claude-code$/,
+      /github\.com\/margaretstorey\/cognitive-tours#skills-for-claude-code$/
     );
   });
 
@@ -924,7 +972,11 @@ test.describe('empty map points to /first-tours', () => {
 test.describe('Claude Code skills panel', () => {
   const SKILLS = ['first-tours', 'suggest-waypoint', 'suggest-tour', 'audit-waypoints', 'audit-tours'];
 
-  test('lists every skill with this site filled in, copies a command, and closes on Escape', async ({ page, context, baseURL }) => {
+  test('lists every skill with this site filled in, copies a command, and closes on Escape', async ({
+    page,
+    context,
+    baseURL,
+  }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await page.goto('/');
     await page.getByRole('button', { name: 'Claude Code skills' }).click();
@@ -932,7 +984,7 @@ test.describe('Claude Code skills panel', () => {
     await expect(dialog).toBeVisible();
 
     await expect(dialog.getByTestId('install-command')).toHaveText(
-      'claude plugin install cognitive-tours --marketplace margaretstorey/cognitive-tours',
+      'claude plugin install cognitive-tours --marketplace margaretstorey/cognitive-tours'
     );
     const origin = new URL(baseURL!).origin;
     for (const skill of SKILLS) {
@@ -956,7 +1008,7 @@ test.describe('Claude Code skills panel', () => {
     await row.getByRole('button', { name: 'Copy' }).click();
     await expect(row.getByRole('button', { name: 'Copied' })).toBeVisible();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-      `/cognitive-tours:suggest-waypoint site ${origin}`,
+      `/cognitive-tours:suggest-waypoint site ${origin}`
     );
 
     await page.keyboard.press('Escape');
@@ -965,10 +1017,10 @@ test.describe('Claude Code skills panel', () => {
 
   test('a site that knows its repo offers a clone-and-start command', () => {
     expect(startInRepoCommand('https://github.com/margaretstorey/cognitive-tours')).toBe(
-      'git clone https://github.com/margaretstorey/cognitive-tours && cd cognitive-tours && claude',
+      'git clone https://github.com/margaretstorey/cognitive-tours && cd cognitive-tours && claude'
     );
     expect(startInRepoCommand('https://github.com/acme-startup/acme/')).toBe(
-      'git clone https://github.com/acme-startup/acme/ && cd acme && claude',
+      'git clone https://github.com/acme-startup/acme/ && cd acme && claude'
     );
     expect(startInRepoCommand(null)).toBeNull();
   });
@@ -992,14 +1044,28 @@ test.describe('zooming out on a large map', () => {
     made.length = 0;
   });
 
-  test('the fit view control shows waypoints 6,000 units apart (below React Flow\'s default 0.5 zoom)', async ({ page, request }) => {
+  test("the fit view control shows waypoints 6,000 units apart (below React Flow's default 0.5 zoom)", async ({
+    page,
+    request,
+  }) => {
     const rand = () => Math.random().toString(36).slice(2, 8);
     const labels = [`Zoom Far West ${rand()}`, `Zoom Far East ${rand()}`];
-    const spots = [{ x: -3000, y: -2000 }, { x: 3000, y: 2000 }];
+    const spots = [
+      { x: -3000, y: -2000 },
+      { x: 3000, y: 2000 },
+    ];
     for (let i = 0; i < 2; i++) {
       const id = `w-${Date.now()}-${rand()}`;
       const res = await request.post('/api/waypoints', {
-        data: { id, label: labels[i], type: 'Feature', description: 'Far away.', notes: null, filePath: null, position: spots[i] },
+        data: {
+          id,
+          label: labels[i],
+          type: 'Feature',
+          description: 'Far away.',
+          notes: null,
+          filePath: null,
+          position: spots[i],
+        },
       });
       expect(res.ok()).toBeTruthy();
       made.push(id);
@@ -1012,10 +1078,21 @@ test.describe('zooming out on a large map', () => {
     const pane = (await page.locator('.react-flow__pane').boundingBox())!;
     for (const label of labels) {
       const node = page.locator('.react-flow__node', { hasText: label });
-      await expect.poll(async () => {
-        const b = await node.boundingBox();
-        return !!b && b.x >= pane.x && b.y >= pane.y && b.x + b.width <= pane.x + pane.width && b.y + b.height <= pane.y + pane.height;
-      }, { timeout: 5000 }).toBe(true);
+      await expect
+        .poll(
+          async () => {
+            const b = await node.boundingBox();
+            return (
+              !!b &&
+              b.x >= pane.x &&
+              b.y >= pane.y &&
+              b.x + b.width <= pane.x + pane.width &&
+              b.y + b.height <= pane.y + pane.height
+            );
+          },
+          { timeout: 5000 }
+        )
+        .toBe(true);
     }
   });
 });

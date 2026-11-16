@@ -45,7 +45,15 @@ test.describe('undo deletes', () => {
     for (const [i, label] of labels.entries()) {
       const id = `w-${Date.now()}-${rand()}`;
       const res = await request.post('/api/waypoints', {
-        data: { id, label, type: 'Feature', description: `About ${label}.`, notes: 'Some notes.', filePath: null, position: { x, y: y + i * 250 } },
+        data: {
+          id,
+          label,
+          type: 'Feature',
+          description: `About ${label}.`,
+          notes: 'Some notes.',
+          filePath: null,
+          position: { x, y: y + i * 250 },
+        },
       });
       expect(res.ok()).toBeTruthy();
       made.waypoints.push(id);
@@ -61,9 +69,16 @@ test.describe('undo deletes', () => {
     return id;
   }
 
-  test('Undo in the toast puts back a waypoint, its link and its tour stop with its narrative', async ({ page, request }) => {
+  test('Undo in the toast puts back a waypoint, its link and its tour stop with its narrative', async ({
+    page,
+    request,
+  }) => {
     const label = `Undo Me ${rand()}`;
-    const [before, deleted, after] = await addWaypoints(request, [`Undo Before ${rand()}`, label, `Undo After ${rand()}`]);
+    const [before, deleted, after] = await addWaypoints(request, [
+      `Undo Before ${rand()}`,
+      label,
+      `Undo After ${rand()}`,
+    ]);
     const edgeLabel = `undo link ${rand()}`;
     const edgeId = await addEdge(request, deleted, after, edgeLabel);
     const tourId = `t-${Date.now()}-${rand()}`;
@@ -72,9 +87,13 @@ test.describe('undo deletes', () => {
       { waypointId: deleted, narrative: 'The narrative that must come back.' },
       { waypointId: after, narrative: 'The end.' },
     ];
-    expect((await request.post('/api/tours', {
-      data: { id: tourId, name: `Undo Tour ${rand()}`, description: '', stops },
-    })).ok()).toBeTruthy();
+    expect(
+      (
+        await request.post('/api/tours', {
+          data: { id: tourId, name: `Undo Tour ${rand()}`, description: '', stops },
+        })
+      ).ok()
+    ).toBeTruthy();
     made.tours.push(tourId);
 
     await page.goto('/');
@@ -89,16 +108,21 @@ test.describe('undo deletes', () => {
     await toast.getByRole('button', { name: 'Undo' }).click();
     await expect(toast).toHaveCount(0);
 
-    await expect.poll(async () => {
-      const data = await getData(request);
-      const tour = data.tours.find(t => t.id === tourId);
-      return (
-        data.waypoints.some(w => w.id === deleted) &&
-        data.edges.some(e => e.id === edgeId && e.label === edgeLabel) &&
-        tour?.stops.map(s => s.waypointId).join(',') === stops.map(s => s.waypointId).join(',') &&
-        tour?.stops[1].narrative === 'The narrative that must come back.'
-      );
-    }, { timeout: 10000 }).toBe(true);
+    await expect
+      .poll(
+        async () => {
+          const data = await getData(request);
+          const tour = data.tours.find(t => t.id === tourId);
+          return (
+            data.waypoints.some(w => w.id === deleted) &&
+            data.edges.some(e => e.id === edgeId && e.label === edgeLabel) &&
+            tour?.stops.map(s => s.waypointId).join(',') === stops.map(s => s.waypointId).join(',') &&
+            tour?.stops[1].narrative === 'The narrative that must come back.'
+          );
+        },
+        { timeout: 10000 }
+      )
+      .toBe(true);
 
     await page.reload();
     const node = page.locator('.react-flow__node', { hasText: label });
@@ -125,7 +149,9 @@ test.describe('undo deletes', () => {
 
     await page.keyboard.press('ControlOrMeta+z');
     await expect(edge).toHaveCount(1);
-    await expect.poll(async () => (await getData(request)).edges.some(e => e.id === edgeId && e.label === edgeLabel)).toBe(true);
+    await expect
+      .poll(async () => (await getData(request)).edges.some(e => e.id === edgeId && e.label === edgeLabel))
+      .toBe(true);
 
     await page.reload();
     await expect(page.getByTestId(`rf__edge-${edgeId}`)).toHaveCount(1);

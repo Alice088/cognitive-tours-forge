@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { TestType, PlaywrightTestArgs, PlaywrightTestOptions, PlaywrightWorkerArgs, PlaywrightWorkerOptions } from '@playwright/test';
+import type {
+  TestType,
+  PlaywrightTestArgs,
+  PlaywrightTestOptions,
+  PlaywrightWorkerArgs,
+  PlaywrightWorkerOptions,
+} from '@playwright/test';
 
 type Pos = { x: number; y: number };
 
@@ -19,7 +25,7 @@ export const POSITIONS_FILE = join(tmpdir(), 'cognitive-tours-test-positions.jso
  * always leaves them right. Waypoints tests make themselves are left alone.
  */
 export function keepPositions(
-  test: TestType<PlaywrightTestArgs & PlaywrightTestOptions, PlaywrightWorkerArgs & PlaywrightWorkerOptions>,
+  test: TestType<PlaywrightTestArgs & PlaywrightTestOptions, PlaywrightWorkerArgs & PlaywrightWorkerOptions>
 ) {
   test.afterEach(async ({ page, request }) => {
     // Closing the page drops any position save still waiting (they're debounced).

@@ -31,7 +31,11 @@ const noSubscribe = () => () => {};
 
 // This site's address; '' during server rendering.
 export function useSiteOrigin(): string {
-  return useSyncExternalStore(noSubscribe, () => window.location.origin, () => '');
+  return useSyncExternalStore(
+    noSubscribe,
+    () => window.location.origin,
+    () => ''
+  );
 }
 
 // A command in a code box, with a Copy button that says "Copied" for 2s.
@@ -52,14 +56,17 @@ export function CopyCommand({
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       },
-      () => {},
+      () => {}
     );
   };
 
   return (
     <div className="flex items-start gap-2">
       {/* Wraps instead of truncating, so the whole command (site address included) can be read before copying. */}
-      <code data-testid={testId} className="min-w-0 flex-1 whitespace-normal break-all rounded bg-gray-100 px-2 py-1 text-xs">
+      <code
+        data-testid={testId}
+        className="min-w-0 flex-1 whitespace-normal break-all rounded bg-gray-100 px-2 py-1 text-xs"
+      >
         {command}
       </code>
       <button
@@ -74,7 +81,10 @@ export function CopyCommand({
 
 const SKILLS: { name: string; when: string }[] = [
   { name: 'first-tours', when: 'A repo you don’t know yet: drafts a starting map, for you to check and rewrite.' },
-  { name: 'suggest-waypoint', when: 'After a work session: finds what’s worth recording and, after you OK it, adds it to the map for you to describe.' },
+  {
+    name: 'suggest-waypoint',
+    when: 'After a work session: finds what’s worth recording and, after you OK it, adds it to the map for you to describe.',
+  },
   { name: 'suggest-tour', when: 'Fits new waypoints into tours after you OK it; you write each stop’s narrative.' },
   { name: 'audit-waypoints', when: 'Checks waypoints against the code they link to.' },
   { name: 'audit-tours', when: 'Finds recent changes no waypoint or tour covers, and stale narratives.' },
@@ -116,7 +126,7 @@ export function ClaudeCodeSkillsButton({ mapIsEmpty }: { mapIsEmpty: boolean }) 
             aria-modal="true"
             aria-labelledby="claude-code-skills-title"
             className="bg-white rounded-xl shadow-xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-2 shrink-0">
               <h2 id="claude-code-skills-title" className="text-base font-semibold text-gray-900">
@@ -132,15 +142,32 @@ export function ClaudeCodeSkillsButton({ mapIsEmpty }: { mapIsEmpty: boolean }) 
             </div>
             <div className="flex flex-col gap-4 px-6 pb-6 overflow-y-auto text-sm text-gray-700">
               <p data-testid="skills-intro">
-                Five skills for <a className="underline" href="https://claude.com/claude-code" target="_blank" rel="noopener noreferrer">Claude Code</a>,
-                run in a copy of the repo this map describes. The suggest skills add the waypoints, links
-                and tour stops you approve; you write the descriptions and narratives. The audit skills only
-                read and report. first-tours drafts a whole starting map, marked as drafted.
+                Five skills for{' '}
+                <a
+                  className="underline"
+                  href="https://claude.com/claude-code"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Claude Code
+                </a>
+                , run in a copy of the repo this map describes. The suggest skills add the waypoints, links and tour
+                stops you approve; you write the descriptions and narratives. The audit skills only read and report.
+                first-tours drafts a whole starting map, marked as drafted.
               </p>
 
               <section aria-label="Install">
                 <h3 className="font-semibold text-gray-900">
-                  1. You need <a className="underline" href="https://claude.com/claude-code" target="_blank" rel="noopener noreferrer">Claude Code</a>, and the plugin, installed once in your terminal
+                  1. You need{' '}
+                  <a
+                    className="underline"
+                    href="https://claude.com/claude-code"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Claude Code
+                  </a>
+                  , and the plugin, installed once in your terminal
                 </h3>
                 <div className="mt-1.5">
                   <CopyCommand command={INSTALL_TERMINAL} testId="install-command" />
@@ -148,19 +175,29 @@ export function ClaudeCodeSkillsButton({ mapIsEmpty }: { mapIsEmpty: boolean }) 
                 <p className="mt-1 text-xs text-gray-500">
                   Or inside Claude Code: <code>{INSTALL_IN_CLAUDE}</code>. Already installed? Update it:{' '}
                   <code data-testid="update-command">{UPDATE_TERMINAL}</code>.{' '}
-                  <a className="underline hover:text-gray-700" href={PLUGIN_INSTALL_URL} target="_blank" rel="noopener noreferrer">
+                  <a
+                    className="underline hover:text-gray-700"
+                    href={PLUGIN_INSTALL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     More
                   </a>
                 </p>
               </section>
 
               <section aria-label="Start Claude Code">
-                <h3 className="font-semibold text-gray-900">2. Open the repo this map describes, and start Claude Code there</h3>
+                <h3 className="font-semibold text-gray-900">
+                  2. Open the repo this map describes, and start Claude Code there
+                </h3>
                 {startInRepoCommand(SITE_REPO_URL) ? (
                   <>
                     <p className="mt-1">
-                      This map describes <a className="underline" href={SITE_REPO_URL!} target="_blank" rel="noopener noreferrer">{SITE_REPO_URL!.replace(/^https?:\/\//, '')}</a>.
-                      If you don’t have a copy yet:
+                      This map describes{' '}
+                      <a className="underline" href={SITE_REPO_URL!} target="_blank" rel="noopener noreferrer">
+                        {SITE_REPO_URL!.replace(/^https?:\/\//, '')}
+                      </a>
+                      . If you don’t have a copy yet:
                     </p>
                     <div className="mt-1.5">
                       <CopyCommand command={startInRepoCommand(SITE_REPO_URL)!} testId="start-command" />
@@ -168,8 +205,8 @@ export function ClaudeCodeSkillsButton({ mapIsEmpty }: { mapIsEmpty: boolean }) 
                   </>
                 ) : (
                   <p className="mt-1" data-testid="start-steps">
-                    In a terminal, go to your copy of the repo this map describes (<code>cd</code> into its
-                    folder), then type <code>claude</code>.
+                    In a terminal, go to your copy of the repo this map describes (<code>cd</code> into its folder),
+                    then type <code>claude</code>.
                   </p>
                 )}
                 {SITE_NOTICE?.toLowerCase().includes('reset') && (
@@ -182,13 +219,13 @@ export function ClaudeCodeSkillsButton({ mapIsEmpty }: { mapIsEmpty: boolean }) 
               <section aria-label="Skills">
                 <h3 className="font-semibold text-gray-900">3. Then paste a command, with this map’s address</h3>
                 <p className="mt-1" data-testid="first-time-note">
-                  The first time, copy a full command below: it tells the skill which map is yours, and the
-                  skill offers to remember it. After that, just type <code>/cognitive-tours:</code> and the
-                  skill’s name. Or just ask Claude Code in your own words, e.g. “make a starting map of
-                  this repo” or “help me record what I just did”.
+                  The first time, copy a full command below: it tells the skill which map is yours, and the skill offers
+                  to remember it. After that, just type <code>/cognitive-tours:</code> and the skill’s name. Or just ask
+                  Claude Code in your own words, e.g. “make a starting map of this repo” or “help me record what I just
+                  did”.
                 </p>
                 <ul className="mt-1.5 flex flex-col gap-3">
-                  {SKILLS.map((s) => (
+                  {SKILLS.map(s => (
                     <li key={s.name} data-testid={`skill-${s.name}`}>
                       <p>
                         <span className="font-medium text-gray-900">{s.name}</span>: {s.when}
@@ -203,7 +240,6 @@ export function ClaudeCodeSkillsButton({ mapIsEmpty }: { mapIsEmpty: boolean }) 
                   ))}
                 </ul>
               </section>
-
             </div>
           </div>
         </div>

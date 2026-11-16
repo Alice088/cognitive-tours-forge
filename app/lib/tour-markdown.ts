@@ -54,7 +54,11 @@ export function tourByline(tour: Tour): string {
   return parts.join(' · ');
 }
 
-export function generateTourMarkdown(tour: Tour, waypoints: Waypoint[], { projectName, repoUrl }: ExportContext = {}): string {
+export function generateTourMarkdown(
+  tour: Tour,
+  waypoints: Waypoint[],
+  { projectName, repoUrl }: ExportContext = {}
+): string {
   const waypointMap = new Map(waypoints.map(w => [w.id, w]));
   const lines: string[] = [];
 
@@ -109,9 +113,7 @@ export function generateFullMapMarkdown(waypoints: Waypoint[], { projectName, re
   lines.push('');
 
   WAYPOINT_TYPES.forEach(type => {
-    const group = waypoints
-      .filter(w => w.type === type)
-      .sort((a, b) => a.label.localeCompare(b.label));
+    const group = waypoints.filter(w => w.type === type).sort((a, b) => a.label.localeCompare(b.label));
     if (group.length === 0) return;
 
     lines.push(`## ${type} Waypoints`);

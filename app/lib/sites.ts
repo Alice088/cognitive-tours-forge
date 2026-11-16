@@ -22,7 +22,10 @@ export function getSites(): (string | null)[] {
   // No fallback: a missing setting should fail loudly rather than quietly
   // back up fewer sites than there are.
   if (!raw) throw new Error('SITE_NAMES is not set; add the comma-separated site names to .env');
-  const names = raw.split(',').map(s => s.trim()).filter(Boolean);
+  const names = raw
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
   const bad = names.filter(n => !SITE_NAME.test(n));
   if (bad.length > 0) throw new Error(`SITE_NAMES has invalid names: ${bad.join(', ')}`);
   return [null, ...new Set(names)];

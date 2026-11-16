@@ -4,10 +4,7 @@ import { Prisma } from '@/app/generated/prisma/client';
 import { toWaypoint } from '@/app/lib/db-mappers';
 import type { Waypoint } from '@/app/lib/types';
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const denied = requireEditPasscode(request);
   if (denied) return denied;
   const { id } = await params;
@@ -33,10 +30,7 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const denied = requireEditPasscode(request);
   if (denied) return denied;
   const { id } = await params;

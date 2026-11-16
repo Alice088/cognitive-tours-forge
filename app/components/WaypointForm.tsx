@@ -35,7 +35,13 @@ export default function WaypointForm({ mode, initialValues, onSave, onCancel, on
 
   const handleSave = () => {
     if (!canSave) return;
-    onSave({ label: label.trim(), type: type as WaypointType, description: description.trim() || undefined, notes: notes.trim() || undefined, filePath: filePath.trim() || undefined });
+    onSave({
+      label: label.trim(),
+      type: type as WaypointType,
+      description: description.trim() || undefined,
+      notes: notes.trim() || undefined,
+      filePath: filePath.trim() || undefined,
+    });
   };
 
   return (
@@ -46,63 +52,71 @@ export default function WaypointForm({ mode, initialValues, onSave, onCancel, on
         </h2>
 
         <div className="flex flex-col gap-4 px-6 pb-4 overflow-y-auto">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium">Title *</label>
-          <input
-            autoFocus
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm"
-            value={label}
-            onChange={e => setLabel(e.target.value)}
-            placeholder="Short descriptive title"
-          />
-        </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">Title *</label>
+            <input
+              autoFocus
+              className="border border-gray-300 rounded px-3 py-1.5 text-sm"
+              value={label}
+              onChange={e => setLabel(e.target.value)}
+              placeholder="Short descriptive title"
+            />
+          </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium">Type *</label>
-          <select
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm bg-white"
-            value={type}
-            onChange={e => setType(e.target.value as WaypointType)}
-          >
-            <option value="">Select a type…</option>
-            {WAYPOINT_TYPES.map(t => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">Type *</label>
+            <select
+              className="border border-gray-300 rounded px-3 py-1.5 text-sm bg-white"
+              value={type}
+              onChange={e => setType(e.target.value as WaypointType)}
+            >
+              <option value="">Select a type…</option>
+              {WAYPOINT_TYPES.map(t => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium">Description <span className="text-gray-400 font-normal">(optional)</span></label>
-          <textarea
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm resize-none"
-            rows={3}
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            onFocus={onDescriptionFocus}
-            placeholder="What is this waypoint about?"
-          />
-        </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">
+              Description <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <textarea
+              className="border border-gray-300 rounded px-3 py-1.5 text-sm resize-none"
+              rows={3}
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              onFocus={onDescriptionFocus}
+              placeholder="What is this waypoint about?"
+            />
+          </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium">Notes <span className="text-gray-400 font-normal">(optional)</span></label>
-          <textarea
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm resize-none"
-            rows={2}
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder="Supplementary notes"
-          />
-        </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">
+              Notes <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <textarea
+              className="border border-gray-300 rounded px-3 py-1.5 text-sm resize-none"
+              rows={2}
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Supplementary notes"
+            />
+          </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium">Linked artifact <span className="text-gray-400 font-normal">(optional)</span></label>
-          <input
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm font-mono"
-            value={filePath}
-            onChange={e => setFilePath(e.target.value)}
-            placeholder="e.g. src/components/MyComponent.tsx, or a full https:// link"
-          />
-        </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">
+              Linked artifact <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <input
+              className="border border-gray-300 rounded px-3 py-1.5 text-sm font-mono"
+              value={filePath}
+              onChange={e => setFilePath(e.target.value)}
+              placeholder="e.g. src/components/MyComponent.tsx, or a full https:// link"
+            />
+          </div>
         </div>
 
         <div className="flex gap-2 justify-end border-t px-6 py-4 shrink-0">

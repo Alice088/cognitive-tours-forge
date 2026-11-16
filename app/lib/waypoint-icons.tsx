@@ -6,16 +6,16 @@ import type { WaypointType } from './types';
 // apart without colour (colour-blind readers, black-and-white printouts).
 // Chosen with the user on Nov 5 from a mockup of three placements.
 export const WAYPOINT_ICONS: Record<WaypointType, LucideIcon> = {
-  'Goal':           Flag,
-  'User Need':      User,
-  'Feature':        Puzzle,
-  'ADR':            Scale,
+  Goal: Flag,
+  'User Need': User,
+  Feature: Puzzle,
+  ADR: Scale,
   'Code Component': Code,
-  'Test':           FlaskConical,
-  'Risk':           TriangleAlert,
+  Test: FlaskConical,
+  Risk: TriangleAlert,
   'AI Instruction': Bot,
-  'Open Question':  CircleHelp,
-  'Deprecated':     Archive,
+  'Open Question': CircleHelp,
+  Deprecated: Archive,
 };
 
 // The icon is decoration: the type's name is always shown beside it as

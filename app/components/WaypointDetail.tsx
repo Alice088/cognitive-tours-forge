@@ -127,15 +127,13 @@ export default function WaypointDetail({
         {resumeTourBanner}
         <div className="flex gap-2 p-4 border-b border-gray-200 shrink-0">{addWaypointButton}</div>
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-3 text-xs text-gray-600">
-          <p className="text-base text-red-700 font-bold">
-            Select a tour to begin understanding, or create a new one
-          </p>
+          <p className="text-base text-red-700 font-bold">Select a tour to begin understanding, or create a new one</p>
           <h2 className="text-sm font-semibold text-gray-800">Getting oriented</h2>
           <p>
-            A <span className="font-medium text-gray-700">waypoint</span> is a single point of
-            understanding — a goal, feature, decision, or piece of code worth remembering. A{' '}
-            <span className="font-medium text-gray-700">tour</span> strings waypoints together into
-            a guided path through intent and implementation.
+            A <span className="font-medium text-gray-700">waypoint</span> is a single point of understanding — a goal,
+            feature, decision, or piece of code worth remembering. A{' '}
+            <span className="font-medium text-gray-700">tour</span> strings waypoints together into a guided path
+            through intent and implementation.
           </p>
           <p>Select a waypoint to see its details or create a new waypoint.</p>
         </div>
@@ -168,14 +166,14 @@ export default function WaypointDetail({
         {addWaypointButton}
       </div>
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-        <span className={`inline-flex items-center gap-1 self-start px-2 py-0.5 rounded text-xs font-medium border ${colorClass}`}>
+        <span
+          className={`inline-flex items-center gap-1 self-start px-2 py-0.5 rounded text-xs font-medium border ${colorClass}`}
+        >
           <WaypointTypeIcon type={waypoint.type} size={12} />
           {waypoint.type}
         </span>
         <h2 className="text-sm font-semibold text-gray-900 leading-snug">{waypoint.label}</h2>
-        {waypoint.description && (
-          <p className="text-xs text-gray-700 leading-relaxed">{waypoint.description}</p>
-        )}
+        {waypoint.description && <p className="text-xs text-gray-700 leading-relaxed">{waypoint.description}</p>}
         {waypoint.notes && (
           <div className="text-xs text-gray-500 border-t pt-3">
             <div className="font-medium text-gray-600 mb-1">Notes</div>
@@ -252,7 +250,10 @@ export default function WaypointDetail({
                   value={folderDraft}
                   onChange={e => setFolderDraft(e.target.value)}
                   onKeyDown={e => {
-                    if (e.key === 'Enter') { setCodeFolder(folderDraft); setEditingFolder(false); }
+                    if (e.key === 'Enter') {
+                      setCodeFolder(folderDraft);
+                      setEditingFolder(false);
+                    }
                     if (e.key === 'Escape') setEditingFolder(false);
                   }}
                   placeholder="e.g. /Users/you/code/your-repo"
@@ -262,7 +263,10 @@ export default function WaypointDetail({
                 <p className="text-gray-400">Where your copy of the repo lives. Saved in this browser only.</p>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => { setCodeFolder(folderDraft); setEditingFolder(false); }}
+                    onClick={() => {
+                      setCodeFolder(folderDraft);
+                      setEditingFolder(false);
+                    }}
                     className="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50 font-medium"
                   >
                     Save
@@ -290,7 +294,10 @@ export default function WaypointDetail({
                   type="text"
                   aria-label="Your team's GitHub repo"
                   value={repoDraft}
-                  onChange={e => { setRepoDraft(e.target.value); setRepoError(false); }}
+                  onChange={e => {
+                    setRepoDraft(e.target.value);
+                    setRepoError(false);
+                  }}
                   onKeyDown={e => {
                     if (e.key === 'Enter') saveRepo();
                     if (e.key === 'Escape') setEditingRepo(false);

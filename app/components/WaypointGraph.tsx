@@ -41,9 +41,11 @@ function WaypointNode({ data, selected }: NodeProps & { data: WaypointNodeData }
         data.isActiveTourStep || data.isCurrentMatch
           ? 'scale-[1.2] ring-[6px] ring-offset-2 ring-blue-500 shadow-xl shadow-blue-500/60'
           : data.isNew
-            // Red "new" halo: added since this browser last looked (app/lib/seen.ts).
-            ? 'ring-4 ring-offset-2 ring-red-500 shadow-lg shadow-red-500/60'
-            : selected ? 'ring-2 ring-offset-1 ring-blue-500' : ''
+            ? // Red "new" halo: added since this browser last looked (app/lib/seen.ts).
+              'ring-4 ring-offset-2 ring-red-500 shadow-lg shadow-red-500/60'
+            : selected
+              ? 'ring-2 ring-offset-1 ring-blue-500'
+              : ''
       }`}
     >
       <Handle type="target" position={Position.Left} className="!bg-gray-400" />
@@ -128,7 +130,8 @@ function Graph({
   focusRequest,
 }: WaypointGraphProps) {
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
-  const { getNodesBounds, setViewport, setCenter, getInternalNode, getViewport, screenToFlowPosition, getNodes } = useReactFlow();
+  const { getNodesBounds, setViewport, setCenter, getInternalNode, getViewport, screenToFlowPosition, getNodes } =
+    useReactFlow();
   const paneRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<HTMLDivElement>(null);
   // Last cursor position over the map, in window coordinates, and whether it
@@ -186,7 +189,7 @@ function Graph({
       // a column rather than exactly on top of each other.
       const taken = (p: { x: number; y: number }) =>
         getNodes().some(
-          n => Math.abs(n.position.x - p.x) < NEW_NODE_WIDTH / 2 && Math.abs(n.position.y - p.y) < NEW_NODE_HEIGHT,
+          n => Math.abs(n.position.x - p.x) < NEW_NODE_WIDTH / 2 && Math.abs(n.position.y - p.y) < NEW_NODE_HEIGHT
         );
       for (let i = 0; i < 20 && taken(position); i++) position.y += NEW_NODE_HEIGHT + NEW_NODE_MARGIN;
       return position;
@@ -201,9 +204,7 @@ function Graph({
   const hiddenNodeIds = useMemo(
     () =>
       new Set(
-        waypoints
-          .filter(w => !filterState[w.type] || (newOnlyIds != null && !newOnlyIds.has(w.id)))
-          .map(w => w.id)
+        waypoints.filter(w => !filterState[w.type] || (newOnlyIds != null && !newOnlyIds.has(w.id))).map(w => w.id)
       ),
     [waypoints, filterState, newOnlyIds]
   );
@@ -224,8 +225,7 @@ function Graph({
   const matchIds = useMemo(() => matchesFor(searchQuery), [matchesFor, searchQuery]);
   // Which match is current; a new query starts again at the first.
   const [matchCursor, setMatchCursor] = useState({ query: '', index: 0 });
-  const matchIndex =
-    matchCursor.query === searchQuery && matchCursor.index < matchIds.length ? matchCursor.index : 0;
+  const matchIndex = matchCursor.query === searchQuery && matchCursor.index < matchIds.length ? matchCursor.index : 0;
   const currentMatchId = matchIds[matchIndex] ?? null;
   const searching = matchIds.length > 0;
 
@@ -260,10 +260,16 @@ function Graph({
           // Spotlight: the current stop (or match) leads, other stops (or
           // matches) recede, and everything else fades furthest.
           const opacity = searching
-            ? isCurrentMatch ? undefined : matchIds.includes(w.id) ? 0.85 : 0.2
+            ? isCurrentMatch
+              ? undefined
+              : matchIds.includes(w.id)
+                ? 0.85
+                : 0.2
             : !inTour || isCurrentStop
               ? undefined
-              : activeTourWaypointIds.includes(w.id) ? 0.85 : 0.2;
+              : activeTourWaypointIds.includes(w.id)
+                ? 0.85
+                : 0.2;
           return {
             id: w.id,
             type: 'waypointNode',
@@ -280,7 +286,17 @@ function Graph({
             style: opacity !== undefined ? { opacity } : undefined,
           };
         }),
-    [waypoints, selectedWaypointId, activeTourWaypointIds, hiddenNodeIds, searching, currentMatchId, matchIds, isNewWaypoint, justCreatedIds]
+    [
+      waypoints,
+      selectedWaypointId,
+      activeTourWaypointIds,
+      hiddenNodeIds,
+      searching,
+      currentMatchId,
+      matchIds,
+      isNewWaypoint,
+      justCreatedIds,
+    ]
   );
 
   const nodesRef = useRef(nodes);
@@ -354,7 +370,18 @@ function Graph({
       cancelAnimationFrame(raf1);
       cancelAnimationFrame(raf2);
     };
-  }, [tourKey, followStopId, currentMatchId, filterState, panelCollapsed, getNodesBounds, setViewport, setCenter, getInternalNode, getViewport]);
+  }, [
+    tourKey,
+    followStopId,
+    currentMatchId,
+    filterState,
+    panelCollapsed,
+    getNodesBounds,
+    setViewport,
+    setCenter,
+    getInternalNode,
+    getViewport,
+  ]);
 
   const rfEdges: Edge[] = useMemo(
     () =>
@@ -443,7 +470,9 @@ function Graph({
       } else {
         const bounds = getNodesBounds(measured);
         const pad = { top: '15%', bottom: '15%', left: '10%', right: '10%' } as const;
-        setViewport(getViewportForBounds(bounds, container.clientWidth, container.clientHeight, 0.05, 1.5, pad), { duration: 400 });
+        setViewport(getViewportForBounds(bounds, container.clientWidth, container.clientHeight, 0.05, 1.5, pad), {
+          duration: 400,
+        });
       }
     };
     frame = requestAnimationFrame(attempt);
@@ -476,15 +505,12 @@ function Graph({
     [onDeleteEdge]
   );
 
-  const handleConnect = useCallback(
-    (connection: Connection) => {
-      if (connection.source && connection.target && connection.source !== connection.target) {
-        setPendingConnection({ source: connection.source, target: connection.target });
-        setPendingLabel('');
-      }
-    },
-    []
-  );
+  const handleConnect = useCallback((connection: Connection) => {
+    if (connection.source && connection.target && connection.source !== connection.target) {
+      setPendingConnection({ source: connection.source, target: connection.target });
+      setPendingLabel('');
+    }
+  }, []);
 
   const confirmConnect = useCallback(() => {
     if (!pendingConnection) return;
@@ -510,16 +536,16 @@ function Graph({
     [onSelectWaypoint, searchQuery, onSearchChange, getInternalNode]
   );
 
-  const onNodeDoubleClick = useCallback(
-    (_: React.MouseEvent, node: Node) => onEditWaypoint(node.id),
-    [onEditWaypoint]
-  );
+  const onNodeDoubleClick = useCallback((_: React.MouseEvent, node: Node) => onEditWaypoint(node.id), [onEditWaypoint]);
 
-  const onPaneClick = useCallback((e: React.MouseEvent) => {
-    lastClickRef.current = screenToFlowPosition({ x: e.clientX, y: e.clientY });
-    onSelectWaypoint(null);
-    if (searchQuery) onSearchChange('');
-  }, [onSelectWaypoint, searchQuery, onSearchChange, screenToFlowPosition]);
+  const onPaneClick = useCallback(
+    (e: React.MouseEvent) => {
+      lastClickRef.current = screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      onSelectWaypoint(null);
+      if (searchQuery) onSearchChange('');
+    },
+    [onSelectWaypoint, searchQuery, onSearchChange, screenToFlowPosition]
+  );
 
   const onEdgeDoubleClick = useCallback(
     (_: React.MouseEvent, edge: Edge) => {
@@ -619,7 +645,11 @@ function Graph({
               >
                 {searching ? (
                   <>
-                    <button onClick={() => stepMatch(-1)} aria-label="Previous match" className="px-1 hover:text-blue-600">
+                    <button
+                      onClick={() => stepMatch(-1)}
+                      aria-label="Previous match"
+                      className="px-1 hover:text-blue-600"
+                    >
                       ‹
                     </button>
                     <span className="tabular-nums whitespace-nowrap">
@@ -662,7 +692,10 @@ function Graph({
                   <button onClick={cancelConnect} className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">
                     Cancel
                   </button>
-                  <button onClick={confirmConnect} className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                  <button
+                    onClick={confirmConnect}
+                    className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
                     Add Connection
                   </button>
                 </div>
@@ -690,13 +723,13 @@ function FirstToursCard() {
     >
       <h2 className="text-base font-semibold text-gray-900">Don&apos;t start from a blank page</h2>
       <p className="mt-2">
-        New to this repo? Open Claude Code inside it and run the <code>first-tours</code>{' '}skill. It reads the
-        code and docs, then adds a starting map here: about a dozen waypoints and two short tours
-        (one from the user&apos;s side, one from the builder&apos;s; at most 8 stops each).
+        New to this repo? Open Claude Code inside it and run the <code>first-tours</code> skill. It reads the code and
+        docs, then adds a starting map here: about a dozen waypoints and two short tours (one from the user&apos;s side,
+        one from the builder&apos;s; at most 8 stops each).
       </p>
       <p className="mt-2">
-        It shows you the plan before adding anything, and marks everything it adds as drafted by
-        Claude, for you to check and rewrite in your own words.
+        It shows you the plan before adding anything, and marks everything it adds as drafted by Claude, for you to
+        check and rewrite in your own words.
       </p>
       <div className="mt-3">
         <CopyCommand
@@ -707,12 +740,16 @@ function FirstToursCard() {
       </div>
       <p className="mt-2 text-xs text-gray-500">
         Needs the{' '}
-        <a href={PLUGIN_INSTALL_URL} target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">
+        <a
+          href={PLUGIN_INSTALL_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-gray-700"
+        >
           Cognitive Tours plugin
         </a>{' '}
         for Claude Code. The skill offers to remember this site, so later skills need only{' '}
-        <code>/cognitive-tours:</code> and their name. This card only appears while the map is
-        completely empty.
+        <code>/cognitive-tours:</code> and their name. This card only appears while the map is completely empty.
       </p>
     </section>
   );

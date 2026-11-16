@@ -1,1 +1,0 @@
-../../../plugins/cognitive-tours/skills/audit-waypoints/SKILL.md

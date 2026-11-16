@@ -22,7 +22,11 @@ export async function GET(request: Request) {
   }
 
   const date = new Date().toISOString().slice(0, 10);
-  const counts = { waypoints: plan.data.waypoints.length, edges: plan.data.edges.length, tours: plan.data.tours.length };
+  const counts = {
+    waypoints: plan.data.waypoints.length,
+    edges: plan.data.edges.length,
+    tours: plan.data.tours.length,
+  };
   try {
     await applyReset(prisma, plan.data);
   } catch (err) {

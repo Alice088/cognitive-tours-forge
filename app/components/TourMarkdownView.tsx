@@ -55,7 +55,9 @@ export default function TourMarkdownView({ tour, waypoints, activeStepIndex }: T
                   <h2 id={`stop-${index}`} className="text-base font-semibold text-gray-800 mb-1">
                     <span className="text-gray-400 font-normal text-sm mr-2">Step {index + 1}:</span>
                     {wp.label}
-                    <span className={`ml-2 align-middle inline-flex items-center gap-1 text-xs font-normal px-1.5 py-0.5 rounded border ${WAYPOINT_COLORS[wp.type]}`}>
+                    <span
+                      className={`ml-2 align-middle inline-flex items-center gap-1 text-xs font-normal px-1.5 py-0.5 rounded border ${WAYPOINT_COLORS[wp.type]}`}
+                    >
                       <WaypointTypeIcon type={wp.type} size={12} />
                       {wp.type}
                     </span>
@@ -72,21 +74,22 @@ export default function TourMarkdownView({ tour, waypoints, activeStepIndex }: T
                       <p className="text-sm text-gray-600">{wp.notes}</p>
                     </div>
                   )}
-                  {wp.filePath?.trim() && (codeFolder && !isLinkPath(wp.filePath) ? (
-                    <a
-                      href={vscodeLink(codeFolder, wp.filePath) ?? undefined}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 hover:bg-gray-200 block mb-2 font-mono break-all"
-                    >
-                      {wp.filePath}
-                    </a>
-                  ) : (
-                    // No code folder set in this browser: show the path, not a broken link.
-                    <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 block mb-2 font-mono break-all">
-                      {wp.filePath}
-                    </span>
-                  ))}
+                  {wp.filePath?.trim() &&
+                    (codeFolder && !isLinkPath(wp.filePath) ? (
+                      <a
+                        href={vscodeLink(codeFolder, wp.filePath) ?? undefined}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 hover:bg-gray-200 block mb-2 font-mono break-all"
+                      >
+                        {wp.filePath}
+                      </a>
+                    ) : (
+                      // No code folder set in this browser: show the path, not a broken link.
+                      <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 block mb-2 font-mono break-all">
+                        {wp.filePath}
+                      </span>
+                    ))}
                   {wp.filePath?.trim() && githubFileLink(repoUrl, wp.filePath) && (
                     <a
                       href={githubFileLink(repoUrl, wp.filePath) ?? undefined}

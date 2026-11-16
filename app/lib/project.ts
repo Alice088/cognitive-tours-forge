@@ -42,7 +42,7 @@ export const CANVAS_COLOR: string | null = parseSiteColor(process.env.NEXT_PUBLI
  */
 export function pickStartHereTourId(
   tours: readonly { id: string; name: string }[],
-  preferredName: string | null,
+  preferredName: string | null
 ): string | null {
   const preferred = preferredName ? tours.find(t => t.name === preferredName) : undefined;
   return (preferred ?? tours[0])?.id ?? null;

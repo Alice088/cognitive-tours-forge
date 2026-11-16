@@ -73,7 +73,11 @@ export async function applyReset(prisma: PrismaClient, data: SiteData): Promise<
           createdAt: date(t.createdAt),
           updatedAt: date(t.updatedAt),
           waypoints: {
-            create: t.stops.map((s, order) => ({ waypointId: s.waypointId, order, narrative: s.narrative?.trim() || null })),
+            create: t.stops.map((s, order) => ({
+              waypointId: s.waypointId,
+              order,
+              narrative: s.narrative?.trim() || null,
+            })),
           },
         },
       })

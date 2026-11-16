@@ -10,8 +10,10 @@ keepPositions(test);
 
 const box = (id: string, x: number, y: number, w = 180, h = 60): Box => ({ id, x, y, w, h });
 const clear = (a: Box, b: Box) =>
-  a.x + a.w + MAKE_ROOM_GAP <= b.x || b.x + b.w + MAKE_ROOM_GAP <= a.x ||
-  a.y + a.h + MAKE_ROOM_GAP <= b.y || b.y + b.h + MAKE_ROOM_GAP <= a.y;
+  a.x + a.w + MAKE_ROOM_GAP <= b.x ||
+  b.x + b.w + MAKE_ROOM_GAP <= a.x ||
+  a.y + a.h + MAKE_ROOM_GAP <= b.y ||
+  b.y + b.h + MAKE_ROOM_GAP <= a.y;
 const apply = (boxes: Box[], moved: Map<string, { x: number; y: number }>) =>
   boxes.map(b => ({ ...b, ...(moved.get(b.id) ?? {}) }));
 
@@ -60,7 +62,9 @@ test.describe('the map makes room for new waypoints', () => {
     const oldId = `w-${Date.now()}-old${r}`;
     const newId = `w-${Date.now()}-new${r}`;
     const post = (id: string, label: string, x: number, y: number) =>
-      request.post('/api/waypoints', { data: { id, label, type: 'Feature', description: '', notes: null, filePath: null, position: { x, y } } });
+      request.post('/api/waypoints', {
+        data: { id, label, type: 'Feature', description: '', notes: null, filePath: null, position: { x, y } },
+      });
     expect((await post(oldId, `Room Old ${r}`, 940, 80)).ok()).toBeTruthy();
     made.push(oldId);
 
@@ -72,10 +76,15 @@ test.describe('the map makes room for new waypoints', () => {
     await page.reload();
 
     // The move is saved like a drag (debounced), so poll the site.
-    await expect.poll(async () => {
-      const { waypoints } = await (await request.get('/api/data')).json();
-      return waypoints.find((w: { id: string }) => w.id === oldId).position;
-    }, { timeout: 10000 }).not.toEqual({ x: 940, y: 80 });
+    await expect
+      .poll(
+        async () => {
+          const { waypoints } = await (await request.get('/api/data')).json();
+          return waypoints.find((w: { id: string }) => w.id === oldId).position;
+        },
+        { timeout: 10000 }
+      )
+      .not.toEqual({ x: 940, y: 80 });
     const { waypoints } = await (await request.get('/api/data')).json();
     expect(waypoints.find((w: { id: string }) => w.id === newId).position).toEqual({ x: 960, y: 90 });
   });

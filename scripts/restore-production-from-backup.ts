@@ -80,9 +80,18 @@ function problemsIn(backup: Backup): string[] {
       seen.add(id);
     }
   };
-  duplicates('waypoint', backup.waypoints.map(w => w.id));
-  duplicates('edge', backup.edges.map(e => e.id));
-  duplicates('tour', backup.tours.map(t => t.id));
+  duplicates(
+    'waypoint',
+    backup.waypoints.map(w => w.id)
+  );
+  duplicates(
+    'edge',
+    backup.edges.map(e => e.id)
+  );
+  duplicates(
+    'tour',
+    backup.tours.map(t => t.id)
+  );
 
   const waypointIds = new Set(backup.waypoints.map(w => w.id));
   for (const w of backup.waypoints) {
@@ -97,7 +106,8 @@ function problemsIn(backup: Backup): string[] {
   }
   for (const t of backup.tours) {
     (t.stops ?? []).forEach((s, i) => {
-      if (!waypointIds.has(s.waypointId)) problems.push(`tour "${t.name}" stop ${i + 1} points at missing waypoint ${s.waypointId}`);
+      if (!waypointIds.has(s.waypointId))
+        problems.push(`tour "${t.name}" stop ${i + 1} points at missing waypoint ${s.waypointId}`);
     });
   }
   return problems;
@@ -157,14 +167,18 @@ function restoreSql(backup: Backup, source: string, site: string): string {
 function main() {
   const [backupArg, site] = process.argv.slice(2);
   if (!backupArg || !site) {
-    fail(`Usage: npx tsx scripts/restore-production-from-backup.ts <backup.json> <site>   (site: ${siteNames().join(', ')})`);
+    fail(
+      `Usage: npx tsx scripts/restore-production-from-backup.ts <backup.json> <site>   (site: ${siteNames().join(', ')})`
+    );
   }
   const database = databaseFor(site);
   const backup = loadBackup(backupArg);
 
   const problems = problemsIn(backup);
   if (problems.length > 0) {
-    fail(`Refusing: this backup has ${problems.length} problem(s), so restoring it could break the map:\n  - ${problems.join('\n  - ')}`);
+    fail(
+      `Refusing: this backup has ${problems.length} problem(s), so restoring it could break the map:\n  - ${problems.join('\n  - ')}`
+    );
   }
 
   fs.mkdirSync(RESTORE_DIR, { recursive: true });
@@ -175,7 +189,9 @@ function main() {
   const stops = backup.tours.reduce((n, t) => n + (t.stops?.length ?? 0), 0);
 
   console.log(`Wrote ${rel}`);
-  console.log(`It puts back ${backup.waypoints.length} waypoints, ${backup.edges.length} edges and ${backup.tours.length} tours (${stops} stops):`);
+  console.log(
+    `It puts back ${backup.waypoints.length} waypoints, ${backup.edges.length} edges and ${backup.tours.length} tours (${stops} stops):`
+  );
   for (const t of backup.tours) console.log(`  - ${t.name}`);
   console.log(`\nNothing has changed yet. To restore the "${site}" site (database ${database}):`);
   console.log('  1. npx tsx scripts/backup-all-sites.ts      (a fresh backup first)');

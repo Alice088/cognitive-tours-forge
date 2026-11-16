@@ -13,7 +13,10 @@ import { useRepoUrl } from '@/app/lib/repo';
 // on a stop in the tour editor (the background and text would be too loud
 // on the whole row).
 function typeBorderColor(type: WaypointType): string {
-  return WAYPOINT_COLORS[type].split(' ').filter(c => c.startsWith('border-') && c !== 'border-dotted').join(' ');
+  return WAYPOINT_COLORS[type]
+    .split(' ')
+    .filter(c => c.startsWith('border-') && c !== 'border-dotted')
+    .join(' ');
 }
 
 const FILTER_PRESETS: { label: string; types: WaypointType[] }[] = [
@@ -96,10 +99,7 @@ export default function TourBar({
   // Hidden types, plus one for "New to you only" when it's on.
   const hiddenCount = WAYPOINT_TYPES.filter(t => !filterState[t]).length + (newOnly ? 1 : 0);
 
-  const sortedTours = useMemo(
-    () => [...tours].sort((a, b) => a.name.localeCompare(b.name)),
-    [tours]
-  );
+  const sortedTours = useMemo(() => [...tours].sort((a, b) => a.name.localeCompare(b.name)), [tours]);
 
   useEffect(() => {
     if (!filterPanelOpen) return;
@@ -130,8 +130,7 @@ export default function TourBar({
     return () => document.removeEventListener('keydown', handler);
   }, [editor.open]);
 
-  const openCreate = () =>
-    setEditor({ open: true, mode: 'create', name: '', description: '', author: '', stops: [] });
+  const openCreate = () => setEditor({ open: true, mode: 'create', name: '', description: '', author: '', stops: [] });
 
   const openEdit = () => {
     const tour = tours.find(t => t.id === activeTourId);
@@ -170,8 +169,7 @@ export default function TourBar({
     closeEditor();
   };
 
-  const addWaypointToTour = (id: string) =>
-    setEditor(e => ({ ...e, stops: [...e.stops, { waypointId: id }] }));
+  const addWaypointToTour = (id: string) => setEditor(e => ({ ...e, stops: [...e.stops, { waypointId: id }] }));
 
   const removeWaypointFromTour = (idx: number) =>
     setEditor(e => ({ ...e, stops: e.stops.filter((_, i) => i !== idx) }));
@@ -238,7 +236,9 @@ export default function TourBar({
       {sortedTours.length > 0 ? (
         <optgroup label={`Tours (${sortedTours.length})`}>
           {sortedTours.map(t => (
-            <option key={t.id} value={t.id}>{t.name}</option>
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
           ))}
         </optgroup>
       ) : (
@@ -309,9 +309,7 @@ export default function TourBar({
                   {FILTER_PRESETS.map(preset => (
                     <button
                       key={preset.label}
-                      onClick={() =>
-                        WAYPOINT_TYPES.forEach(type => onFilterChange(type, preset.types.includes(type)))
-                      }
+                      onClick={() => WAYPOINT_TYPES.forEach(type => onFilterChange(type, preset.types.includes(type)))}
                       className="text-xs font-medium text-gray-600 border border-gray-200 rounded px-1.5 py-0.5 hover:bg-gray-50"
                     >
                       {preset.label}
@@ -329,7 +327,9 @@ export default function TourBar({
                       onChange={e => onFilterChange(type, e.target.checked)}
                       className="rounded"
                     />
-                    <span className={`inline-block w-2.5 h-2.5 rounded-full border-2 flex-shrink-0 ${WAYPOINT_COLORS[type]}`} />
+                    <span
+                      className={`inline-block w-2.5 h-2.5 rounded-full border-2 flex-shrink-0 ${WAYPOINT_COLORS[type]}`}
+                    />
                     <WaypointTypeIcon type={type} />
                     <span>{type}</span>
                   </label>
@@ -414,8 +414,6 @@ export default function TourBar({
             </button>
           </div>
         )}
-
-
       </div>
 
       {editor.open && (
@@ -425,134 +423,183 @@ export default function TourBar({
               {editor.mode === 'create' ? 'New Tour' : 'Edit Tour'}
             </h2>
             <div className="flex flex-col gap-4 px-6 pb-4 overflow-y-auto">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Name *</label>
-              <input
-                className="border border-gray-300 rounded px-3 py-1.5 text-sm"
-                value={editor.name}
-                onChange={e => setEditor(ed => ({ ...ed, name: e.target.value }))}
-                placeholder="Tour name"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Description</label>
-              <input
-                className="border border-gray-300 rounded px-3 py-1.5 text-sm"
-                value={editor.description}
-                onChange={e => setEditor(ed => ({ ...ed, description: e.target.value }))}
-                placeholder="One-line summary"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium" htmlFor="tour-author">Author</label>
-              <input
-                id="tour-author"
-                className="border border-gray-300 rounded px-3 py-1.5 text-sm"
-                value={editor.author}
-                onChange={e => setEditor(ed => ({ ...ed, author: e.target.value }))}
-                placeholder="Your name"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Waypoints (ordered)</label>
-              {editor.stops.length === 0 && (
-                <p className="text-xs text-gray-400">No waypoints added yet.</p>
-              )}
-              <ul className="flex flex-col gap-1">
-                {editor.stops.map((stop, idx) => {
-                  const wp = waypoints.find(w => w.id === stop.waypointId);
-                  const nextStop = editor.stops[idx + 1];
-                  const nextWp = nextStop && waypoints.find(w => w.id === nextStop.waypointId);
-                  const descShown = shownDescriptions.has(stop.waypointId);
-                  const tourId = editor.mode === 'edit' ? editor.tourId : undefined;
-                  const isNew = !!tourId && !!isNewStop?.(tourId, stop.waypointId, stop.narrative);
-                  return (
-                    <li
-                      key={`${stop.waypointId}-${idx}`}
-                      className={`flex flex-col gap-1 text-sm ${isNew ? 'rounded ring-2 ring-red-500 shadow-md shadow-red-500/40 p-1' : ''}`}
-                      data-testid="tour-editor-stop"
-                      data-new={isNew ? 'true' : undefined}
-                    >
-                      <div className={`flex flex-col gap-1 border-l-4 pl-2 ${wp ? typeBorderColor(wp.type) : 'border-gray-200'}`}>
-                        <div className="flex items-center gap-2">
-                          <span className="flex-1 truncate">
-                            <span className="text-gray-400 font-normal">Stop {idx + 1}: </span>
-                            {isNew && (
-                              <span className="mr-1 text-xs font-semibold text-red-600" title="Added since you last looked: write its narrative below">new</span>
-                            )}
-                            {wp?.label ?? stop.waypointId}
-                          </span>
-                          {wp && (
-                            <span className={`shrink-0 inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded border ${WAYPOINT_COLORS[wp.type]}`}>
-                              <WaypointTypeIcon type={wp.type} size={12} />
-                              {wp.type}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium">Name *</label>
+                <input
+                  className="border border-gray-300 rounded px-3 py-1.5 text-sm"
+                  value={editor.name}
+                  onChange={e => setEditor(ed => ({ ...ed, name: e.target.value }))}
+                  placeholder="Tour name"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium">Description</label>
+                <input
+                  className="border border-gray-300 rounded px-3 py-1.5 text-sm"
+                  value={editor.description}
+                  onChange={e => setEditor(ed => ({ ...ed, description: e.target.value }))}
+                  placeholder="One-line summary"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium" htmlFor="tour-author">
+                  Author
+                </label>
+                <input
+                  id="tour-author"
+                  className="border border-gray-300 rounded px-3 py-1.5 text-sm"
+                  value={editor.author}
+                  onChange={e => setEditor(ed => ({ ...ed, author: e.target.value }))}
+                  placeholder="Your name"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium">Waypoints (ordered)</label>
+                {editor.stops.length === 0 && <p className="text-xs text-gray-400">No waypoints added yet.</p>}
+                <ul className="flex flex-col gap-1">
+                  {editor.stops.map((stop, idx) => {
+                    const wp = waypoints.find(w => w.id === stop.waypointId);
+                    const nextStop = editor.stops[idx + 1];
+                    const nextWp = nextStop && waypoints.find(w => w.id === nextStop.waypointId);
+                    const descShown = shownDescriptions.has(stop.waypointId);
+                    const tourId = editor.mode === 'edit' ? editor.tourId : undefined;
+                    const isNew = !!tourId && !!isNewStop?.(tourId, stop.waypointId, stop.narrative);
+                    return (
+                      <li
+                        key={`${stop.waypointId}-${idx}`}
+                        className={`flex flex-col gap-1 text-sm ${isNew ? 'rounded ring-2 ring-red-500 shadow-md shadow-red-500/40 p-1' : ''}`}
+                        data-testid="tour-editor-stop"
+                        data-new={isNew ? 'true' : undefined}
+                      >
+                        <div
+                          className={`flex flex-col gap-1 border-l-4 pl-2 ${wp ? typeBorderColor(wp.type) : 'border-gray-200'}`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="flex-1 truncate">
+                              <span className="text-gray-400 font-normal">Stop {idx + 1}: </span>
+                              {isNew && (
+                                <span
+                                  className="mr-1 text-xs font-semibold text-red-600"
+                                  title="Added since you last looked: write its narrative below"
+                                >
+                                  new
+                                </span>
+                              )}
+                              {wp?.label ?? stop.waypointId}
                             </span>
-                          )}
-                          <button onClick={() => moveWaypoint(idx, -1)} disabled={idx === 0} className="text-gray-400 hover:text-gray-700 disabled:opacity-30">↑</button>
-                          <button onClick={() => moveWaypoint(idx, 1)} disabled={idx === editor.stops.length - 1} className="text-gray-400 hover:text-gray-700 disabled:opacity-30">↓</button>
-                          <button onClick={() => removeWaypointFromTour(idx)} className="text-red-400 hover:text-red-600">✕</button>
-                        </div>
-                        {wp?.description?.trim() && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setShownDescriptions(prev => {
-                                const next = new Set(prev);
-                                if (next.has(stop.waypointId)) next.delete(stop.waypointId); else next.add(stop.waypointId);
-                                return next;
-                              })}
-                              className="self-start text-xs text-blue-600 hover:underline"
-                            >
-                              {descShown ? 'Hide description' : 'Show description'}
-                            </button>
-                            {descShown && (
-                              <p className="text-xs text-gray-600 whitespace-pre-wrap">{wp.description}</p>
+                            {wp && (
+                              <span
+                                className={`shrink-0 inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded border ${WAYPOINT_COLORS[wp.type]}`}
+                              >
+                                <WaypointTypeIcon type={wp.type} size={12} />
+                                {wp.type}
+                              </span>
                             )}
-                          </>
-                        )}
-                      </div>
-                      <span className="text-xs font-bold text-gray-700 mt-1" data-testid="tour-editor-bridge-heading">
-                        {nextStop
-                          ? `→ to stop ${idx + 2}: ${nextWp?.label ?? nextStop.waypointId}`
-                          : 'Closing words (optional)'}
-                      </span>
-                      <textarea
-                        rows={3}
-                        className="text-sm border border-gray-200 rounded px-2 py-1 w-full resize-none"
-                        placeholder="Narrative for this stop (optional)"
-                        value={stop.narrative ?? ''}
-                        onFocus={() => { if (tourId) onStopSeen?.(tourId, stop.waypointId); }}
-                        onChange={ev => setEditor(ed => {
-                          const stops = ed.stops.map((s, i) => i === idx ? { ...s, narrative: ev.target.value } : s);
-                          return { ...ed, stops };
-                        })}
-                      />
-                    </li>
-                  );
-                })}
-              </ul>
-              <select
-                className="text-sm border border-gray-300 rounded px-2 py-1"
-                defaultValue=""
-                onChange={e => { if (e.target.value) { addWaypointToTour(e.target.value); e.target.value = ''; } }}
-              >
-                <option value="">Add a waypoint…</option>
-                {[...waypoints].sort((a, b) => a.label.localeCompare(b.label)).map(w => (
-                  <option key={w.id} value={w.id}>{w.label}</option>
-                ))}
-              </select>
-            </div>
+                            <button
+                              onClick={() => moveWaypoint(idx, -1)}
+                              disabled={idx === 0}
+                              className="text-gray-400 hover:text-gray-700 disabled:opacity-30"
+                            >
+                              ↑
+                            </button>
+                            <button
+                              onClick={() => moveWaypoint(idx, 1)}
+                              disabled={idx === editor.stops.length - 1}
+                              className="text-gray-400 hover:text-gray-700 disabled:opacity-30"
+                            >
+                              ↓
+                            </button>
+                            <button
+                              onClick={() => removeWaypointFromTour(idx)}
+                              className="text-red-400 hover:text-red-600"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          {wp?.description?.trim() && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setShownDescriptions(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(stop.waypointId)) next.delete(stop.waypointId);
+                                    else next.add(stop.waypointId);
+                                    return next;
+                                  })
+                                }
+                                className="self-start text-xs text-blue-600 hover:underline"
+                              >
+                                {descShown ? 'Hide description' : 'Show description'}
+                              </button>
+                              {descShown && (
+                                <p className="text-xs text-gray-600 whitespace-pre-wrap">{wp.description}</p>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        <span className="text-xs font-bold text-gray-700 mt-1" data-testid="tour-editor-bridge-heading">
+                          {nextStop
+                            ? `→ to stop ${idx + 2}: ${nextWp?.label ?? nextStop.waypointId}`
+                            : 'Closing words (optional)'}
+                        </span>
+                        <textarea
+                          rows={3}
+                          className="text-sm border border-gray-200 rounded px-2 py-1 w-full resize-none"
+                          placeholder="Narrative for this stop (optional)"
+                          value={stop.narrative ?? ''}
+                          onFocus={() => {
+                            if (tourId) onStopSeen?.(tourId, stop.waypointId);
+                          }}
+                          onChange={ev =>
+                            setEditor(ed => {
+                              const stops = ed.stops.map((s, i) =>
+                                i === idx ? { ...s, narrative: ev.target.value } : s
+                              );
+                              return { ...ed, stops };
+                            })
+                          }
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
+                <select
+                  className="text-sm border border-gray-300 rounded px-2 py-1"
+                  defaultValue=""
+                  onChange={e => {
+                    if (e.target.value) {
+                      addWaypointToTour(e.target.value);
+                      e.target.value = '';
+                    }
+                  }}
+                >
+                  <option value="">Add a waypoint…</option>
+                  {[...waypoints]
+                    .sort((a, b) => a.label.localeCompare(b.label))
+                    .map(w => (
+                      <option key={w.id} value={w.id}>
+                        {w.label}
+                      </option>
+                    ))}
+                </select>
+              </div>
             </div>
             <div className="flex gap-2 items-center border-t px-6 py-4 shrink-0">
               {editor.mode === 'edit' && editor.tourId && (
                 <button
-                  onClick={() => { onDeleteTour(editor.tourId!); closeEditor(); }}
+                  onClick={() => {
+                    onDeleteTour(editor.tourId!);
+                    closeEditor();
+                  }}
                   className="px-4 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 mr-auto"
                 >
                   Delete tour
                 </button>
               )}
-              <button onClick={closeEditor} className="px-4 py-1.5 text-sm border rounded hover:bg-gray-50">Cancel</button>
+              <button onClick={closeEditor} className="px-4 py-1.5 text-sm border rounded hover:bg-gray-50">
+                Cancel
+              </button>
               <button
                 onClick={saveEditor}
                 disabled={!editor.name.trim()}

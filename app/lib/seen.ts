@@ -95,14 +95,14 @@ export function useSeen(waypoints: Waypoint[], tours: Tour[], loaded: boolean) {
   /** New to this browser and not yet given a description. */
   const isNewWaypoint = useCallback(
     (w: Waypoint) => !!seen && !seen.waypoints.has(w.id) && !w.description?.trim(),
-    [seen],
+    [seen]
   );
 
   /** A stop new to this browser that has no narrative yet. */
   const isNewStop = useCallback(
     (tourId: string, waypointId: string, narrative: string | null | undefined) =>
       !!seen && !seen.stops.has(stopKey(tourId, waypointId)) && !narrative?.trim(),
-    [seen],
+    [seen]
   );
 
   return { newAtLoad, arrivedAfterLoad, isNewWaypoint, isNewStop, markWaypointsSeen, markStopsSeen };

@@ -60,9 +60,7 @@ test.describe('Start here walkthrough', () => {
   });
 
   test('on an empty map it has two steps and skips the tour ones', async ({ page }) => {
-    await page.route('**/api/data', route =>
-      route.fulfill({ json: { waypoints: [], edges: [], tours: [] } }),
-    );
+    await page.route('**/api/data', route => route.fulfill({ json: { waypoints: [], edges: [], tours: [] } }));
     await page.goto('/');
     const card = page.getByRole('dialog', { name: 'Start here' });
     await expect(card).toContainText('This map is empty');

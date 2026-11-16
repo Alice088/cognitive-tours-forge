@@ -33,7 +33,9 @@ interface Backup {
 // silently overwrite dev.db while the caller thinks they're targeting something else.
 function assertSafeToRun() {
   if (process.env.NODE_ENV === 'production') {
-    console.error('Refusing to run: NODE_ENV is "production". This script only ever targets the local dev.db and must never run in production.');
+    console.error(
+      'Refusing to run: NODE_ENV is "production". This script only ever targets the local dev.db and must never run in production.'
+    );
     process.exit(1);
   }
 
@@ -41,8 +43,12 @@ function assertSafeToRun() {
   if (rawUrl) {
     const resolved = path.resolve(PROJECT_ROOT, rawUrl.replace(/^file:/, ''));
     if (resolved !== DEV_DB_PATH) {
-      console.error(`Refusing to run: DATABASE_URL resolves to "${resolved}", but this script only ever targets "${DEV_DB_PATH}" (dev.db).`);
-      console.error('This usually means it was invoked with the wrong environment loaded (e.g. .env.test). Re-run without that environment.');
+      console.error(
+        `Refusing to run: DATABASE_URL resolves to "${resolved}", but this script only ever targets "${DEV_DB_PATH}" (dev.db).`
+      );
+      console.error(
+        'This usually means it was invoked with the wrong environment loaded (e.g. .env.test). Re-run without that environment.'
+      );
       process.exit(1);
     }
   }
@@ -126,7 +132,9 @@ async function main() {
     });
   }
 
-  console.log(`Imported ${backup.waypoints.length} waypoints, ${backup.edges.length} edges, ${backup.tours.length} tours`);
+  console.log(
+    `Imported ${backup.waypoints.length} waypoints, ${backup.edges.length} edges, ${backup.tours.length} tours`
+  );
   await prisma.$disconnect();
 }
 

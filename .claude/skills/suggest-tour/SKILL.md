@@ -1,1 +1,0 @@
-../../../plugins/cognitive-tours/skills/suggest-tour/SKILL.md
