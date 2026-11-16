@@ -12,8 +12,11 @@ only how to run it and what to expect.
   touches the real `~/.ctour`
 
 ```bash
-mkdir -p /tmp/ctour-check && export CTOUR_HOME=/tmp/ctour-check
+mkdir -p "$HOME/.ctour-check" && export CTOUR_HOME="$HOME/.ctour-check"
 ```
+
+The folder must be inside your home directory: adding a project outside it is
+refused, because the picker never browses past a home-level ancestor.
 
 `CTOUR_HOME` relocates the workspace registry. Every scenario below assumes it
 is set; without it the application reads and writes `~/.ctour/workspace.json`.
@@ -24,6 +27,9 @@ is set; without it the application reads and writes `~/.ctour/workspace.json`.
 npm install
 npm run dev
 ```
+
+The first launch shows an empty workspace. Everything below starts from that
+screen.
 
 Open `http://localhost:3000`. First load against an empty `CTOUR_HOME` shows the
 empty workspace state.

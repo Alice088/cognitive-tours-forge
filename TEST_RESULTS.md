@@ -4,6 +4,72 @@
 
 ---
 
+## Прогон: 2026-11-16 08:13 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run`, `npx playwright test` (workers=1), `npx tsc --noEmit`, `npx eslint .`, `npx next build`
+
+### Приёмочные тесты (`playwright test`, workers=1)
+
+| #   | Тест                                                       | Пакет               | Результат | Время |
+| --- | ---------------------------------------------------------- | ------------------- | --------- | ----- |
+| 1   | reaches every region with the keyboard and shows focus     | keyboard.spec.ts    | PASS      | 1.49s |
+| 2   | shows a visible focus ring on a keyboard-focused control   | keyboard.spec.ts    | PASS      | 0.46s |
+| 3   | Escape closes the inspector drawer before anything else    | keyboard.spec.ts    | PASS      | 0.60s |
+| 4   | undo inside a text field stays text undo                   | keyboard.spec.ts    | PASS      | 0.89s |
+| 5   | stays inside the interaction budget on a 250 waypoint map  | performance.spec.ts | PASS      | 0.78s |
+| 6   | reports a map larger than the supported size               | performance.spec.ts | PASS      | 0.69s |
+| 7   | keeps every region inside the window at each width         | responsive.spec.ts  | PASS      | 1.28s |
+| 8   | opens one drawer at a time and returns focus to its opener | responsive.spec.ts  | PASS      | 0.63s |
+| 9   | keeps the canvas at least 320 wide                         | responsive.spec.ts  | PASS      | 0.44s |
+| 10  | edits are saved once at the end of a pause                 | responsive.spec.ts  | PASS      | 3.16s |
+| 11  | shows the four regions without overlap                     | shell.spec.ts       | PASS      | 0.46s |
+| 12  | keeps every tour fact in the dock                          | shell.spec.ts       | PASS      | 0.46s |
+| 13  | every visible control has an accessible name               | shell.spec.ts       | PASS      | 0.44s |
+| 14  | switches theme and keeps the choice after a reload         | shell.spec.ts       | PASS      | 0.71s |
+| 15  | resolves surfaces from tokens in the dark theme            | shell.spec.ts       | PASS      | 0.55s |
+| 16  | restores the tour and step after leaving the map           | shell.spec.ts       | PASS      | 0.90s |
+| 17  | opens a map from the rail                                  | shell.spec.ts       | PASS      | 0.48s |
+| 18  | creates a map and opens it empty                           | shell.spec.ts       | PASS      | 1.19s |
+| 19  | autosaves a description to the map file                    | shell.spec.ts       | PASS      | 3.10s |
+| 20  | undoes and redoes a change                                 | shell.spec.ts       | PASS      | 2.37s |
+| 21  | keeps the map visible while editing                        | shell.spec.ts       | PASS      | 0.53s |
+| 22  | rearranges at 360 without horizontal scrolling             | shell.spec.ts       | PASS      | 0.53s |
+| 23  | keeps the dock usable at 768                               | shell.spec.ts       | PASS      | 0.45s |
+| 24  | an empty workspace adds a project itself                   | states.spec.ts      | PASS      | 1.14s |
+| 25  | a failed load says what failed and offers one retry        | states.spec.ts      | PASS      | 0.43s |
+| 26  | an unavailable project stays listed and can be repointed   | states.spec.ts      | PASS      | 1.92s |
+
+### Юнит-тесты (`vitest run`)
+
+| #   | Тест                    | Пакет                                 | Результат | Время  |
+| --- | ----------------------- | ------------------------------------- | --------- | ------ |
+| 1   | theme contrast (5)      | tests/unit/theme-contrast.test.ts     | PASS      | 0.54s¹ |
+| 2   | safe path (10)          | tests/unit/safe-path.test.ts          | PASS      | 0.54s¹ |
+| 3   | map file (13)           | tests/unit/map-file.test.ts           | PASS      | 0.54s¹ |
+| 4   | registry (8)            | tests/unit/registry.test.ts           | PASS      | 0.54s¹ |
+| 5   | history (11)            | tests/unit/history.test.ts            | PASS      | 0.54s¹ |
+| 6   | map fixture builder (3) | tests/unit/fixtures/build-map.test.ts | PASS      | 0.54s¹ |
+
+¹ Vitest печатает только суммарное время прогона (541 ms на 6 файлов).
+
+### Статические проверки
+
+| #   | Проверка       | Пакет        | Результат | Время |
+| --- | -------------- | ------------ | --------- | ----- |
+| 1   | `tsc --noEmit` | app/         | PASS      | 3.0s  |
+| 2   | `eslint .`     | app/, tests/ | PASS      | 8.0s  |
+| 3   | `next build`   | app/         | PASS      | 9.0s  |
+
+### Сводка
+
+Всего: **80** · PASS: **80** · FAIL: **0** · SKIP: **0** · время: юнит 0.54s, e2e 26.1s, статические 20s.
+
+### Падения
+
+нет
+
+---
+
 ## Прогон: 2026-11-16 08:00 MSK (+0300)
 
 **Ветка:** `main` · **Go/Node:** Node v22.22.3 · **Команды:** `npx vitest run`, `npx playwright test --workers=1`, `npx tsc --noEmit`, `npx eslint .`, `npx next build`

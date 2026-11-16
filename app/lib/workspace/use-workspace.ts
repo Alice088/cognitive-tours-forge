@@ -104,6 +104,13 @@ export async function saveViewState(view: ViewState): Promise<void> {
   await requestJson('/api/workspace/view-state', { method: 'PUT', body: JSON.stringify(view) });
 }
 
+export async function relinkProject(projectId: string, path: string): Promise<{ project: ProjectSummary }> {
+  return requestJson(`/api/workspace/${encodeURIComponent(projectId)}/relink`, {
+    method: 'POST',
+    body: JSON.stringify({ path }),
+  });
+}
+
 export async function addProject(path: string): Promise<{ project: ProjectSummary }> {
   return requestJson('/api/workspace', { method: 'POST', body: JSON.stringify({ path }) });
 }

@@ -92,12 +92,18 @@ export function createMapStore(seed: Partial<MapState> = {}) {
           setActiveTour: tourId => set({ activeTourId: tourId, step: 0 }),
           setStep: step => set({ step: Math.max(0, Math.floor(step)) }),
           updateWaypoint: (id, patch) =>
-            change(document => ({
-              ...document,
-              waypoints: document.waypoints.map(waypoint =>
-                waypoint.id === id ? { ...waypoint, ...patch } : waypoint
-              ),
-            })),
+            change(document => {
+              const target = document.waypoints.find(waypoint => waypoint.id === id);
+              if (!target || !differs(target, patch)) {
+                return document;
+              }
+              return {
+                ...document,
+                waypoints: document.waypoints.map(waypoint =>
+                  waypoint.id === id ? { ...waypoint, ...patch } : waypoint
+                ),
+              };
+            }),
           addWaypoint: waypoint =>
             change(document => ({
               ...document,
@@ -121,36 +127,57 @@ export function createMapStore(seed: Partial<MapState> = {}) {
             })),
           addTour: tour => change(document => ({ ...document, tours: [...document.tours, tour] })),
           updateTour: (id, patch) =>
-            change(document => ({
-              ...document,
-              tours: document.tours.map(tour => (tour.id === id ? { ...tour, ...patch } : tour)),
-            })),
+            change(document => {
+              const target = document.tours.find(tour => tour.id === id);
+              if (!target || !differs(target, patch)) {
+                return document;
+              }
+              return {
+                ...document,
+                tours: document.tours.map(tour => (tour.id === id ? { ...tour, ...patch } : tour)),
+              };
+            }),
           deleteTour: id =>
             change(document => ({
               ...document,
               tours: document.tours.filter(tour => tour.id !== id),
             })),
           setTourStops: (tourId, stops) =>
-            change(document => ({
-              ...document,
-              tours: document.tours.map(tour => (tour.id === tourId ? { ...tour, stops } : tour)),
-            })),
+            change(document => {
+              const target = document.tours.find(tour => tour.id === tourId);
+              if (!target || sameStops(target.stops, stops)) {
+                return document;
+              }
+              return {
+                ...document,
+                tours: document.tours.map(tour => (tour.id === tourId ? { ...tour, stops } : tour)),
+              };
+            }),
           moveStop: (tourId, from, to) =>
-            change(document => ({
-              ...document,
-              tours: document.tours.map(tour => {
-                if (tour.id !== tourId) {
-                  return tour;
-                }
-                const stops = [...tour.stops];
-                if (from < 0 || from >= stops.length || to < 0 || to >= stops.length) {
-                  return tour;
-                }
-                const [moved] = stops.splice(from, 1);
-                stops.splice(to, 0, moved);
-                return { ...tour, stops };
-              }),
-            })),
+            change(document => {
+              const target = document.tours.find(tour => tour.id === tourId);
+              if (!target) {
+                return document;
+              }
+              if (from < 0 || from >= target.stops.length || to < 0 || to >= target.stops.length) {
+                return document;
+              }
+              if (from === to) {
+                return document;
+              }
+              return {
+                ...document,
+                tours: document.tours.map(tour => {
+                  if (tour.id !== tourId) {
+                    return tour;
+                  }
+                  const stops = [...tour.stops];
+                  const [moved] = stops.splice(from, 1);
+                  stops.splice(to, 0, moved);
+                  return { ...tour, stops };
+                }),
+              };
+            }),
           setSaveStatus: (status, error = null) => set({ saveStatus: status, saveError: error }),
           markSaved: mtimeMs => set({ saveStatus: 'saved', saveError: null, mtimeMs }),
         };
@@ -161,6 +188,20 @@ export function createMapStore(seed: Partial<MapState> = {}) {
         equality: (past, current) => past.document === current.document,
       }
     )
+  );
+}
+
+function differs<T extends object>(current: T, patch: Partial<T>): boolean {
+  const values = current as Record<string, unknown>;
+  return Object.entries(patch).some(([key, value]) => values[key] !== value);
+}
+
+function sameStops(current: Stop[], next: Stop[]): boolean {
+  if (current.length !== next.length) {
+    return false;
+  }
+  return current.every(
+    (stop, index) => stop.waypointId === next[index].waypointId && stop.narrative === next[index].narrative
   );
 }
 

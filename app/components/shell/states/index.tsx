@@ -18,13 +18,16 @@ export function EmptyWorkspace({ onAddProject }: { onAddProject: () => void }) {
   );
 }
 
-export function EmptyProject({ onAddProject }: { onAddProject: () => void }) {
+export function EmptyProject({ projectName, onCreateMap }: { projectName: string; onCreateMap: () => void }) {
   return (
     <div className="flex h-full items-center justify-center p-6">
       <div className="max-w-md space-y-3 text-center">
-        <h1 className="text-lg font-semibold">No project open</h1>
-        <p className="text-sm text-muted-foreground">Choose a project from the navigation to see its maps.</p>
-        <Button onClick={onAddProject}>Add project</Button>
+        <h1 className="text-lg font-semibold">{projectName} has no maps yet</h1>
+        <p className="text-sm text-muted-foreground">
+          A map holds the waypoints and tours that explain this project. It is stored inside the project, in its .tours
+          directory.
+        </p>
+        <Button onClick={onCreateMap}>Create map</Button>
       </div>
     </div>
   );

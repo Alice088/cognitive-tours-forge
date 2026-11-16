@@ -135,3 +135,43 @@ describe('map history', () => {
     expect(store.getState().document?.tours[0].stops).toEqual([{ waypointId: 'w-1' }]);
   });
 });
+
+describe('one history entry per committed change', () => {
+  it('records exactly one entry per action type', () => {
+    const store = storeWith(3);
+    const before = historyDepth(store).past;
+
+    store.getState().updateWaypoint('w-1', { description: 'one' });
+    expect(historyDepth(store).past).toBe(before + 1);
+
+    store.getState().addWaypoint({
+      id: 'w-new',
+      label: 'New',
+      type: 'Feature',
+      position: { x: 1, y: 1 },
+    });
+    expect(historyDepth(store).past).toBe(before + 2);
+
+    store.getState().addEdge({ id: 'e-new', source: 'w-1', target: 'w-2' });
+    expect(historyDepth(store).past).toBe(before + 3);
+
+    store.getState().setTourStops('t-1', [{ waypointId: 'w-1' }, { waypointId: 'w-2' }]);
+    expect(historyDepth(store).past).toBe(before + 4);
+
+    store.getState().moveStop('t-1', 0, 1);
+    expect(historyDepth(store).past).toBe(before + 5);
+
+    store.getState().deleteWaypoint('w-3');
+    expect(historyDepth(store).past).toBe(before + 6);
+  });
+
+  it('does not record a change that leaves the document identical', () => {
+    const store = storeWith(2);
+    const before = historyDepth(store).past;
+    store.getState().setTourStops('t-1', []);
+    expect(historyDepth(store).past).toBe(before);
+    store.getState().selectWaypoint('w-1');
+    store.getState().setSaveStatus('saved');
+    expect(historyDepth(store).past).toBe(before);
+  });
+});

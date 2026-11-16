@@ -15,7 +15,7 @@ import type { MapStore } from '@/app/lib/store/map-store';
 import { useMapStore } from '@/app/components/shell/MapStoreProvider';
 import { generateTourMarkdown, tourSlug } from '@/app/lib/tour-markdown';
 import { useWorkspace, fetchMap, saveMap, saveViewState } from '@/app/lib/workspace/use-workspace';
-import type { SaveStatus } from '@/app/lib/workspace/types';
+import { SUPPORTED_TOURS, SUPPORTED_WAYPOINTS, type SaveStatus } from '@/app/lib/workspace/types';
 
 const SAVE_DELAY = 800;
 
@@ -26,6 +26,7 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
   const [editing, setEditing] = useState(false);
   const [overview, setOverview] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [oversizedDismissed, setOversizedDismissed] = useState(false);
   const pendingSave = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const status = useStore(store, state => state.status);
@@ -145,6 +146,17 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
     return new Set(tour.stops.map(stop => stop.waypointId));
   }, [tour, overview]);
 
+  const oversized = waypoints.length > SUPPORTED_WAYPOINTS || tours.length > SUPPORTED_TOURS;
+
+  const announcement =
+    status === 'loading'
+      ? 'Loading map'
+      : status === 'failed'
+        ? 'The map could not be loaded'
+        : mapDocument
+          ? `Map open with ${waypoints.length} waypoints and ${tours.length} tours`
+          : '';
+
   const exportTour = tour
     ? () => {
         const markdown = generateTourMarkdown(tour, waypoints, { projectName: projectId });
@@ -231,6 +243,17 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
           </Button>
         </div>
       ) : null}
+      {oversized && !oversizedDismissed ? (
+        <div role="status" className="flex items-center gap-2 border-b border-border bg-muted px-3 py-2 text-sm">
+          <span className="flex-1">
+            This map is larger than the supported size of {SUPPORTED_WAYPOINTS} waypoints and {SUPPORTED_TOURS} tours.
+            It still works, but panning may not stay smooth.
+          </span>
+          <Button variant="outline" size="sm" onClick={() => setOversizedDismissed(true)}>
+            Dismiss
+          </Button>
+        </div>
+      ) : null}
       <div className="min-h-0 flex-1">
         <AppShell
           rail={rail}
@@ -239,6 +262,7 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
           inspector={<Inspector store={store} editing={editing} />}
           inspectorOpen={inspectorOpen}
           onInspectorOpenChange={setInspectorOpen}
+          announcement={announcement}
         />
       </div>
     </div>

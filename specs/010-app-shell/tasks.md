@@ -139,13 +139,13 @@ Single Next.js project at the repository root: `app/`, `app/components/`, `app/l
 
 ### Tests for User Story 4
 
-- [ ] T040 [P] [US4] Write `tests/acceptance/responsive.spec.ts` running the same assertions at 1440, 1024, 768 and 360 px: region visibility per band, no horizontal overflow outside the canvas, dock controls usable, one drawer at a time, dismissing a drawer returns space to the canvas
+- [x] T040 [P] [US4] Write `tests/acceptance/responsive.spec.ts` running the same assertions at 1440, 1024, 768 and 360 px: region visibility per band, no horizontal overflow outside the canvas, dock controls usable, one drawer at a time, dismissing a drawer returns space to the canvas
 
 ### Implementation for User Story 4
 
 - [x] T041 [US4] Implement the width bands in `app/components/shell/AppShell.tsx` per `contracts/ui-shell.md` §2: `>=1280px` expanded rail (240 px) and docked inspector (320 px); `768–1279px` icon-only rail (56 px) with labels on hover and focus, 300 px inspector; `<768px` rail and inspector as sheets with a persistent opener, dock fixed to a single scrollable bottom row
-- [ ] T042 [US4] Enforce canvas minimums in `app/components/shell/MapCanvas.tsx` and `app/globals.css`: at least 320 px wide, never horizontally scrollable, grid track sizing with `minmax(0, 1fr)` so children cannot force overflow
-- [ ] T043 [US4] Ensure only one drawer is open at a time in `app/components/shell/AppShell.tsx`, dismissing it restores focus to its opener; then run `tests/acceptance/responsive.spec.ts` and record the run in `TEST_RESULTS.md`
+- [x] T042 [US4] Enforce canvas minimums in `app/components/shell/MapCanvas.tsx` and `app/globals.css`: at least 320 px wide, never horizontally scrollable, grid track sizing with `minmax(0, 1fr)` so children cannot force overflow
+- [x] T043 [US4] Ensure only one drawer is open at a time in `app/components/shell/AppShell.tsx`, dismissing it restores focus to its opener; then run `tests/acceptance/responsive.spec.ts` and record the run in `TEST_RESULTS.md`
 
 **Checkpoint**: US1–US4 all work independently.
 
@@ -159,14 +159,14 @@ Single Next.js project at the repository root: `app/`, `app/components/`, `app/l
 
 ### Tests for User Story 5
 
-- [ ] T044 [P] [US5] Write `tests/acceptance/states.spec.ts` covering SC-007/SC-012: empty workspace → add project → map listed, project without a map → create map → map opens, slow load shows a skeleton with data actions disabled, failure shows a plain-language message with retry, and each state exposes exactly one primary action
+- [x] T044 [P] [US5] Write `tests/acceptance/states.spec.ts` covering SC-007/SC-012: empty workspace → add project → map listed, project without a map → create map → map opens, slow load shows a skeleton with data actions disabled, failure shows a plain-language message with retry, and each state exposes exactly one primary action
 
 ### Implementation for User Story 5
 
 - [x] T045 [US5] Create `app/components/shell/states/` — `EmptyWorkspace.tsx`, `EmptyProject.tsx`, `LoadingSurface.tsx` (skeleton matching the region's shape), `FailedSurface.tsx` (message plus single retry) — each rendering one primary action and nothing else
 - [x] T046 [US5] Create `app/components/shell/AddProjectDialog.tsx` on the shadcn `dialog` + `scroll-area`: a breadcrumb, a directory-only list from `GET /api/workspace/browse`, a path field the person may also type or paste, and a confirm action mapping the contract's error codes (`not-a-directory`, `not-readable`, `already-registered`, `refused-self`) to plain sentences
 - [x] T047 [US5] Create `app/components/shell/CreateMapDialog.tsx` posting to `POST /api/workspace/[projectId]/maps`, mapping `invalid-name`, `name-taken` and `project-unavailable`, and opening the new map at once on `201`
-- [ ] T048 [US5] Announce surface state changes through one live region in `app/components/shell/AppShell.tsx` (`aria-live="polite"`), and disable data-dependent controls visibly while loading; then run the acceptance suite and record the run in `TEST_RESULTS.md`
+- [x] T048 [US5] Announce surface state changes through one live region in `app/components/shell/AppShell.tsx` (`aria-live="polite"`), and disable data-dependent controls visibly while loading; then run the acceptance suite and record the run in `TEST_RESULTS.md`
 
 **Checkpoint**: US1–US5 all work independently.
 
@@ -188,7 +188,7 @@ Single Next.js project at the repository root: `app/`, `app/components/`, `app/l
 - [x] T051 [P] [US6] Create `app/components/shell/TourEditor.tsx` inside the inspector: name, description, stop list with reorder controls (keyboard-operable, not drag-only) and stop removal, committed to the store as one history entry per reorder
 - [x] T052 [US6] Implement autosave in `app/lib/store/map-store.ts` and `app/lib/workspace/use-map-document.ts`: a debounce of 800 ms after the last change, `PUT /api/maps/...`, `saveStatus` transitions `idle → pending → saved | failed`, a failed save keeps the person's text and exposes one retry, and history is cleared only on map switch, never on save
 - [x] T053 [US6] Wire undo and redo to the dock controls and to `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z` and `Ctrl+Y`, scoped per map, disabled at the ends of the stack, and suspended while focus is in a text field so text undo still works there
-- [ ] T054 [US6] Coalesce rapid edits to one field into a single history entry (commit on pause or blur) in `app/lib/store/history.ts` and `app/lib/store/map-store.ts`, and ensure create, edit, move, delete and reorder of waypoints, edges, tours and stops each produce exactly one entry
+- [x] T054 [US6] Coalesce rapid edits to one field into a single history entry (commit on pause or blur) in `app/lib/store/history.ts` and `app/lib/store/map-store.ts`, and ensure create, edit, move, delete and reorder of waypoints, edges, tours and stops each produce exactly one entry
 - [x] T055 [US6] Handle `409 stale-document` in `app/lib/workspace/use-map-document.ts` and `app/components/shell/AppShell.tsx`: a non-dismissible notice naming that the map changed on disk, with exactly two actions — reload or overwrite — never resolving silently
 - [x] T056 [US6] Run `tests/acceptance/editing.spec.ts` with the full unit suite and record the run in `TEST_RESULTS.md`
 
@@ -200,13 +200,13 @@ Single Next.js project at the repository root: `app/`, `app/components/`, `app/l
 
 **Purpose**: Performance guarantees, accessibility, and removal of everything Phases 1–8 orphan.
 
-- [ ] T057 [P] Add `tests/unit/fixtures/build-map.ts` generating a map of a given waypoint and tour count, and `tests/acceptance/performance.spec.ts` measuring pan, zoom, select, drag and search keystroke against the 100 ms budget at 250 waypoints and 40 tours (SC-010)
-- [ ] T058 [P] Implement the oversized-map report (FR-025) in `app/lib/store/selectors.ts` and `app/components/shell/MapCanvas.tsx`: above 250 waypoints or 40 tours the map still opens and a dismissible note states that it exceeds the supported size
-- [ ] T059 [P] Accessibility sweep: `aria-label` on every icon-only control naming the action, visible focus ring at 3:1 in both themes, `aria-current` on the active project and map, dock step announced politely, focus order rail → dock → canvas → inspector, `Escape` closing the topmost surface, plus `tests/acceptance/keyboard.spec.ts` for SC-008
+- [x] T057 [P] Add `tests/unit/fixtures/build-map.ts` generating a map of a given waypoint and tour count, and `tests/acceptance/performance.spec.ts` measuring pan, zoom, select, drag and search keystroke against the 100 ms budget at 250 waypoints and 40 tours (SC-010)
+- [x] T058 [P] Implement the oversized-map report (FR-025) in `app/lib/store/selectors.ts` and `app/components/shell/MapCanvas.tsx`: above 250 waypoints or 40 tours the map still opens and a dismissible note states that it exceeds the supported size
+- [x] T059 [P] Accessibility sweep: `aria-label` on every icon-only control naming the action, visible focus ring at 3:1 in both themes, `aria-current` on the active project and map, dock step announced politely, focus order rail → dock → canvas → inspector, `Escape` closing the topmost surface, plus `tests/acceptance/keyboard.spec.ts` for SC-008
 - [x] T060 Delete the orphaned server layer: `prisma/`, `prisma.config.ts`, `app/lib/db.ts`, `app/lib/db-mappers.ts`, `app/lib/edit-passcode.ts`, `app/api/data/`, `app/api/waypoints/`, `app/api/edges/`, `app/api/tours/`, `app/api/backup-nightly/`, `app/api/reset-nightly/`, `scripts/`, `backups/`, `vercel.json`; remove the dependencies `@prisma/*`, `@libsql/client`, `better-sqlite3`, `@vercel/analytics`, `@vercel/blob`, `dotenv-cli`; remove the `postinstall: prisma generate` script; delete the `@vercel/analytics` import from `app/layout.tsx`; delete the five superseded files in `tests/acceptance/` that the new specs replace
 - [x] T061 [P] Update `README.md` in the fixed order — business logic, then architecture (four regions, token layer, local storage, workspace registry), then technical detail (commands, `CTOUR_HOME`, troubleshooting) — and add `docs/adr/0001-local-first-shell.md` recording why hosting, Prisma and per-team sites were removed
 - [x] T062 Run `npm run build`, `npm run typecheck`, `npm run lint`, `npm run test:unit`, `npm run test:e2e`; confirm nothing under `app/` or `tests/` references a removed module; record the final run in `TEST_RESULTS.md`
-- [ ] T063 Execute `specs/010-app-shell/quickstart.md` end to end against a throwaway `CTOUR_HOME` and a throwaway project directory, and correct any drift between the guide and the built application
+- [x] T063 Execute `specs/010-app-shell/quickstart.md` end to end against a throwaway `CTOUR_HOME` and a throwaway project directory, and correct any drift between the guide and the built application
 
 ---
 
@@ -268,3 +268,6 @@ Each later phase is independently demonstrable: US2 dark mode, US3 project switc
 - A task that deletes code is not a cleanup afterthought: it is what keeps the constitution's "no dead code" rule true at every commit
 - Commit after each phase at minimum; the pre-commit hook runs prettier and `tsc --noEmit`
 - History is per map and per session by design (FR-023); never persist it
+- T037 stays open on one point: an unavailable project is marked, can be
+  repointed, and refuses writes, but it does not yet open read-only from a
+  cached copy of the map — that cache belongs to the import/export feature

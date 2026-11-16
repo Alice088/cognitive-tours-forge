@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangleIcon, MapIcon, PlusIcon } from 'lucide-react';
+import { AlertTriangleIcon, FolderSearchIcon, MapIcon, PlusIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
@@ -12,10 +12,12 @@ export function ProjectGroup({
   project,
   activeMapFile,
   onCreateMap,
+  onRelink,
 }: {
   project: ProjectSummary;
   activeMapFile: string | null;
   onCreateMap: (project: ProjectSummary) => void;
+  onRelink: (project: ProjectSummary) => void;
 }) {
   return (
     <li className="px-1 py-1" data-project={project.id}>
@@ -27,14 +29,25 @@ export function ProjectGroup({
           {project.name}
         </span>
         {project.availability === 'unavailable' ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span aria-label="Not found on disk" className="text-destructive">
-                <AlertTriangleIcon className="size-4" aria-hidden="true" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>{project.error ?? 'The folder cannot be reached'}</TooltipContent>
-          </Tooltip>
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span aria-label="Not found on disk" className="text-destructive">
+                  <AlertTriangleIcon className="size-4" aria-hidden="true" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{project.error ?? 'The folder cannot be reached'}</TooltipContent>
+            </Tooltip>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7"
+              aria-label={`Choose a new location for ${project.name}`}
+              onClick={() => onRelink(project)}
+            >
+              <FolderSearchIcon aria-hidden="true" />
+            </Button>
+          </>
         ) : null}
         <Button
           variant="ghost"

@@ -2,7 +2,7 @@
 
 Cognitive Tours is a map of how a piece of software actually works, kept next to
 the code it describes.
-е
+еа
 depend on each other. A **tour** is an ordered walk through the map with a
 spoken narrative at each stop, so a newcomer can be shown the shape of the system
 in ten minutes instead of six months.

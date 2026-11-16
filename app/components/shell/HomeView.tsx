@@ -3,13 +3,15 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AddProjectDialog } from '@/app/components/shell/AddProjectDialog';
-import { EmptyWorkspace, FailedSurface, LoadingSurface } from '@/app/components/shell/states';
-import { useWorkspace } from '@/app/lib/workspace/use-workspace';
+import { CreateMapDialog } from '@/app/components/shell/CreateMapDialog';
+import { EmptyProject, EmptyWorkspace, FailedSurface, LoadingSurface } from '@/app/components/shell/states';
+import { createMap, useWorkspace } from '@/app/lib/workspace/use-workspace';
 
 export function HomeView() {
   const router = useRouter();
   const { snapshot, status, failure, refresh } = useWorkspace();
   const [adding, setAdding] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     if (!snapshot) {
@@ -37,9 +39,32 @@ export function HomeView() {
     return <FailedSurface message={failure ?? 'The workspace could not be read.'} onRetry={refresh} />;
   }
 
+  const projects = snapshot?.projects ?? [];
+  const withMaps = projects.filter(project => project.maps.length > 0);
+  const first = projects[0];
+
   return (
     <div className="flex h-dvh items-center justify-center bg-background text-foreground">
-      <EmptyWorkspace onAddProject={() => setAdding(true)} />
+      {projects.length === 0 ? (
+        <EmptyWorkspace onAddProject={() => setAdding(true)} />
+      ) : withMaps.length === 0 && first ? (
+        <EmptyProject projectName={first.name} onCreateMap={() => setCreating(true)} />
+      ) : (
+        <LoadingSurface label="Opening your last map" />
+      )}
+      <CreateMapDialog
+        open={creating}
+        onOpenChange={setCreating}
+        projectName={first?.name ?? ''}
+        onCreate={async name => {
+          if (!first) {
+            return;
+          }
+          const result = await createMap(first.id, name);
+          router.push(`/p/${first.id}/${result.map.file}`);
+        }}
+      />
+
       <AddProjectDialog
         open={adding}
         onOpenChange={setAdding}
