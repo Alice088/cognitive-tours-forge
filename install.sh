@@ -3,6 +3,7 @@ set -eu
 
 REPO="${CTOUR_REPO:-Alice088/cognitive-tours-forge}"
 BRANCH="${CTOUR_BRANCH:-main}"
+FORCE_SOURCE="${CTOUR_FORCE_SOURCE:-}"
 TARBALL_URL="${CTOUR_TARBALL_URL:-}"
 PREFIX=""
 TEMP=""
@@ -36,8 +37,9 @@ Environment:
 
   CTOUR_REPO         GitHub repository, owner/name        (default Alice088/cognitive-tours-forge)
   CTOUR_BRANCH       branch to read the sources from      (default main)
-  CTOUR_TARBALL_URL  a packed ctour-<version>.tgz to use instead of building
-  CTOUR_PREFIX       same as --prefix
+  CTOUR_TARBALL_URL   a packed ctour-<version>.tgz to use instead of building
+  CTOUR_FORCE_SOURCE  build from $CTOUR_BRANCH even when a packed release exists
+  CTOUR_PREFIX        same as --prefix
 
 The installer needs Node.js 20 or newer and npm. It never writes inside your
 projects: it installs a command, and the command writes there when you run it.
@@ -101,12 +103,55 @@ download_tarball() {
   TARBALL="$TEMP/download/ctour.tgz"
 }
 
+read_json_field() {
+  node -e 'let text="";process.stdin.on("data",(chunk)=>text+=chunk).on("end",()=>{try{const value='"$1"';process.stdout.write(String(value ?? ""))}catch{}})' 2>/dev/null || printf ''
+}
+
+branch_version() {
+  curl -fsSL --max-time 10 "https://raw.githubusercontent.com/$REPO/$BRANCH/package.json" 2>/dev/null |
+    read_json_field 'JSON.parse(text).version'
+}
+
+tarball_field() {
+  tar -xzOf "$1" package/dist/build.json 2>/dev/null |
+    read_json_field "$2"
+}
+
+branch_commit() {
+  curl -fsSL --max-time 10 "https://api.github.com/repos/$REPO/commits/$BRANCH" 2>/dev/null |
+    read_json_field 'JSON.parse(text).sha'
+}
+
+release_matches_branch() {
+  built="$(tarball_field "$TARBALL" 'JSON.parse(text).commit')"
+  dirty="$(tarball_field "$TARBALL" 'JSON.parse(text).dirty')"
+  if [ -z "$built" ]; then
+    say "The packed release carries no build information; using it"
+    return 0
+  fi
+  if [ "$dirty" = "true" ]; then
+    say "The packed release was built from a working tree with uncommitted changes; building from source"
+    return 1
+  fi
+  head="$(branch_commit)"
+  if [ -z "$head" ]; then
+    say "Cannot reach GitHub to compare the release with $BRANCH; using the release"
+    return 0
+  fi
+  if [ "$built" != "$head" ]; then
+    say "The packed release was built from $built, while $BRANCH is at $head; building from source"
+    return 1
+  fi
+  return 0
+}
+
 release_tarball() {
-  version="$(curl -fsSL --max-time 10 "https://raw.githubusercontent.com/$REPO/$BRANCH/package.json" 2>/dev/null | node -e 'let text="";process.stdin.on("data",(chunk)=>text+=chunk).on("end",()=>{try{process.stdout.write(JSON.parse(text).version)}catch{}})' 2>/dev/null || printf '')"
+  version="$(branch_version)"
   [ -n "$version" ] || return 1
   candidate="https://github.com/$REPO/releases/download/v$version/ctour-$version.tgz"
   curl -fsSL --max-time 10 --head "$candidate" >/dev/null 2>&1 || return 1
   download_tarball "$candidate"
+  release_matches_branch
 }
 
 build_from_source() {
@@ -125,14 +170,20 @@ build_from_source() {
 }
 
 TARBALL=""
+WANTED=""
 
 if [ -n "$TARBALL_URL" ]; then
   download_tarball "$TARBALL_URL"
+elif [ -n "$FORCE_SOURCE" ] && [ -z "$HERE" ]; then
+  WANTED="$(branch_version)"
+  build_from_source
 elif usable_source; then
   pack_from_folder "$HERE"
 elif release_tarball; then
-  say "Using the packed release of $REPO"
+  WANTED="$(branch_version)"
+  say "Using the packed release of $REPO ($WANTED)"
 else
+  WANTED="$(branch_version)"
   build_from_source
 fi
 
@@ -158,6 +209,11 @@ fi
 
 [ -n "${BIN:-}" ] && [ -x "$BIN" ] || fail "the command was installed but is not on PATH"
 "$BIN" --version || fail "the installed command does not run"
+
+INSTALLED="$("$BIN" --version | awk '{print $2}')"
+if [ -n "$WANTED" ] && [ "$INSTALLED" != "$WANTED" ]; then
+  say "Warning: installed $INSTALLED while $BRANCH is at $WANTED"
+fi
 
 say ""
 say "Done. Next:"

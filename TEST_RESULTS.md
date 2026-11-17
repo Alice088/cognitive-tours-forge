@@ -4,6 +4,69 @@
 
 ---
 
+## Прогон: 2026-11-17 09:20 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `make pack ALLOW_DIRTY=1`, `sh install.sh --prefix …` (путь релиза), `curl … | sh` (текущий `main`), `npx vitest run`, `npx eslint .`, `npx tsc --noEmit`
+
+Проверка вопроса «даёт ли `curl … | sh` новую версию»: сейчас **нет** — ассет `v0.1.0` собран до появления pi-адаптера и не несёт сведений о сборке, установщик честно берёт его. Добавлен механизм: сборка пишет `dist/build.json` (версия, коммит, признак грязного дерева), установщик сравнивает коммит с головой `main` и при расхождении или грязной сборке собирает из исходников; `make release` теперь отказывается при незакоммиченных изменениях и при уже существующем релизе.
+
+| #   | Тест                                                                                | Пакет  | Результат | Время  |
+| --- | ----------------------------------------------------------------------------------- | ------ | --------- | ------ |
+| 1   | сборка пишет `dist/build.json` с версией и коммитом                                 | cli    | PASS      | 0.20s  |
+| 2   | `make pack ALLOW_DIRTY=1` даёт tarball с `package/dist/build.json`                  | make   | PASS      | 61.00s |
+| 3   | `install.sh` по пути релиза печатает «carries no build information; using it»       | sh     | PASS      | 8.40s  |
+| 4   | текущая команда `curl … \| sh` из `main` ставит старый `0.1.0`                      | sh     | PASS      | 9.60s  |
+| 5   | фейковый `curl`: коммит релиза не совпадает с `main` → «building from source»       | vitest | PASS      | 0.90s  |
+| 6   | фейковый `curl`: релиз собран из грязного дерева → «uncommitted changes», исходники | vitest | PASS      | 0.80s  |
+| 7   | `make release` отказывается при незакоммиченных изменениях                          | make   | PASS      | 0.10s  |
+| 8   | `make release` отказывается при существующем релизе `v0.1.0`                        | make   | PASS      | 0.60s  |
+| 9   | `npx vitest run` — 37 файлов / 346 тестов                                           | vitest | PASS      | 4.70s  |
+| 10  | `npx eslint .`                                                                      | eslint | PASS      | 2.80s  |
+| 11  | `npx tsc --noEmit`                                                                  | tsc    | PASS      | 3.10s  |
+
+### Сводка
+
+**Всего:** 11 · **PASS:** 11 · **FAIL:** 0 · **SKIP:** 0 · **PANIC:** 0 · время 92.20s
+
+### Падения
+
+| Тест | Причина |
+| ---- | ------- |
+| —    | нет     |
+
+---
+
+## Прогон: 2026-11-17 09:11 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `make release` (дважды), `make help`, `npx vitest run`, `npx eslint .`, `npx tsc --noEmit`
+
+Добавлен `Makefile` с целью `release`: typecheck → unit-тесты → чистая сборка → `npm pack` → установка tarball в `.tmp/release` и запуск `--version`. Первый прогон поймал дефект: в `.next/standalone` оставался прошлый `ctour-0.1.0.tgz`, и он попадал в новый пакет (38 MB вместо 19.8). Исправлено: `build:all` теперь удаляет `.next/standalone` перед сборкой, а `files` дополнительно исключает `**/*.tgz`.
+
+| #   | Тест                                                                   | Пакет  | Результат | Время                           |
+| --- | ---------------------------------------------------------------------- | ------ | --------- | ------------------------------- |
+| 1   | `make release`: typecheck + 344 теста как gate                         | make   | PASS      | 3.10s + 4.60s                   |
+| 2   | `make release`: чистая сборка (`build:all`)                            | make   | PASS      | 62.00s                          |
+| 3   | `make release`: `npm pack` даёт `ctour-0.1.0.tgz`                      | make   | PASS      | 9.40s                           |
+| 4   | `make release`: установка tarball в `.tmp/release` и `ctour --version` | make   | PASS      | 9.30s                           |
+| 5   | размер пакета после исправления                                        | make   | PASS      | — (19 788 253 байта, 1441 файл) |
+| 6   | в пакете нет `.tgz`, `.tmp/`, `test-results/`                          | make   | PASS      | 0.40s                           |
+| 7   | `make help` перечисляет цели                                           | make   | PASS      | 0.10s                           |
+| 8   | `npx vitest run` — 37 файлов / 344 теста                               | vitest | PASS      | 4.60s                           |
+| 9   | `npx eslint .`                                                         | eslint | PASS      | 2.80s                           |
+| 10  | `npx tsc --noEmit`                                                     | tsc    | PASS      | 3.10s                           |
+
+### Сводка
+
+**Всего:** 10 · **PASS:** 10 · **FAIL:** 0 · **SKIP:** 0 · **PANIC:** 0 · время 99.40s
+
+### Падения
+
+| Тест | Причина                                                                                                             |
+| ---- | ------------------------------------------------------------------------------------------------------------------- |
+| —    | нет; первый прогон дал 38 MB из-за старого tarball внутри `.next/standalone`, дефект исправлен до записи результата |
+
+---
+
 ## Прогон: 2026-11-16 18:02 MSK (+0300)
 
 **Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npm run build:cli`, `node dist/cli.mjs mcp install`, `node dist/cli.mjs doctor`, `/home/fworld/.pi/agent/bin/pi mcp list`, прямой JSON-RPC вызов `list_projects`, `npx vitest run`, `npx eslint .`, `npx tsc --noEmit`

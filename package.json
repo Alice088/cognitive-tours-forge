@@ -38,6 +38,7 @@
     "!.next/standalone/resources/",
     "!.next/standalone/test-results/",
     "!.next/standalone/.tmp/",
+    "!**/*.tgz",
     "README.md",
     "LICENSE"
   ],
@@ -52,9 +53,9 @@
     "test:e2e": "playwright test",
     "prepare": "husky",
     "build:web": "next build",
-    "build:cli": "esbuild cli/index.ts --bundle --platform=node --format=esm --outfile=dist/cli.mjs --banner:js='#!/usr/bin/env node' && node -e \"require('node:fs').chmodSync('dist/cli.mjs', 0o755)\"",
+    "build:cli": "esbuild cli/index.ts --bundle --platform=node --format=esm --outfile=dist/cli.mjs --banner:js='#!/usr/bin/env node' && node -e \"require('node:fs').chmodSync('dist/cli.mjs', 0o755)\" && node scripts/build-info.mjs",
     "build:pack": "node scripts/pack-standalone.mjs",
-    "build:all": "npm run build:web && npm run build:pack && npm run build:cli",
+    "build:all": "node -e \"require('node:fs').rmSync('.next/standalone',{recursive:true,force:true})\" && npm run build:web && npm run build:pack && npm run build:cli",
     "prepublishOnly": "npm run typecheck && npm run test:unit && npm run build:all"
   },
   "dependencies": {

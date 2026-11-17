@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { chmodSync, copyFileSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { chmodSync, copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -65,6 +65,95 @@ describe('install.sh', () => {
     const result = run([], { PATH: empty }, '/bin/sh');
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('Node.js is not installed');
+  });
+
+  it('builds from source when the packed release is older than the branch', () => {
+    const fakeBin = path.join(sandbox, 'fake-bin');
+    execFileSync('mkdir', ['-p', fakeBin]);
+    const tarball = path.join(sandbox, 'ctour-9.9.9.tgz');
+    execFileSync('sh', [
+      '-c',
+      `mkdir -p "${path.join(sandbox, 'pack', 'package', 'dist')}" && printf '{"commit":"aaaa","dirty":false}' > "${path.join(sandbox, 'pack', 'package', 'dist', 'build.json')}" && tar -czf "${tarball}" -C "${path.join(sandbox, 'pack')}" package`,
+    ]);
+    const curl = path.join(fakeBin, 'curl');
+    writeFileSync(
+      curl,
+      `#!/bin/sh
+out=""
+head=0
+for arg in "$@"; do
+  case "$arg" in
+    --head) head=1 ;;
+    -o) want_out=1 ;;
+    *) if [ "\${want_out:-}" = 1 ]; then out="$arg"; want_out=0; fi ;;
+  esac
+  case "$arg" in
+    *package.json) body='{"version":"9.9.9"}' ;;
+    *api.github.com*) body='{"sha":"bbbb"}' ;;
+    *archive/refs*) exit 22 ;;
+  esac
+done
+if [ -n "$out" ]; then cp "${tarball}" "$out"; exit 0; fi
+if [ "$head" = 1 ]; then exit 0; fi
+[ -n "\${body:-}" ] && printf '%s' "$body"
+exit 0
+`,
+      'utf8'
+    );
+    chmodSync(curl, 0o755);
+
+    const result = run(['--prefix', path.join(sandbox, 'prefix')], {
+      PATH: `${fakeBin}${path.delimiter}${process.env.PATH ?? ''}`,
+      CTOUR_REPO: 'test/repo',
+    });
+
+    expect(result.stdout).toContain('building from source');
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('cannot download the sources');
+  });
+
+  it('refuses a packed release built from uncommitted changes', () => {
+    const fakeBin = path.join(sandbox, 'fake-bin-dirty');
+    execFileSync('mkdir', ['-p', fakeBin]);
+    const pack = path.join(sandbox, 'pack-dirty');
+    execFileSync('sh', [
+      '-c',
+      `mkdir -p "${path.join(pack, 'package', 'dist')}" && printf '{"commit":"bbbb","dirty":true}' > "${path.join(pack, 'package', 'dist', 'build.json')}" && tar -czf "${path.join(sandbox, 'dirty.tgz')}" -C "${pack}" package`,
+    ]);
+    const curl = path.join(fakeBin, 'curl');
+    writeFileSync(
+      curl,
+      `#!/bin/sh
+out=""
+head=0
+for arg in "$@"; do
+  case "$arg" in
+    --head) head=1 ;;
+    -o) want_out=1 ;;
+    *) if [ "\${want_out:-}" = 1 ]; then out="$arg"; want_out=0; fi ;;
+  esac
+  case "$arg" in
+    *package.json) body='{"version":"9.9.9"}' ;;
+    *api.github.com*) body='{"sha":"bbbb"}' ;;
+    *archive/refs*) exit 22 ;;
+  esac
+done
+if [ -n "$out" ]; then cp "${path.join(sandbox, 'dirty.tgz')}" "$out"; exit 0; fi
+if [ "$head" = 1 ]; then exit 0; fi
+[ -n "\${body:-}" ] && printf '%s' "$body"
+exit 0
+`,
+      'utf8'
+    );
+    chmodSync(curl, 0o755);
+
+    const result = run(['--prefix', path.join(sandbox, 'prefix-dirty')], {
+      PATH: `${fakeBin}${path.delimiter}${process.env.PATH ?? ''}`,
+      CTOUR_REPO: 'test/repo',
+    });
+
+    expect(result.stdout).toContain('uncommitted changes');
+    expect(result.status).toBe(1);
   });
 
   it('documents the repository and branch it reads from', () => {

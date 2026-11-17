@@ -102,7 +102,9 @@ One line: it installs the `ctour` command, adds nothing to your projects, and as
 for no configuration. You need Node.js 20 or newer; the installer builds the
 interface on your machine the first time (a couple of minutes), then installs the
 command into the machine-wide npm prefix, or into `~/.local` when that prefix is
-not writable.
+not writable. It uses the packed release for the version on `main` when one exists,
+and builds from source when that release is older than the branch, so it never
+installs a stale build.
 
 Other ways in, for people who prefer them:
 
@@ -180,10 +182,11 @@ product, not a curiosity of the prototype.
 
 ## Building and testing
 
-`npm install`, `npm run dev`, `npm run build:all`, `npm run test:unit`,
-`npm run test:e2e`, `npm run lint`, `npm run typecheck` — with the test layout, the
-command's internals, the environment and a troubleshooting table for every symptom
-the product can produce: [docs/DEVELOPING.md](docs/DEVELOPING.md).
+`npm install`, `npm run dev`, `npm run test:unit`, `npm run test:e2e`,
+`npm run lint`, `npm run typecheck`, and `make release` to produce the installable
+`ctour-<version>.tgz` — with the test layout, the command's internals, the
+environment and a troubleshooting table for every symptom the product can produce:
+[docs/DEVELOPING.md](docs/DEVELOPING.md).
 
 Feature work is specified before it is built; see `specs/`. The map format is a
 contract, `specs/010-app-shell/contracts/map-file.md`: changes to ordering or field

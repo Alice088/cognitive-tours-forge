@@ -12,6 +12,32 @@ Using it is in the [README](../README.md); how it works is in
 
 Node.js 20 or newer (22 tested).
 
+### Prepare a release
+
+```bash
+make release
+```
+
+Typecheck, unit tests, a clean build (the standalone folder is removed first, so
+nothing stale travels), `npm pack`, then a real install of the tarball into
+`.tmp/release` and `ctour --version` against it. It prints the file, its size and
+its sha256, and the four steps that follow: tag and push, attach the file to the
+release, `install.sh` then picks it up instead of building, and optionally
+`npm publish`. `make help` lists the smaller targets (`pack`, `verify`, `test`,
+`e2e`, `lint`, `clean`, `bump-patch`, `bump-minor`).
+
+Two guards run before anything is built. A working tree with uncommitted changes is
+refused (`ALLOW_DIRTY=1` overrides it for a local experiment), and a version whose
+GitHub release already exists is refused: a new release means a new version, so run
+`make bump-patch` or `make bump-minor` first. `make pack` skips the tag guard when
+you are replacing an asset by hand.
+
+Every build writes `dist/build.json` with the version, the commit it came from, and
+whether the tree was dirty. `install.sh` reads it out of the packed release and
+compares it with the head of the branch: a release built from another commit, or
+from a dirty tree, is not used — the installer builds from source instead. That is
+how `curl … | sh` can never hand out an older build than the one on `main`.
+
 ### Install it
 
 ```bash
