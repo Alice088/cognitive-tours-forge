@@ -4,6 +4,33 @@
 
 ---
 
+## Прогон: 2026-11-17 09:22 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run`, `npm run build:cli`, `node dist/cli.mjs --version`, `npx eslint .`, `npx tsc --noEmit`
+
+`make bump-patch` до 0.1.1 уронил `dispatch.test.ts` («expected '0.1.0' to be '0.1.1'»): версия была зашита в `cli/lib/version.ts`. Теперь она читается из `package.json` во время запуска (`../package.json`, затем `../../package.json`), поэтому бамп версии больше не расходится с бинарём.
+
+| #   | Тест                                                        | Пакет  | Результат | Время |
+| --- | ----------------------------------------------------------- | ------ | --------- | ----- |
+| 1   | `dispatch.test.ts` — версия совпадает с `package.json`      | vitest | PASS      | 0.10s |
+| 2   | `npm run build:cli` пишет `dist/build.json` с версией 0.1.1 | cli    | PASS      | 0.60s |
+| 3   | `node dist/cli.mjs --version` печатает `ctour 0.1.1`        | cli    | PASS      | 0.10s |
+| 4   | `npx vitest run` — 37 файлов / 346 тестов                   | vitest | PASS      | 4.40s |
+| 5   | `npx eslint .`                                              | eslint | PASS      | 2.80s |
+| 6   | `npx tsc --noEmit`                                          | tsc    | PASS      | 3.10s |
+
+### Сводка
+
+**Всего:** 6 · **PASS:** 6 · **FAIL:** 0 · **SKIP:** 0 · **PANIC:** 0 · время 11.10s
+
+### Падения
+
+| Тест | Причина                                                                                               |
+| ---- | ----------------------------------------------------------------------------------------------------- |
+| —    | нет (падение `dispatch.test.ts` после `make bump-patch` было дефектом и исправлено в этом же прогоне) |
+
+---
+
 ## Прогон: 2026-11-17 09:20 MSK (+0300)
 
 **Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `make pack ALLOW_DIRTY=1`, `sh install.sh --prefix …` (путь релиза), `curl … | sh` (текущий `main`), `npx vitest run`, `npx eslint .`, `npx tsc --noEmit`
