@@ -136,12 +136,12 @@ Step by step, with what to click and what to expect:
 
 ## Guides
 
-| Guide                                                         | It covers                                                                   |
-| ------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| [Mapping a project](docs/guides/mapping-a-project.md)         | waypoints, links, file paths, layout, several maps in one repository        |
-| [Writing a tour](docs/guides/writing-a-tour.md)               | stops, narration, the reading surface, the whole-tour view, export          |
-| [Working with an agent](docs/guides/working-with-an-agent.md) | `ctour mcp`, connecting Claude Code / Cursor / Gemini CLI / Codex, refusals |
-| [Moving maps between projects](docs/guides/moving-maps.md)    | saving a copy, importing with a preview, the whole-workspace bundle         |
+| Guide                                                         | It covers                                                                        |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [Mapping a project](docs/guides/mapping-a-project.md)         | waypoints, links, file paths, layout, several maps in one repository             |
+| [Writing a tour](docs/guides/writing-a-tour.md)               | stops, narration, the reading surface, the whole-tour view, export               |
+| [Working with an agent](docs/guides/working-with-an-agent.md) | `ctour mcp`, connecting Claude Code / Cursor / Gemini CLI / Codex / pi, refusals |
+| [Moving maps between projects](docs/guides/moving-maps.md)    | saving a copy, importing with a preview, the whole-workspace bundle              |
 
 ## How it fits together
 

@@ -35,9 +35,9 @@ two-space indent — and your next `git diff` is the change, not a reformat.
 ctour mcp install
 ```
 
-The command looks for Claude Code, Cursor, Gemini CLI and Codex on this machine,
-and for each one it finds, adds a map server entry to that agent's own
-configuration file. It preserves the rest of the file byte for byte, uses an
+The command looks for Claude Code, Cursor, Gemini CLI, Codex and pi on this
+machine, and for each one it finds, adds a map server entry to that agent's own
+configuration file (`~/.pi/agent/mcp.json` for pi, so `pi mcp list` shows it). It preserves the rest of the file byte for byte, uses an
 absolute path to the command, and writes nothing at all the second time it runs.
 Restart the agent afterwards; most of them read configuration only at startup.
 

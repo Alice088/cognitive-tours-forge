@@ -12,7 +12,7 @@ import {
   verifyJson,
 } from './config-text';
 
-export type AgentName = 'claude-code' | 'cursor' | 'gemini-cli' | 'codex';
+export type AgentName = 'claude-code' | 'cursor' | 'gemini-cli' | 'codex' | 'pi';
 
 export type AgentAdapter = {
   name: AgentName;
@@ -66,6 +66,14 @@ export const ADAPTERS: AgentAdapter[] = [
     entryPath: ['mcp_servers', 'ctour'],
     configPath: home => path.join(home, '.codex', 'config.toml'),
     folderPath: home => path.join(home, '.codex'),
+  },
+  {
+    name: 'pi',
+    label: 'pi',
+    format: 'json',
+    entryPath: ['mcpServers', 'ctour'],
+    configPath: home => path.join(home, '.pi', 'agent', 'mcp.json'),
+    folderPath: home => path.join(home, '.pi', 'agent'),
   },
 ];
 

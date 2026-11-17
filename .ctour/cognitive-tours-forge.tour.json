@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "project": {
+    "name": "cognitive-tours-forge",
+    "createdAt": "2026-11-16T16:19:17.838Z"
+  },
+  "waypoints": [
+    {
+      "id": "w-1",
+      "label": "New waypoint",
+      "type": "Open Question",
+      "position": {
+        "x": 80,
+        "y": 80
+      }
+    }
+  ],
+  "edges": [],
+  "tours": []
+}

@@ -173,7 +173,7 @@ what a refusal means — travel in the protocol's own handshake, from
 product.
 
 `ctour mcp install` finds the agents on the machine (Claude Code, Cursor, Gemini
-CLI, Codex), adds the entry to the agent's own configuration, and leaves every
+CLI, Codex, pi), adds the entry to the agent's own configuration, and leaves every
 other byte of that file alone; running it twice writes nothing. `ctour doctor`
 reports whether each detected agent is connected and whether the command it points
 at still exists.

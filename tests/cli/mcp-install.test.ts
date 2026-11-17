@@ -67,6 +67,13 @@ describe('detection', () => {
     expect((await detect(root)).map(one => one.name)).toEqual(['cursor']);
   });
 
+  it('finds pi by its agent folder', async () => {
+    const root = home();
+    mkdirSync(path.join(root, '.pi', 'agent'), { recursive: true });
+
+    expect((await detect(root)).map(one => one.name)).toEqual(['pi']);
+  });
+
   it('finds nothing on a machine without agents', async () => {
     expect(await detect(home())).toEqual([]);
   });
@@ -111,6 +118,24 @@ describe('JSON configuration', () => {
     expect(JSON.parse(readFileSync(path.join(root, '.cursor', 'mcp.json'), 'utf8'))).toEqual({
       mcpServers: { ctour: entry },
     });
+  });
+
+  it('connects pi in ~/.pi/agent/mcp.json and leaves other servers alone', async () => {
+    const root = home();
+    const file = path.join(root, '.pi', 'agent', 'mcp.json');
+    write(file, '{\n  "mcpServers": {\n    "filesystem": { "command": "npx" }\n  }\n}\n');
+
+    const first = await installInto(adapter('pi'), root, entry);
+
+    expect(first.change).toBe('added');
+    expect(first.path).toBe(file);
+    expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({
+      mcpServers: { filesystem: { command: 'npx' }, ctour: entry },
+    });
+
+    const second = await installInto(adapter('pi'), root, entry);
+
+    expect(second.change).toBe('unchanged');
   });
 
   it('replaces a stale entry in place', async () => {

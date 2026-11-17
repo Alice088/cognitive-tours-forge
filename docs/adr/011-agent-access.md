@@ -50,8 +50,9 @@ a refusal uses — is the product (VI).
    apart, written into directories this feature otherwise never touches.
 
 6. **One adapter table, byte-preserving edits.**
-   Claude Code, Cursor, Gemini CLI and Codex are detected by their configuration
-   file or folder; `cli/mcp/config-text.ts` splices the entry and re-parses the
+   Claude Code, Cursor, Gemini CLI, Codex and pi are detected by their
+   configuration file or folder (pi reads `~/.pi/agent/mcp.json`, the same
+   `mcpServers` shape the others use); `cli/mcp/config-text.ts` splices the entry and re-parses the
    result instead of re-serialising the file, so every other byte stays as the
    person wrote it. Idempotent by construction: an equal entry means no write.
 

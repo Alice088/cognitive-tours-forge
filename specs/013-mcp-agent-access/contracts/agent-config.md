@@ -12,6 +12,7 @@ changes nothing.
 | Cursor      | `~/.cursor/mcp.json`      | JSON   | `mcpServers.ctour`    |
 | Gemini CLI  | `~/.gemini/settings.json` | JSON   | `mcpServers.ctour`    |
 | Codex       | `~/.codex/config.toml`    | TOML   | `[mcp_servers.ctour]` |
+| pi          | `~/.pi/agent/mcp.json`    | JSON   | `mcpServers.ctour`    |
 
 Detection is by the presence of the file or its parent directory, never by `PATH`.
 An agent is "detected" when its configuration exists; that is the only case in which

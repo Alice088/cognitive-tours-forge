@@ -4,6 +4,38 @@
 
 ---
 
+## Прогон: 2026-11-16 18:02 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npm run build:cli`, `node dist/cli.mjs mcp install`, `node dist/cli.mjs doctor`, `/home/fworld/.pi/agent/bin/pi mcp list`, прямой JSON-RPC вызов `list_projects`, `npx vitest run`, `npx eslint .`, `npx tsc --noEmit`
+
+Добавлен адаптер pi в `ctour mcp install`: `~/.pi/agent/mcp.json`, тот же `mcpServers`, что у остальных. Подключение выполнено на этой машине и проверено настоящим клиентом pi.
+
+| #   | Тест                                                                                                     | Пакет  | Результат | Время |
+| --- | -------------------------------------------------------------------------------------------------------- | ------ | --------- | ----- |
+| 1   | `detect` находит pi по папке `~/.pi/agent`                                                               | vitest | PASS      | 0.01s |
+| 2   | `installInto` пишет `mcpServers.ctour` в `~/.pi/agent/mcp.json`, не трогая `filesystem`                  | vitest | PASS      | 0.01s |
+| 3   | второй прогон отвечает `unchanged`                                                                       | vitest | PASS      | 0.01s |
+| 4   | два новых теста в `mcp-install.test.ts` (21 тест)                                                        | vitest | PASS      | 0.90s |
+| 5   | `node dist/cli.mjs mcp install` → `pi  connected  ~/.pi/agent/mcp.json`                                  | cli    | PASS      | 0.80s |
+| 6   | `pi mcp list` → `ctour: connected, 9 tools (codemode, global)`                                           | pi     | PASS      | 2.40s |
+| 7   | `list_projects` через тот же путь, что прописан pi: 3 проекта, `support-inbox` с 12 waypoints и 5 турами | mcp    | PASS      | 0.70s |
+| 8   | `ctour doctor` → `ok agent:pi connected in ~/.pi/agent/mcp.json`                                         | cli    | PASS      | 0.60s |
+| 9   | `npx vitest run` — 37 файлов / 343 теста                                                                 | vitest | PASS      | 4.60s |
+| 10  | `npx eslint .`                                                                                           | eslint | PASS      | 2.80s |
+| 11  | `npx tsc --noEmit`                                                                                       | tsc    | PASS      | 3.10s |
+
+### Сводка
+
+**Всего:** 11 · **PASS:** 11 · **FAIL:** 0 · **SKIP:** 0 · **PANIC:** 0 · время 16.33s
+
+### Падения
+
+| Тест | Причина |
+| ---- | ------- |
+| —    | нет     |
+
+---
+
 ## Прогон: 2026-11-16 17:47 MSK (+0300)
 
 **Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `curl -fsSL …/main/install.sh | sh -s -- --prefix /tmp/release-prefix`, `curl -fsSL …/main/install.sh | sh`, `ctour --version`, `CTOUR_HOME=/tmp/release-home ctour init --port 4414`

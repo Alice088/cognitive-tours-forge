@@ -81,7 +81,7 @@ ctour mcp install
 ```
 
 The command finds the agents on this machine — Claude Code, Cursor, Gemini CLI,
-Codex — adds the map server to the one it finds, and leaves every other byte of
+Codex, pi — adds the map server to the one it finds, and leaves every other byte of
 that configuration alone. Restart the agent; it can then list your projects, read a
 map, and add or change waypoints, links and tours in the same file you have open.
 
