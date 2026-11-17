@@ -1,6 +1,6 @@
 {
   "name": "ctour",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Maps and guided tours of your code, written by you, linking why to how",
   "license": "MIT",
   "repository": {
