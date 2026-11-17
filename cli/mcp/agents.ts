@@ -23,7 +23,7 @@ export type AgentAdapter = {
   folderPath: (home: string) => string;
 };
 
-export type ConnectionEntry = { command: string; args: string[] };
+export type ConnectionEntry = { command: string; args: string[]; exposure?: string };
 
 export type ConnectionResult = {
   agent: AgentAdapter;
@@ -94,6 +94,11 @@ export async function detect(userHome: string = homedir()): Promise<AgentAdapter
   return found;
 }
 
+export function entryFor(adapter: AgentAdapter, entry: ConnectionEntry = connectionFor()): ConnectionEntry {
+  if (adapter.name !== 'pi') return entry;
+  return { ...entry, exposure: 'direct' };
+}
+
 export function connectionFor(): ConnectionEntry {
   const candidate = process.argv[1];
   if (candidate) {
@@ -137,7 +142,7 @@ export async function readConnection(
 export async function installInto(
   adapter: AgentAdapter,
   userHome: string = homedir(),
-  entry: ConnectionEntry = connectionFor()
+  entry: ConnectionEntry = entryFor(adapter)
 ): Promise<ConnectionResult> {
   const file = adapter.configPath(userHome);
   const original = await fs.readFile(file, 'utf8').catch(() => null);

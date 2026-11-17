@@ -247,6 +247,22 @@ describe('the install command', () => {
     expect(out).toContain('restart the agent');
   });
 
+  it('asks pi for direct tools, so the model sees them without a search', async () => {
+    const root = home();
+    mkdirSync(path.join(root, '.pi', 'agent'), { recursive: true });
+
+    await quiet(() => installAgent({ home: root, userHome: root }));
+
+    const written = JSON.parse(readFileSync(path.join(root, '.pi', 'agent', 'mcp.json'), 'utf8'));
+    expect(written.mcpServers.ctour.exposure).toBe('direct');
+    expect(written.mcpServers.ctour.args).toEqual(['mcp']);
+
+    const { value: code, out } = await quiet(() => installAgent({ home: root, userHome: root }));
+
+    expect(code).toBe(0);
+    expect(out).toContain('already connected');
+  });
+
   it('says already connected on a second run', async () => {
     const root = home();
     write(path.join(root, '.claude.json'), '{}');

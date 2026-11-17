@@ -1,5 +1,5 @@
 import { homedir } from 'node:os';
-import { ADAPTERS, connectionFor, detect, installInto, snippetFor } from '@/cli/mcp/agents';
+import { ADAPTERS, connectionFor, detect, entryFor, installInto, snippetFor } from '@/cli/mcp/agents';
 import { workspaceHome } from '@/app/lib/workspace/registry';
 import { serve } from '../mcp/server';
 import { line } from '../lib/output';
@@ -32,7 +32,7 @@ export async function installAgent(overrides: { home?: string; userHome?: string
 
   let code = 0;
   for (const adapter of found) {
-    const result = await installInto(adapter, userHome, entry);
+    const result = await installInto(adapter, userHome, entryFor(adapter, entry));
     if (result.change === 'unreadable') {
       line(`cannot read ${result.path}: ${result.reason}`);
       for (const text of snippetFor(adapter, entry)) {
