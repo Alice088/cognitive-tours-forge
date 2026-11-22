@@ -4,6 +4,36 @@
 
 ---
 
+## Прогон: 2026-11-22 10:54 MSK (+0300)
+
+**Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run`, `npx playwright test`, `npx tsc --noEmit`, `npx eslint .`, `npx prettier --check app tests`
+
+Узел waypoint вырос из фиксированных 208×74: ширина берётся из длины подписи, высота — из числа строк, `line-clamp-3` убран. Размер тянется хэндлами (правый — ширина, нижний — высота, углы — обе оси) и хранится в карте как необязательное `size` (`normalizeDocument`/`serializeDocument`/`validateDocument`). Добавлены мультивыбор (`selectedIds` + `toggleSelection`, рамка Shift-протяжкой с синхронизацией на `onSelectionEnd`), массовое удаление `deleteWaypoints(ids)` и заметный путь создания тура («New tour», «Add a waypoint», нарратив стопа).
+
+| #   | Тест                                                                   | Пакет      | Результат | Время   |
+| --- | ---------------------------------------------------------------------- | ---------- | --------- | ------- |
+| 1   | `waypoint-size.test.ts` — авторазмер, клампы, чтение сохранённого size | vitest     | PASS      | 0.01s   |
+| 2   | `map-store-bulk.test.ts` — выбор, `deleteWaypoints`, одна ступень undo | vitest     | PASS      | 0.02s   |
+| 3   | `map-file.test.ts` — `size` переживает запись, мусор отбрасывается     | vitest     | PASS      | 0.05s   |
+| 4   | `npx vitest run` — 39 файлов / 361 тест                                | vitest     | PASS      | 4.32s   |
+| 5   | `waypoint-sizing.spec.ts` — 4 сценария (текст, ресайз, удаление, тур)  | playwright | PASS      | 16.60s  |
+| 6   | `npx playwright test` — 121 тест                                       | playwright | PASS      | 156.00s |
+| 7   | `npx tsc --noEmit`                                                     | tsc        | PASS      | 12.00s  |
+| 8   | `npx eslint .`                                                         | eslint     | PASS      | 9.00s   |
+| 9   | `npx prettier --check app tests`                                       | prettier   | PASS      | 3.00s   |
+
+### Сводка
+
+**Всего:** 9 · **PASS:** 9 · **FAIL:** 0 · **SKIP:** 0 · **PANIC:** 0 · время 201.00s
+
+### Падения
+
+| Тест | Причина |
+| ---- | ------- |
+| —    | нет     |
+
+---
+
 ## Прогон: 2026-11-17 09:22 MSK (+0300)
 
 **Ветка:** `main` · **Node:** v22.22.3 · **Команды:** `npx vitest run`, `npm run build:cli`, `node dist/cli.mjs --version`, `npx eslint .`, `npx tsc --noEmit`

@@ -15,9 +15,11 @@ the detail it is; nobody has to open the inspector to read a tour.
 ## Building one
 
 1. **New tour** in the dock, then give it a name that says what the walk promises:
-   _A newcomer walks the product_, _Where this can hurt us_.
-2. **Edit tour** opens the stop list. Add waypoints as stops, drag them into the
-   order you want to say things in.
+   _A newcomer walks the product_, _Where this can hurt us_. A map with no tours
+   yet says so and offers the same button.
+2. **Edit tour** opens the stop list. **Add a waypoint** puts a stop at the end —
+   or select a waypoint on the map and press **Add to “…”** to put it where you
+   are looking. The arrows move a stop up or down; the order is the tour.
 3. Write the narration for each stop. Two or three sentences is a good stop; one
    is fine if the sentence is the point.
 

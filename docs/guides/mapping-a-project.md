@@ -68,6 +68,20 @@ the same for everyone who opens it. There is no auto-layout, and that is on
 purpose: the arrangement is part of the explanation — goals at the top, code in
 the middle, risks where they bite.
 
+A box is as wide as its label needs and grows down as the label wraps, so a
+sentence is never cut off with an ellipsis. Selecting a box puts handles on it:
+the right and bottom handles change one axis, a corner changes both, and the size
+is saved with the map beside the position. **Fit the box to its text** in the
+inspector hands the box back to the label.
+
+## Removing waypoints
+
+Select one box and delete it from the inspector. To remove several, click the
+first, then `Shift`-click the rest — or hold `Shift` and drag a box around them —
+and press `Delete`, or **Delete N waypoints** in the top row. One action removes
+the waypoints, the links that touched them and their tour stops, and one `Ctrl`/
+`Cmd`+`Z` puts all of it back.
+
 ## Finding things
 
 The canvas's top row has a search field and a type filter. Search matches labels

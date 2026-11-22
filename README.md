@@ -85,6 +85,12 @@ Three rules keep a map worth reading:
    yet. Nothing on the screen matters more than the words the author wrote for the
    stop being read.
 
+A waypoint's box grows to hold its label, so a sentence is never cut off with an
+ellipsis; its size is kept in the map beside its position. A tour is an order
+through waypoints with words at each stop, and it is made where it is read: the
+dock creates it, and the waypoint in front of you is one press away from becoming
+the next stop.
+
 ## Who this is for
 
 Someone joining a codebase and needing to know why it is shaped this way. Someone

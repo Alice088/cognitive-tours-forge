@@ -2,6 +2,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { resolveInside } from '@/app/lib/fs/safe-path';
 import { serializeDocument } from '@/app/lib/workspace/serialize';
+import { storedSize } from '@/app/lib/waypoint-size';
 import { WAYPOINT_TYPES, type WaypointType } from '@/app/lib/theme/tokens';
 import {
   MAP_VERSION,
@@ -188,6 +189,7 @@ export function normalizeDocument(
       notes: optionalString(candidate.notes),
       file,
       position,
+      size: storedSize(candidate.size) ?? undefined,
     });
   }
   report.waypointCount = waypoints.length;
@@ -278,6 +280,9 @@ export function validateDocument(document: MapDocument): void {
     }
     if (!Number.isFinite(waypoint.position.x) || !Number.isFinite(waypoint.position.y)) {
       throw new MapFileError('invalid-document', `waypoint ${waypoint.id} has an invalid position`);
+    }
+    if (waypoint.size && storedSize(waypoint.size) === null) {
+      throw new MapFileError('invalid-document', `waypoint ${waypoint.id} has an invalid size`);
     }
     ids.add(waypoint.id);
   }

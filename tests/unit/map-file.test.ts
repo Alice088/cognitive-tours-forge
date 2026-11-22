@@ -11,6 +11,7 @@ import {
   readMap,
   readMapStrict,
   serializeDocument,
+  validateDocument,
   writeMap,
 } from '@/app/lib/workspace/map-file';
 import type { MapDocument } from '@/app/lib/workspace/types';
@@ -124,6 +125,40 @@ describe('map file', () => {
     expect(document.waypoints[0].position).toEqual({ x: 0, y: 0 });
     expect(document.waypoints[0].file).toBeUndefined();
     expect(report.droppedPaths).toBe(1);
+  });
+
+  it('keeps a waypoint size across a write and a read', async () => {
+    const sized = sample();
+    sized.waypoints[0].size = { width: 300, height: 160 };
+    await writeMap(project, 'sized.tour.json', sized);
+    const text = readFileSync(path.join(project, '.ctour', 'sized.tour.json'), 'utf8');
+    expect(text).toContain('"size"');
+    const { document } = await readMap(project, 'sized.tour.json');
+    expect(document.waypoints.find(waypoint => waypoint.id === 'w-b')?.size).toEqual({ width: 300, height: 160 });
+    expect(document.waypoints.find(waypoint => waypoint.id === 'w-a')?.size).toBeUndefined();
+    expect(text.match(/"size"/g)).toHaveLength(1);
+  });
+
+  it('drops an unusable size without dropping the waypoint', () => {
+    const raw = {
+      version: 1,
+      project: { name: 'demo', createdAt: '2026-11-16T09:12:00.000Z' },
+      waypoints: [
+        { id: 'w-a', label: 'A', type: 'Goal', position: { x: 0, y: 0 }, size: { width: -1, height: 10 } },
+        { id: 'w-b', label: 'B', type: 'Goal', position: { x: 0, y: 0 }, size: { width: 'wide', height: 10 } },
+      ],
+      edges: [],
+      tours: [],
+    };
+    const { document, report } = normalizeDocument(raw);
+    expect(report.droppedWaypoints).toBe(0);
+    expect(document.waypoints.map(waypoint => waypoint.size)).toEqual([undefined, undefined]);
+  });
+
+  it('refuses a negative size on a document handed to the writer', () => {
+    const broken = sample();
+    broken.waypoints[0].size = { width: 0, height: 100 };
+    expect(() => validateDocument(broken)).toThrow(MapFileError);
   });
 
   it('refuses an unsupported version', () => {

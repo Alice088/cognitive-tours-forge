@@ -1,14 +1,25 @@
 'use client';
 
-import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
+import { Handle, NodeResizeControl, NodeResizer, Position, type Node, type NodeProps } from '@xyflow/react';
 import { memo } from 'react';
 import { cn } from '@/app/lib/utils';
 import type { WaypointType } from '@/app/lib/theme/tokens';
+import {
+  MAX_WAYPOINT_HEIGHT,
+  MAX_WAYPOINT_WIDTH,
+  MIN_WAYPOINT_HEIGHT,
+  MIN_WAYPOINT_WIDTH,
+  type WaypointSize,
+} from '@/app/lib/waypoint-size';
 
 export interface WaypointNodeData extends Record<string, unknown> {
   label: string;
   type: WaypointType;
   dimmed: boolean;
+  width: number;
+  size: WaypointSize | null;
+  resizable: boolean;
+  onResize: (id: string, size: WaypointSize) => void;
 }
 
 export type WaypointNodeType = Node<WaypointNodeData, 'waypoint'>;
@@ -29,29 +40,80 @@ const TYPE_CLASS: Record<WaypointType, string> = {
   Deprecated: 'bg-waypoint-deprecated text-waypoint-deprecated-foreground border-waypoint-deprecated-foreground/40',
 };
 
-function WaypointNodeInner({ data, selected }: NodeProps<WaypointNodeType>) {
+function WaypointNodeInner({ id, data, selected }: NodeProps<WaypointNodeType>) {
+  const boundaries = {
+    minWidth: MIN_WAYPOINT_WIDTH,
+    minHeight: MIN_WAYPOINT_HEIGHT,
+    maxWidth: MAX_WAYPOINT_WIDTH,
+    maxHeight: MAX_WAYPOINT_HEIGHT,
+  };
+  const commit = (_: unknown, params: { width: number; height: number }) =>
+    data.onResize(id, { width: params.width, height: params.height });
+
   return (
-    <div
-      className={cn(
-        'w-52 rounded-lg border px-3 py-2 text-left shadow-sm transition-opacity',
-        TYPE_CLASS[data.type],
-        selected && 'ring-2 ring-state-selected',
-        data.dimmed && 'opacity-40'
-      )}
-    >
-      <Handle type="target" position={Position.Top} className="!size-2" />
-      <p className="text-[10px] font-medium uppercase tracking-wide opacity-80">{data.type}</p>
-      <p className="mt-0.5 line-clamp-3 text-sm font-medium">{data.label}</p>
-      <Handle type="source" position={Position.Bottom} className="!size-2" />
-    </div>
+    <>
+      {data.resizable ? (
+        <>
+          <NodeResizer
+            isVisible={selected}
+            {...boundaries}
+            lineClassName="!border-state-selected"
+            handleClassName="!size-2 !rounded-sm !border-state-selected !bg-background"
+            onResizeEnd={commit}
+          />
+          {selected ? (
+            <>
+              <NodeResizeControl
+                position="right"
+                resizeDirection="horizontal"
+                {...boundaries}
+                className="!size-2 !rounded-sm !border-state-selected !bg-background"
+                onResizeEnd={commit}
+              />
+              <NodeResizeControl
+                position="bottom"
+                resizeDirection="vertical"
+                {...boundaries}
+                className="!size-2 !rounded-sm !border-state-selected !bg-background"
+                onResizeEnd={commit}
+              />
+            </>
+          ) : null}
+        </>
+      ) : null}
+      <div
+        className={cn(
+          'box-border rounded-lg border px-3 py-2 text-left shadow-sm transition-opacity',
+          data.size ? 'overflow-auto' : 'overflow-hidden',
+          TYPE_CLASS[data.type],
+          selected && 'ring-2 ring-state-selected',
+          data.dimmed && 'opacity-40'
+        )}
+        style={{
+          width: data.width,
+          height: data.size ? data.size.height : 'auto',
+          minHeight: data.size ? undefined : MIN_WAYPOINT_HEIGHT,
+        }}
+      >
+        <Handle type="target" position={Position.Top} className="!size-2" />
+        <p className="text-[10px] font-medium uppercase tracking-wide opacity-80">{data.type}</p>
+        <p className="mt-0.5 text-sm font-medium break-words">{data.label}</p>
+        <Handle type="source" position={Position.Bottom} className="!size-2" />
+      </div>
+    </>
   );
 }
 
 export const WaypointNode = memo(WaypointNodeInner, (previous, next) => {
   return (
+    previous.id === next.id &&
     previous.data.label === next.data.label &&
     previous.data.type === next.data.type &&
     previous.data.dimmed === next.data.dimmed &&
+    previous.data.width === next.data.width &&
+    previous.data.size?.width === next.data.size?.width &&
+    previous.data.size?.height === next.data.size?.height &&
+    previous.data.resizable === next.data.resizable &&
     previous.selected === next.selected
   );
 });

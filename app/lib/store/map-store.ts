@@ -25,6 +25,7 @@ export interface MapState {
   report: LoadReport | null;
   mtimeMs: number | null;
   selectedWaypointId: string | null;
+  selectedIds: string[];
   activeTourId: string | null;
   step: number;
   saveStatus: SaveStatus;
@@ -44,12 +45,15 @@ export interface MapState {
   setStatus: (status: SurfaceStatus) => void;
   failLoad: (message: string) => void;
   selectWaypoint: (id: string | null) => void;
+  toggleSelection: (id: string, additive: boolean) => void;
+  selectMany: (ids: string[]) => void;
   setActiveTour: (tourId: string | null) => void;
   setStep: (step: number) => void;
   updateWaypoint: (id: string, patch: Partial<Waypoint>) => void;
   moveWaypoint: (id: string, position: Position) => void;
   addWaypoint: (waypoint: Waypoint) => void;
   deleteWaypoint: (id: string) => void;
+  deleteWaypoints: (ids: string[]) => void;
   addEdge: (edge: Edge) => void;
   deleteEdge: (id: string) => void;
   addTour: (tour: Tour) => void;
@@ -70,6 +74,7 @@ const initial = {
   report: null,
   mtimeMs: null,
   selectedWaypointId: null,
+  selectedIds: [] as string[],
   activeTourId: null,
   step: 0,
   saveStatus: 'idle' as SaveStatus,
@@ -99,6 +104,7 @@ export function createMapStore(seed: Partial<MapState> = {}) {
           applyExternal: ({ document, report, mtimeMs }) =>
             set(state => {
               const waypoint = document.waypoints.some(item => item.id === state.selectedWaypointId);
+              const ids = state.selectedIds.filter(id => document.waypoints.some(item => item.id === id));
               const tour = document.tours.find(item => item.id === state.activeTourId) ?? null;
               const step = tour ? Math.min(state.step, Math.max(tour.stops.length - 1, 0)) : 0;
               return {
@@ -110,6 +116,7 @@ export function createMapStore(seed: Partial<MapState> = {}) {
                 status: 'ready',
                 failure: null,
                 selectedWaypointId: waypoint ? state.selectedWaypointId : null,
+                selectedIds: ids,
                 activeTourId: tour ? state.activeTourId : null,
                 step,
               };
@@ -127,10 +134,38 @@ export function createMapStore(seed: Partial<MapState> = {}) {
               saveStatus: 'idle',
               saveError: null,
               saveErrorDetail: null,
+              selectedWaypointId: null,
+              selectedIds: [],
             })),
           setStatus: status => set({ status }),
           failLoad: message => set({ status: 'failed', failure: { message, retryable: true } }),
-          selectWaypoint: id => set({ selectedWaypointId: id }),
+          selectWaypoint: id => set({ selectedWaypointId: id, selectedIds: id === null ? [] : [id] }),
+          toggleSelection: (id, additive) =>
+            set(state => {
+              if (!additive) {
+                return { selectedWaypointId: id, selectedIds: [id] };
+              }
+              if (state.selectedIds.includes(id)) {
+                const rest = state.selectedIds.filter(item => item !== id);
+                return {
+                  selectedIds: rest,
+                  selectedWaypointId:
+                    state.selectedWaypointId === id ? (rest[rest.length - 1] ?? null) : state.selectedWaypointId,
+                };
+              }
+              return { selectedIds: [...state.selectedIds, id], selectedWaypointId: id };
+            }),
+          selectMany: ids =>
+            set(state => {
+              if (sameIds(state.selectedIds, ids)) {
+                return state;
+              }
+              const primary = state.selectedWaypointId;
+              return {
+                selectedIds: ids,
+                selectedWaypointId: primary !== null && ids.includes(primary) ? primary : (ids[ids.length - 1] ?? null),
+              };
+            }),
           setActiveTour: tourId => set({ activeTourId: tourId, step: 0 }),
           setStep: step => set({ step: Math.max(0, Math.floor(step)) }),
           updateWaypoint: (id, patch) =>
@@ -167,16 +202,35 @@ export function createMapStore(seed: Partial<MapState> = {}) {
               ...document,
               waypoints: [...document.waypoints, waypoint],
             })),
-          deleteWaypoint: id =>
-            change(document => ({
-              ...document,
-              waypoints: document.waypoints.filter(waypoint => waypoint.id !== id),
-              edges: document.edges.filter(edge => edge.source !== id && edge.target !== id),
-              tours: document.tours.map(tour => ({
-                ...tour,
-                stops: tour.stops.filter(stop => stop.waypointId !== id),
-              })),
-            })),
+          deleteWaypoint: id => get().deleteWaypoints([id]),
+          deleteWaypoints: ids => {
+            const doomed = new Set(ids);
+            if (doomed.size === 0) {
+              return;
+            }
+            const current = get().document;
+            if (!current || !current.waypoints.some(waypoint => doomed.has(waypoint.id))) {
+              return;
+            }
+            set(state => {
+              const remaining = state.selectedIds.filter(id => !doomed.has(id));
+              const primary = state.selectedWaypointId;
+              return {
+                document: {
+                  ...current,
+                  waypoints: current.waypoints.filter(waypoint => !doomed.has(waypoint.id)),
+                  edges: current.edges.filter(edge => !doomed.has(edge.source) && !doomed.has(edge.target)),
+                  tours: current.tours.map(tour => ({
+                    ...tour,
+                    stops: tour.stops.filter(stop => !doomed.has(stop.waypointId)),
+                  })),
+                },
+                selectedIds: remaining,
+                selectedWaypointId:
+                  primary !== null && !doomed.has(primary) ? primary : (remaining[remaining.length - 1] ?? null),
+              };
+            });
+          },
           addEdge: edge => change(document => ({ ...document, edges: [...document.edges, edge] })),
           deleteEdge: id =>
             change(document => ({
@@ -250,6 +304,14 @@ export function createMapStore(seed: Partial<MapState> = {}) {
       }
     )
   );
+}
+
+function sameIds(current: string[], next: string[]): boolean {
+  if (current.length !== next.length) {
+    return false;
+  }
+  const set = new Set(current);
+  return next.every(id => set.has(id));
 }
 
 function differs<T extends object>(current: T, patch: Partial<T>): boolean {

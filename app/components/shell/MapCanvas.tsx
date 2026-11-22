@@ -6,25 +6,46 @@ import {
   Controls,
   ReactFlow,
   ReactFlowProvider,
+  SelectionMode,
   useNodesState,
+  useOnSelectionChange,
   useViewport,
   type Edge as FlowEdge,
   type NodeTypes,
 } from '@xyflow/react';
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type ReactNode,
+  type RefObject,
+} from 'react';
+import { DeleteWaypointsDialog } from '@/app/components/shell/DeleteWaypointsDialog';
 import { WaypointNode, type WaypointNodeType } from '@/app/components/shell/WaypointNode';
+import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { WAYPOINT_TYPES } from '@/app/lib/theme/tokens';
 import { CARD_INSET, CONTROLS_INSET, cardBox, pickCorner, type Area, type Corner } from '@/app/lib/tour-reading';
+import { autoWidth, waypointSize, type WaypointSize } from '@/app/lib/waypoint-size';
 import type { Edge, Position, Waypoint } from '@/app/lib/workspace/types';
 
 const nodeTypes: NodeTypes = { waypoint: WaypointNode };
 
-const NODE_WIDTH = 208;
-const NODE_HEIGHT = 74;
 const NARROW_QUERY = '(max-width: 767px)';
+
+function SelectionWatcher({ selectionRef }: { selectionRef: RefObject<string[] | null> }) {
+  useOnSelectionChange({
+    onChange: ({ nodes }) => {
+      selectionRef.current = nodes.map(node => node.id);
+    },
+  });
+  return null;
+}
 
 function subscribeNarrow(onChange: () => void): () => void {
   const query = window.matchMedia(NARROW_QUERY);
@@ -69,9 +90,7 @@ function CornerCard({ stop, children }: { stop: Waypoint | null; children: React
     return () => observer.disconnect();
   }, []);
 
-  const box = stop
-    ? { x: x + stop.position.x * zoom, y: y + stop.position.y * zoom, width: NODE_WIDTH, height: NODE_HEIGHT }
-    : null;
+  const box = stop ? { x: x + stop.position.x * zoom, y: y + stop.position.y * zoom, ...waypointSize(stop) } : null;
   const corner = pickCorner(area, box);
   const frame = cardBox(corner, area);
 
@@ -128,8 +147,13 @@ export function MapCanvas({
   waypoints,
   edges,
   selectedId,
+  selectedIds,
   onSelect,
+  onToggle,
+  onSelectionChange,
   onMove,
+  onResize,
+  onDeleteWaypoints,
   dimmedIds,
   readOnly,
   actions,
@@ -140,8 +164,13 @@ export function MapCanvas({
   waypoints: Waypoint[];
   edges: Edge[];
   selectedId: string | null;
+  selectedIds: string[];
   onSelect: (id: string | null) => void;
+  onToggle: (id: string, additive: boolean) => void;
+  onSelectionChange: (ids: string[]) => void;
   onMove: (id: string, position: Position) => void;
+  onResize: (id: string, size: WaypointSize) => void;
+  onDeleteWaypoints: (ids: string[]) => void;
   dimmedIds: Set<string> | null;
   readOnly: boolean;
   actions?: ReactNode;
@@ -151,6 +180,8 @@ export function MapCanvas({
 }) {
   const [query, setQuery] = useState('');
   const [type, setType] = useState<string>('all');
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const draggedSelection = useRef<string[] | null>(null);
   const search = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -189,37 +220,31 @@ export function MapCanvas({
         type: 'waypoint',
         position: waypoint.position,
         draggable: !readOnly,
+        selected: selectedIds.includes(waypoint.id),
         data: {
           label: waypoint.label,
           type: waypoint.type,
           dimmed: dimmedIds ? !dimmedIds.has(waypoint.id) : false,
+          width: waypoint.size?.width ?? autoWidth(waypoint.label),
+          size: waypoint.size ?? null,
+          resizable: !readOnly,
+          onResize,
         },
       })),
-    [visible, dimmedIds, readOnly]
+    [visible, dimmedIds, readOnly, selectedIds, onResize]
   );
 
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<WaypointNodeType>(nodes);
-  const selectedRef = useRef(selectedId);
 
   useEffect(() => {
-    selectedRef.current = selectedId;
-  }, [selectedId]);
-
-  useEffect(() => {
-    setFlowNodes(nodes.map(node => ({ ...node, selected: node.id === selectedRef.current })));
+    setFlowNodes(current => {
+      const known = new Map(current.map(node => [node.id, node]));
+      return nodes.map(node => {
+        const existing = known.get(node.id);
+        return existing ? { ...existing, ...node } : node;
+      });
+    });
   }, [nodes, setFlowNodes]);
-
-  useEffect(() => {
-    setFlowNodes(current =>
-      current.map(node => {
-        const shouldSelect = node.id === selectedId;
-        if (Boolean(node.selected) === shouldSelect) {
-          return node;
-        }
-        return { ...node, selected: shouldSelect };
-      })
-    );
-  }, [selectedId, setFlowNodes]);
 
   const flowEdges = useMemo<FlowEdge[]>(
     () =>
@@ -272,6 +297,14 @@ export function MapCanvas({
         <p className="text-xs text-muted-foreground" aria-live="polite">
           {visible.length} of {waypoints.length} waypoints
         </p>
+        {readOnly ? null : (
+          <p className="hidden text-xs text-muted-foreground lg:block">Shift+click or Shift+drag selects several</p>
+        )}
+        {selectedIds.length > 1 && !readOnly ? (
+          <Button variant="destructive" size="sm" onClick={() => setConfirmingDelete(true)}>
+            Delete {selectedIds.length} waypoints
+          </Button>
+        ) : null}
         {actions ? <div className="ml-auto flex items-center gap-1">{actions}</div> : null}
       </div>
 
@@ -294,6 +327,15 @@ export function MapCanvas({
               className="relative h-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
               onKeyDown={event => {
                 if (event.metaKey || event.ctrlKey || event.altKey) {
+                  return;
+                }
+                if ((event.key === 'Delete' || event.key === 'Backspace') && !readOnly && selectedIds.length > 0) {
+                  event.preventDefault();
+                  if (selectedIds.length === 1) {
+                    onDeleteWaypoints(selectedIds);
+                  } else {
+                    setConfirmingDelete(true);
+                  }
                   return;
                 }
                 if (onTourArrow && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
@@ -321,7 +363,22 @@ export function MapCanvas({
                 onlyRenderVisibleElements
                 nodesDraggable={!readOnly}
                 nodesConnectable={false}
-                onNodeClick={(_, node) => onSelect(node.id)}
+                selectionMode={SelectionMode.Partial}
+                selectionKeyCode="Shift"
+                onNodeClick={(event, node) =>
+                  onToggle(node.id, Boolean(event.shiftKey || event.metaKey || event.ctrlKey))
+                }
+                onSelectionChange={({ nodes: chosen }) => {
+                  draggedSelection.current = chosen.map(node => node.id);
+                }}
+                onSelectionEnd={() => {
+                  const ids = draggedSelection.current;
+                  if (ids === null) {
+                    return;
+                  }
+                  draggedSelection.current = null;
+                  onSelectionChange(ids.filter(id => visible.some(item => item.id === id)));
+                }}
                 onNodeDragStop={(_, node) => onMove(node.id, node.position)}
                 onPaneClick={() => onSelect(null)}
                 fitView
@@ -331,8 +388,20 @@ export function MapCanvas({
               >
                 <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--canvas-grid)" />
                 <Controls showInteractive={false} />
+                <SelectionWatcher selectionRef={draggedSelection} />
               </ReactFlow>
               {reading ? <CornerCard stop={focusedStop ?? null}>{reading}</CornerCard> : null}
+              <DeleteWaypointsDialog
+                open={confirmingDelete}
+                onOpenChange={setConfirmingDelete}
+                ids={selectedIds}
+                waypoints={waypoints}
+                edges={edges}
+                onConfirm={() => {
+                  onDeleteWaypoints(selectedIds);
+                  setConfirmingDelete(false);
+                }}
+              />
             </div>
           </ReactFlowProvider>
         )}

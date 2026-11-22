@@ -67,6 +67,7 @@ Field rules:
 | `waypoints[].notes`          | no       | Same                                                                               |
 | `waypoints[].file`           | no       | Repo-relative POSIX path. An absolute path is dropped and reported                 |
 | `waypoints[].position`       | yes      | Two finite numbers                                                                 |
+| `waypoints[].size`           | no       | Two finite positive numbers. Absent means the box grows with its label             |
 | `edges[].source`, `target`   | yes      | Must name existing waypoints                                                       |
 | `edges[].label`              | no       | Absent is valid                                                                    |
 | `tours[].name`               | yes      | Non-empty                                                                          |

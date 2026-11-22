@@ -5,6 +5,11 @@ export interface Position {
   y: number;
 }
 
+export interface Size {
+  width: number;
+  height: number;
+}
+
 export interface Waypoint {
   id: string;
   label: string;
@@ -13,6 +18,7 @@ export interface Waypoint {
   notes?: string;
   file?: string;
   position: Position;
+  size?: Size;
 }
 
 export interface Edge {

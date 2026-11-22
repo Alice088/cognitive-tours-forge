@@ -17,6 +17,7 @@ import { WorkspaceRail } from '@/app/components/shell/WorkspaceRail';
 import { FailedSurface, LoadingSurface } from '@/app/components/shell/states';
 import { Button } from '@/app/components/ui/button';
 import { stopView } from '@/app/lib/tour-reading';
+import { clampSize, type WaypointSize } from '@/app/lib/waypoint-size';
 import { clearHistory, redo, undo } from '@/app/lib/store/history';
 import type { MapStore } from '@/app/lib/store/map-store';
 import { nextTourId } from '@/app/lib/store/selectors';
@@ -67,6 +68,7 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
   const failure = useStore(store, state => state.failure);
   const mapDocument = useStore(store, state => state.document);
   const selectedId = useStore(store, state => state.selectedWaypointId);
+  const selectedIds = useStore(store, state => state.selectedIds);
   const activeTourId = useStore(store, state => state.activeTourId);
   const step = useStore(store, state => state.step);
   const saveStatus = useStore(store, state => state.saveStatus);
@@ -547,12 +549,20 @@ export function MapWorkspace({ projectId, mapFile }: { projectId: string; mapFil
             waypoints={waypoints}
             edges={edges}
             selectedId={selectedId}
+            selectedIds={selectedIds}
             readOnly={readOnly}
             onSelect={id => {
               store.getState().selectWaypoint(id);
               setInspectorOpen(id !== null);
             }}
+            onToggle={(id, additive) => {
+              store.getState().toggleSelection(id, additive);
+              setInspectorOpen(true);
+            }}
+            onSelectionChange={ids => store.getState().selectMany(ids)}
             onMove={(id, position) => store.getState().moveWaypoint(id, position)}
+            onResize={(id, size: WaypointSize) => store.getState().updateWaypoint(id, { size: clampSize(size) })}
+            onDeleteWaypoints={ids => store.getState().deleteWaypoints(ids)}
             dimmedIds={dimmed}
             actions={actions}
             reading={readingCard}

@@ -74,13 +74,24 @@ export function TourDock({
         </SelectContent>
       </Select>
 
-      <Button variant="ghost" size="icon" aria-label="New tour" disabled={frozen} onClick={onCreateTour}>
+      <Button variant="outline" size="sm" className="shrink-0 gap-1" disabled={frozen} onClick={onCreateTour}>
         <PlusIcon aria-hidden="true" />
+        New tour
       </Button>
 
       <p className="shrink-0 text-sm tabular-nums text-muted-foreground" aria-live="polite">
         {tour ? `Step ${Math.min(step + 1, Math.max(total, 1))} of ${total}` : 'No tour selected'}
       </p>
+
+      {tour && total === 0 ? (
+        <p className="shrink-0 text-xs text-muted-foreground">Select a waypoint on the map, then add it here.</p>
+      ) : null}
+
+      {tours.length === 0 ? (
+        <p className="shrink-0 text-xs text-muted-foreground">
+          No tours yet: a tour is an order through the waypoints.
+        </p>
+      ) : null}
 
       <div className="flex shrink-0 items-center gap-1">
         <Button

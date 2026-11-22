@@ -18,6 +18,7 @@ export function serializeDocument(document: MapDocument): string {
           notes: waypoint.notes,
           file: waypoint.file,
           position: { x: waypoint.position.x, y: waypoint.position.y },
+          size: waypoint.size ? { width: waypoint.size.width, height: waypoint.size.height } : undefined,
         })
       ),
     edges: [...document.edges]

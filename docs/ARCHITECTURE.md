@@ -193,3 +193,14 @@ at once. A save that would overwrite a file changed on disk is refused with a 40
 and shown in the same map-level notice as an outside change, with the same two
 actions; any other failure names the reason and offers one retry without losing the
 text. Loading a map is not an edit, so opening one no longer writes it back.
+
+A waypoint's box is sized from its label — `app/lib/waypoint-size.ts` estimates the
+width and the height a label needs, and a box that the person resized stores its
+`size` beside its `position`, so the picture stays the same for the next reader.
+Only the end of a resize reaches the store, so one drag is one undo step. React
+Flow owns the selection while a person works; the store keeps `selectedIds` as a
+set plus `selectedWaypointId` as the primary, and the canvas mirrors the selection
+back on click and on the end of a rubber-band drag rather than on every change,
+which would echo the canvas's own update into an endless loop. Removal goes
+through `deleteWaypoints(ids)`: waypoints, the links that touched them and their
+tour stops leave in one document, so undo restores all of it at once.
